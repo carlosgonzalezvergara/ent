@@ -1963,17 +1963,18 @@
                             <div className="instruction-card">
                                 <h4><span className="icon">✂</span> Dividir constituyentes</h4>
                                 <ul>
-                                    <li>Haz clic en un <strong>recuadro azul</strong> para dividir una estructura sintáctica en constituyentes.</li>
-                                    <li>Haz clic en las <strong>barras grises</strong> entre palabras para marcar fronteras.</li>
+                                    <li>Haz clic en un <strong>recuadro celeste</strong> para dividir una estructura sintáctica en constituyentes.</li>
+                                    <li>Haz clic en las <strong>barras grises</strong> entre palabras para marcar fronteras entre constituyentes.</li>
+                                    <li>Haz clic en <strong>Deshacer</strong> para revertir la división de un constituyente.</li>
                                 </ul>
                             </div>
 
                             <div className="instruction-card">
                                 <h4><span className="icon">🏷</span> Etiquetas</h4>
                                 <ul>
-                                    <li>En la etiqueta <strong>superior</strong> indica la función (SUJ, CD, CI, etc.).</li>
-                                    <li>En la etiqueta <strong>inferior</strong> indica la categoría (v, sust, FN, FV, etc.).</li>
-                                    <li>Haz <strong>doble clic</strong> sobre un constituyente para marcarlo como núcleo (negrita).</li>
+                                    <li>En la etiqueta <strong>superior</strong> indica la función (N, DET, SUJ, CD, CI, etc.).</li>
+                                    <li>En la etiqueta <strong>inferior</strong> indica la categoría de la palabra (v, sust, etc.) o la frase (FN, FV, etc.).</li>
+                                    <li>Haz <strong>doble clic</strong> sobre un constituyente para marcarlo en negrita.</li>
                                 </ul>
                             </div>
 
@@ -1996,8 +1997,8 @@
                             <div className="instruction-card">
                                 <h4><span className="icon">✕</span> Borrar contenido</h4>
                                 <ul>
-                                    <li>Pasa el cursor por un nodo azul y pulsa <code>✕</code> para borrar el texto.</li>
-                                    <li>La estructura del árbol se mantiene intacta.</li>
+                                    <li>Pasa el cursor por un nodo celeste y pulsa <code>✕</code> para borrar el texto.</li>
+                                    <li>Esto solo borra el texto, pero la estructura del árbol se mantiene intacta.</li>
                                 </ul>
                             </div>
 
@@ -2005,8 +2006,9 @@
                             <div className="instruction-card">
                                 <h4 style={{color: '#5b21b6'}}><span className="icon" style={{backgroundColor: '#5b21b6'}}>📝</span> Modo ejercitación</h4>
                                 <ul>
-                                    <li>Practica con un análisis modelo.</li>
-                                    <li>Compara tu resultado con la respuesta correcta.</li>
+                                    <li>Carga un archivo JSON con un diagrama.</li>
+                                    <li>Haz tu análisis de la expresión propuesta.</li>
+                                    <li>Compara tu resultado con el modelo.</li>
                                 </ul>
                             </div>
                             )}
