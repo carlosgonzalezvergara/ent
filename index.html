@@ -54,7 +54,7 @@
         }
 
         .header-logo {
-            max-width: 500px;
+            max-width: 380px;
             width: 100%;
             height: auto;
         }
@@ -265,7 +265,7 @@
         }
 
         .node-box.can-divide { 
-            border-color: #1e3a8a; 
+            border-color: #374151; 
             background-color: #f0f7ff; 
             cursor: pointer; 
         }
@@ -330,7 +330,7 @@
         }
 
         .split-toggle-btn:hover {
-            color: #1e3a8a;
+            color: #374151;
             border-color: #93c5fd;
         }
 
@@ -389,38 +389,116 @@
             flex-wrap: wrap; 
         }
 
-        .instructions { 
-            margin-top: 32px; 
-            padding: 24px; 
-            background: white; 
-            border-left: 4px solid #1e3a8a; 
-            border-radius: 4px; 
-            font-size: 13px; 
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
+        /* ===========================================
+           PANEL DE INSTRUCCIONES (ESTILO TARJETAS)
+           =========================================== */
+        .instructions-panel {
+            margin-top: 32px;
+            background: linear-gradient(135deg, #fdfcfb 0%, #f7f6f3 100%);
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            overflow: hidden;
         }
 
-        .help-list { 
-            margin: 10px 0 0; 
-            line-height: 1.45; 
-            padding-left: 18px; 
-        }
-        .help-list li { margin-bottom: 8px; }
-
-        .help-details { margin-top: 12px; }
-        .help-details > summary {
-            cursor: pointer;
+        .instructions-header {
+            background: #374151;
+            color: white;
+            padding: 16px 24px;
+            font-size: 1.15rem;
             font-weight: 600;
-            color: #1e3a8a;
+            letter-spacing: 0.02em;
+        }
+
+        .instructions-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: #e5e7eb;
+        }
+
+        @media (max-width: 900px) {
+            .instructions-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .instructions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .instruction-card {
+            background: white;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .instruction-card h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+
+        .instruction-card h4 .icon {
+            width: 24px;
+            height: 24px;
+            background: #374151;
+            color: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .instruction-card ul {
             list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #6b7280;
         }
-        .help-details > summary::-webkit-details-marker { display: none; }
-        .help-details > summary::before { 
-            content: "▶"; 
-            display: inline-block; 
-            margin-right: 8px; 
-            font-size: 12px; 
+
+        .instruction-card li {
+            position: relative;
+            padding-left: 16px;
+            margin-bottom: 6px;
         }
-        .help-details[open] > summary::before { content: "▼"; }
+
+        .instruction-card li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #374151;
+            font-weight: bold;
+        }
+
+        .instruction-card li:last-child {
+            margin-bottom: 0;
+        }
+
+        .instruction-card strong {
+            color: #374151;
+        }
+
+        .instruction-card code {
+            display: inline-block;
+            background: #f5f4f0;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Consolas, monospace;
+            font-size: 12px;
+            color: #374151;
+            border: 1px solid #e8e6e1;
+        }
 
         /* ===========================================
            MODO EJERCITACIÓN
@@ -618,7 +696,7 @@
             font-size: 14px;
         }
         .footer strong { color: #374151; }
-        .footer a { color: #1e3a8a; text-decoration: none; }
+        .footer a { color: #374151; text-decoration: none; }
         .footer a:hover { text-decoration: underline; }
         .footer img { 
             opacity: 0.8; 
@@ -854,7 +932,7 @@
             };
 
             const addChildNode = (parentId) => {
-                const txt = window.prompt('Texto del nuevo nodo (por ej.: Ø, SUJ. DES.):', 'Ø');
+                const txt = window.prompt('Texto del nuevo nodo (por ej.: Ø, SUJ. DES.):');
                 if (txt === null) return;
 
                 const parent = findNodeById(tree, parentId);
@@ -1473,7 +1551,7 @@
                                 <div className="connector-v" style={{ height: '12px' }} />
                                 
                                 {isDiv ? (
-                                    <div style={{background:'#f8fafc', padding:'15px', border:'1px solid #1e3a8a', borderRadius:'4px'}}>
+                                    <div style={{background:'#f8fafc', padding:'15px', border:'1px solid #374151', borderRadius:'4px'}}>
                                         <div style={{display:'flex', gap:'4px', marginBottom:'10px'}}>
                                             {words.map((w, i) => (
                                                 <React.Fragment key={i}>
@@ -1481,7 +1559,7 @@
                                                     {i < words.length - 1 && (
                                                         <button
                                                             onClick={() => setSelectedCuts(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i].sort())}
-                                                            style={{width:'10px', background: selectedCuts.includes(i) ? '#1e3a8a' : '#e2e8f0', border:'none', cursor:'pointer'}}
+                                                            style={{width:'10px', background: selectedCuts.includes(i) ? '#374151' : '#e2e8f0', border:'none', cursor:'pointer'}}
                                                         />
                                                     )}
                                                 </React.Fragment>
@@ -1878,25 +1956,72 @@
                         </div>
                     )}
 
-                    <div className="instructions">
-                        <strong>Instrucciones:</strong>
-                        <ul className="help-list">
-                            <li><strong>Para dividir una estructura sintáctica en constituyentes: </strong>haz clic en un recuadro azul.</li>
-                            <li><strong>Marcar fronteras entre constituyentes:</strong> haz clic en las barras grises entre palabras.</li>
-                            <li><strong>Etiquetas:</strong> en la superior indica función (SUJ, CD, etc.); en la inferior indica categorías (v, sust, FN, FV, etc.).</li>
+                    <div className="instructions-panel">
+                        <div className="instructions-header">Instrucciones</div>
+                        <div className="instructions-grid">
+                            
+                            <div className="instruction-card">
+                                <h4><span className="icon">✂</span> Dividir constituyentes</h4>
+                                <ul>
+                                    <li>Haz clic en un <strong>recuadro azul</strong> para dividir una estructura sintáctica en constituyentes.</li>
+                                    <li>Haz clic en las <strong>barras grises</strong> entre palabras para marcar fronteras.</li>
+                                </ul>
+                            </div>
+
+                            <div className="instruction-card">
+                                <h4><span className="icon">🏷</span> Etiquetas</h4>
+                                <ul>
+                                    <li>En la etiqueta <strong>superior</strong> indica la función (SUJ, CD, CI, etc.).</li>
+                                    <li>En la etiqueta <strong>inferior</strong> indica la categoría (v, sust, FN, FV, etc.).</li>
+                                    <li>Haz <strong>doble clic</strong> sobre un constituyente para marcarlo como núcleo (negrita).</li>
+                                </ul>
+                            </div>
+
+                            <div className="instruction-card">
+                                <h4><span className="icon">＋</span> Agregar constituyentes extra</h4>
+                                <ul>
+                                    <li>Pasa el cursor por el nodo bajo el cual quieres crear un constituyente extra y haz clic en <code>+</code>.</li>
+                                    <li>Escribe el texto y elige la posición donde insertarlo.</li>
+                                </ul>
+                            </div>
+
+                            <div className="instruction-card">
+                                <h4><span className="icon">⇄</span> Dividir etiquetas</h4>
+                                <ul>
+                                    <li>Pasa el cursor por la etiqueta y pulsa <code>⇄</code> para dividir o unir.</li>
+                                    <li>Útil para análisis con múltiples funciones o categorías.</li>
+                                </ul>
+                            </div>
+
+                            <div className="instruction-card">
+                                <h4><span className="icon">✕</span> Borrar contenido</h4>
+                                <ul>
+                                    <li>Pasa el cursor por un nodo azul y pulsa <code>✕</code> para borrar el texto.</li>
+                                    <li>La estructura del árbol se mantiene intacta.</li>
+                                </ul>
+                            </div>
+
                             {!exerciseMode && (
-                                <li><strong>Modo ejercitación:</strong> practica con un análisis modelo y compara tu resultado.</li>
+                            <div className="instruction-card">
+                                <h4 style={{color: '#5b21b6'}}><span className="icon" style={{backgroundColor: '#5b21b6'}}>📝</span> Modo ejercitación</h4>
+                                <ul>
+                                    <li>Practica con un análisis modelo.</li>
+                                    <li>Compara tu resultado con la respuesta correcta.</li>
+                                </ul>
+                            </div>
                             )}
-                        </ul>
-                        <details className="help-details">
-                            <summary>Funciones avanzadas</summary>
-                            <ul className="help-list">
-                                <li><strong>Agregar un constituyente extra (+):</strong> pasa el cursor por el nodo → clic en <strong>+</strong> → escribe el texto → elige la posición.</li>
-                                <li><strong>Dividir etiquetas:</strong> pasa el cursor por la etiqueta y pulsa <strong>⇄</strong> para dividir/unir.</li>
-                                <li><strong>Borrar texto de recuadros azules:</strong> pasa el cursor por un nodo azul y pulsa ✕ para dejar solo la estructura.</li>
-                                <li><strong>Marcar núcleo:</strong> haz doble clic sobre un constituyente para destacarlo en negrita.</li>
-                            </ul>
-                        </details>
+
+                            {exerciseMode && (
+                            <div className="instruction-card">
+                                <h4 style={{color: '#5b21b6'}}><span className="icon" style={{backgroundColor: '#5b21b6'}}>📝</span> Ejercicio activo</h4>
+                                <ul>
+                                    <li>Completa el análisis de la oración.</li>
+                                    <li>Usa <strong>Comparar</strong> para ver la solución.</li>
+                                </ul>
+                            </div>
+                            )}
+
+                        </div>
                     </div>
 
                     {posPicker && (
