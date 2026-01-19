@@ -582,6 +582,32 @@
             border: 1px solid #e8e6e1;
         }
 
+        /* --- Estilo de Tecla Física --- */
+        .key {
+            display: inline-block;
+            background: linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%);
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-family: system-ui, sans-serif;
+            font-weight: 600;
+            color: #374151;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            margin: 0 2px;
+        }
+
+        /* --- Limpieza de Listas de Atajos --- */
+        .shortcut-list li::before {
+            content: none !important;
+        }
+
+        .shortcut-list li {
+            padding-left: 0 !important;
+            margin-bottom: 8px !important;
+            color: #4b5563;
+        }
+
         /* ===========================================
            MODO EJERCITACIÓN
            =========================================== */
@@ -2320,9 +2346,9 @@
                                     >
                                         ↷
                                     </button>
-                                    <button onClick={() => fileInputRef.current.click()} className="btn btn-outline">Cargar archivo</button>
+                                    <button onClick={() => fileInputRef.current.click()} className="btn btn-outline">Cargar .ent</button>
                                     <input type="file" ref={fileInputRef} style={{display:'none'}} accept=".ent,.json" onChange={handleLoadJSON} />
-                                    <button onClick={handleSaveJSON} className="btn btn-outline" disabled={!tree} title="Guardar (Ctrl+S)">Guardar archivo</button>
+                                    <button onClick={handleSaveJSON} className="btn btn-outline" disabled={!tree} title="Guardar (Ctrl+S)">Guardar .ent</button>
                                     <button onClick={() => setExerciseMode(true)} className="btn btn-exercise">📚 Modo ejercitación</button>
                                 </>
                             ) : (
@@ -2342,7 +2368,7 @@
                                 <div className="tree-wrapper">{renderNode(tree)}</div>
                             ) : (
                                 <p style={{textAlign:'center', color:'#9ca3af', marginTop:'100px'}}>
-                                    Escribe una expresión o carga un archivo generado anteriormente por el programa
+                                    Escribe una expresión o carga un archivo .ent para editarlo
                                 </p>
                             )}
                         </div>
@@ -2386,11 +2412,10 @@
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">🏷</span> Etiquetas</h4>
+                                    <h4><span className="icon">☖</span> Etiquetas</h4>
                                     <ul>
                                         <li>En la etiqueta <strong>superior</strong> indica la función (N, DET, SUJ, CD, CI, etc.).</li>
                                         <li>En la etiqueta <strong>inferior</strong> indica la categoría de la palabra (v, sust, etc.) o la frase (FN, FV, etc.).</li>
-                                        <li>Haz <strong>doble clic</strong> sobre un constituyente para marcarlo en negrita.</li>
                                     </ul>
                                 </div>
 
@@ -2401,6 +2426,7 @@
                                         <li><code>**texto**</code> para <strong>negritas</strong></li>
                                         <li><code>_texto_</code> para <sub>subíndice</sub></li>
                                         <li><code>¨texto¨</code> para <sup>superíndice</sup></li>
+                                        <li>Haz <strong>doble clic</strong> sobre un constituyente para marcar su nodo central en negrita.</li>
                                     </ul>
                                 </div>
 
@@ -2423,11 +2449,21 @@
 
                                 <div className="instruction-card">
                                     <h4><span className="icon">⌨</span> Atajos de teclado</h4>
-                                    <ul>
-                                        <li><code>Ctrl+Z</code> / <code>⌘Z</code> — Deshacer</li>
-                                        <li><code>Ctrl+Shift+Z</code> / <code>⌘⇧Z</code> — Rehacer</li>
-                                        <li><code>Ctrl+S</code> / <code>⌘S</code> — Guardar archivo</li>
-                                    </ul>
+                                            <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '40px', marginTop: '8px' }}>
+                                            <ul className="shortcut-list">
+                                                <li style={{ marginBottom: '10px', opacity: 0.7, fontSize: '11px', fontWeight: 'bold', color: '#6b7280' }}>WINDOWS / LINUX</li>
+                                                <li><span className="key">Ctrl</span>+<span className="key">Z</span> Deshacer</li>
+                                                <li><span className="key">Ctrl</span>+<span className="key">Y</span> Rehacer</li>
+                                                <li><span className="key">Ctrl</span>+<span className="key">S</span> Guardar</li>
+                                            </ul>
+
+                                            <ul className="shortcut-list">
+                                                <li style={{ marginBottom: '10px', opacity: 0.7, fontSize: '11px', fontWeight: 'bold', color: '#6b7280' }}>macOS</li>
+                                                <li><span className="key">⌘</span>+<span className="key">Z</span> Deshacer</li>
+                                                <li><span className="key">⌘</span>+<span className="key">⇧</span>+<span className="key">Z</span> Rehacer</li>
+                                                <li><span className="key">⌘</span>+<span className="key">S</span> Guardar</li>
+                                            </ul>
+                                        </div>
                                 </div>
 
                                 <div className="instruction-card">
@@ -2441,9 +2477,9 @@
 
                                 {!exerciseMode && (
                                 <div className="instruction-card">
-                                    <h4 style={{color: '#5b21b6'}}><span className="icon" style={{backgroundColor: '#5b21b6'}}>📝</span> Modo ejercitación</h4>
+                                    <h4 style={{color: '#5b21b6'}}><span className="icon" style={{backgroundColor: '#5b21b6'}}>✎</span> Modo ejercitación</h4>
                                     <ul>
-                                        <li>Carga un archivo con un diagrama.</li>
+                                        <li>Carga un archivo .ent con un diagrama.</li>
                                         <li>Haz tu análisis de la expresión propuesta.</li>
                                         <li>Compara tu resultado con el modelo.</li>
                                     </ul>
@@ -2452,7 +2488,7 @@
 
                                 {exerciseMode && (
                                 <div className="instruction-card">
-                                    <h4 style={{color: '#5b21b6'}}><span className="icon" style={{backgroundColor: '#5b21b6'}}>📝</span> Ejercicio activo</h4>
+                                    <h4 style={{color: '#5b21b6'}}><span className="icon" style={{backgroundColor: '#5b21b6'}}>✎</span> Ejercicio activo</h4>
                                     <ul>
                                         <li>Completa el análisis de la expresión.</li>
                                         <li>Usa <strong>Comparar</strong> para ver la solución.</li>
