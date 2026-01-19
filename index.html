@@ -167,6 +167,33 @@
             box-shadow: 0 3px 10px rgba(239, 68, 68, 0.25);
         }
 
+        .btn-new-analysis {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.35);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-new-analysis::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        .btn-new-analysis:hover {
+            background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+            box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5);
+            transform: translateY(-2px);
+        }
+        .btn-new-analysis:hover::before {
+            left: 100%;
+        }
+
         .btn-icon {
             padding: 10px 12px;
             min-width: 42px;
@@ -176,6 +203,14 @@
             cursor: not-allowed;
             transform: none !important;
             box-shadow: none !important;
+        }
+
+        .btn-separator {
+            width: 1px;
+            height: 24px;
+            background-color: #d1d5db;
+            margin: 0 4px;
+            align-self: center;
         }
 
         /* ===========================================
@@ -281,9 +316,13 @@
             cursor: pointer; 
         }
 
-        .nucleus-node > .label-input, 
-        .nucleus-node > .node-box, 
-        .nucleus-node > div > .label-input { font-weight: bold; }
+        .nucleus-node > .label-wrap .label-input,
+        .nucleus-node > .label-wrap .label-display,
+        .nucleus-node .node-box,
+        .nucleus-node > div > .label-wrap .label-input,
+        .nucleus-node > div > .label-wrap .label-display { 
+            font-weight: bold; 
+        }
 
         /* ===========================================
            ETIQUETAS (LABELS)
@@ -346,7 +385,7 @@
 
         .split-toggle-btn {
             position: absolute;
-            right: -14px;
+            right: -6px;
             top: 50%;
             transform: translateY(-50%);
             width: 16px;
@@ -430,6 +469,49 @@
             justify-content: center;
         }
         .node-box:hover .consolidate-btn { display: flex; }
+
+        .nucleus-toggle-btn {
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            color: #6b7280;
+            font-size: 11px;
+            font-weight: bold;
+            line-height: 16px;
+            padding: 0;
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            align-items: center;
+            justify-content: center;
+            display: flex;
+            transition: opacity 0.15s ease;
+        }
+        .node-box:hover .nucleus-toggle-btn { 
+            opacity: 1; 
+            pointer-events: auto; 
+        }
+        .nucleus-toggle-btn:hover {
+            color: #374151;
+            border-color: #93c5fd;
+            background: #f0f9ff;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .nucleus-toggle-btn.is-nucleus {
+            background: #374151;
+            color: white;
+            border-color: #374151;
+        }
+        .nucleus-toggle-btn.is-nucleus:hover {
+            background: #1f2937;
+        }
 
         /* ===========================================
            ACCIONES INFERIORES E INSTRUCCIONES
@@ -1538,6 +1620,11 @@
                     if (element.tagName === 'INPUT') {
                         return element.value.trim();
                     } else {
+                        // Para label-display, usar data-raw-value si existe para preservar marcadores de formato
+                        const rawValue = element.getAttribute('data-raw-value');
+                        if (rawValue !== null) {
+                            return rawValue.trim();
+                        }
                         return element.textContent.trim();
                     }
                 };
@@ -1548,7 +1635,8 @@
                     // Buscar tanto inputs como displays
                     const topElements = container.querySelectorAll(':scope > .label-wrap > .label-input.label-top, :scope > .label-wrap > .label-display.label-top');
                     const bottomElements = container.querySelectorAll(':scope > .label-wrap > .label-input:not(.label-top), :scope > .label-wrap > .label-display:not(.label-top)');
-                    const nodeBox = container.querySelector(':scope > .node-box');
+                    // El node-box puede estar anidado dentro de un div flex
+                    const nodeBox = container.querySelector('.node-box');
                     const hasChildren = container.querySelector(':scope > div > .children-container') !== null;
                     const isNucleus = container.classList.contains('nucleus-node');
                     const isRootNode = container.parentElement && container.parentElement.classList.contains('tree-wrapper');
@@ -1563,7 +1651,19 @@
                     const labelWraps = container.querySelectorAll(':scope > .label-wrap');
 
                     if (isTechnical && hasChildren) {
+                        // Guardar el texto del nodo para mostrarlo (excluyendo botones)
+                        let nodeText = '';
+                        if (nodeBox) {
+                            // Obtener solo los nodos de texto directos, excluyendo botones
+                            Array.from(nodeBox.childNodes).forEach(child => {
+                                if (child.nodeType === Node.TEXT_NODE) {
+                                    nodeText += child.textContent;
+                                }
+                            });
+                            nodeText = nodeText.trim();
+                        }
                         if (nodeBox) nodeBox.style.display = 'none';
+                        
                         let combinedText = '';
                         if (topVal && botVal) combinedText = `${topVal} • ${botVal}`;
                         else if (topVal) combinedText = `${topVal}`;
@@ -1571,13 +1671,23 @@
                         
                         const mergedSpan = document.createElement('span');
                         mergedSpan.className = 'exp-merged';
-                        mergedSpan.style.cssText = `display: inline-block; text-align: center; font-size: 16px; color: #111827; font-weight: ${isNucleus ? 'bold' : 'normal'}; padding: 4px; text-transform: uppercase;`;
+                        mergedSpan.style.cssText = `display: block; text-align: center; font-size: 16px; color: #111827; font-weight: ${isNucleus ? 'bold' : 'normal'}; padding: 4px; text-transform: uppercase;`;
                         applyFormatToSpan(mergedSpan, combinedText.toUpperCase());
+                        
+                        // Crear span para el texto de la expresión (punto de origen de las líneas)
+                        const textSpan = document.createElement('span');
+                        textSpan.className = 'exp-text-node';
+                        textSpan.style.cssText = `display: block; text-align: center; font-size: 16px; color: #111827; font-weight: ${isNucleus ? 'bold' : 'normal'}; padding: 4px; margin-top: 2px;`;
+                        textSpan.textContent = nodeText;
                         
                         labelWraps.forEach(lw => lw.style.display = 'none');
 
-                        inputData.push({ type: 'merged', labelWraps, box: nodeBox, span: mergedSpan, parent: container, slashSeparators });
+                        inputData.push({ type: 'merged', labelWraps, box: nodeBox, span: mergedSpan, textSpan: textSpan, parent: container, slashSeparators });
+                        
+                        // Insertar mergedSpan al principio del container
                         container.insertBefore(mergedSpan, container.firstChild);
+                        // Insertar textSpan justo después de mergedSpan (como hijo directo del container)
+                        container.insertBefore(textSpan, mergedSpan.nextSibling);
                     } else {
                         const processLabels = (elements, isTop, combinedVal, labelWrap) => {
                             const span = document.createElement('span');
@@ -1674,7 +1784,7 @@
                         if (merged) return merged;
                         const expTop = container.querySelector(':scope > .exp-top');
                         if (expTop && expTop.style.display !== 'none') return expTop;
-                        const nodeBox = container.querySelector(':scope > .node-box');
+                        const nodeBox = container.querySelector('.node-box'); // Sin :scope > porque puede estar anidado
                         if (nodeBox && nodeBox.style.display !== 'none') return nodeBox;
                         const expBottom = container.querySelector(':scope > .exp-bottom');
                         if (expBottom && expBottom.style.display !== 'none') return expBottom;
@@ -1683,10 +1793,18 @@
                     
                     treeWrapper.querySelectorAll('.node-container').forEach(cont => {
                         const pLabel = cont.querySelector(':scope > .exp-merged');
+                        const textNode = cont.querySelector(':scope > .exp-text-node');
+                        const nodeBox = cont.querySelector('.node-box'); // Sin :scope > porque puede estar anidado
                         const branches = cont.querySelector(':scope > div > .children-container');
                         
                         if (pLabel && branches) {
-                            const pPos = getPos(pLabel);
+                            // Usar exp-text-node (texto de la expresión) como punto de origen de las líneas
+                            // Prioridad: exp-text-node > exp-merged (ya que nodeBox está oculto en modo técnico)
+                            let connectionSource = pLabel;
+                            if (textNode && textNode.textContent.trim()) {
+                                connectionSource = textNode;
+                            }
+                            const pPos = getPos(connectionSource);
                             Array.from(branches.children).forEach(branch => {
                                 const childContainer = branch.querySelector(':scope > .node-container');
                                 if (childContainer) {
@@ -1738,6 +1856,7 @@
                         delete d.connector.dataset.originalHeight;
                     } else if (d.type === 'merged') {
                         d.span.remove();
+                        if (d.textSpan) d.textSpan.remove();
                         d.labelWraps.forEach(lw => lw.style.display = '');
                         if (d.box) d.box.style.display = '';
                         d.slashSeparators.forEach(s => s.style.display = '');
@@ -1891,6 +2010,7 @@
                                     className={displayClass}
                                     style={{ width: '80px', minWidth: '80px' }}
                                     onClick={startEditing}
+                                    data-raw-value={parts[0]?.trim() || ''}
                                 >
                                     {parts[0]?.trim() ? formatLabelText(parts[0].trim()) : <span style={{color: '#9ca3af'}}>{isTop ? 'func.' : 'cat.'}</span>}
                                 </span>
@@ -1899,6 +2019,7 @@
                                     className={displayClass}
                                     style={{ width: '80px', minWidth: '80px' }}
                                     onClick={startEditing}
+                                    data-raw-value={parts.slice(1).join('/').trim() || ''}
                                 >
                                     {parts.slice(1).join('/').trim() ? formatLabelText(parts.slice(1).join('/').trim()) : <span style={{color: '#9ca3af'}}>{isTop ? 'func.' : 'cat.'}</span>}
                                 </span>
@@ -1908,6 +2029,7 @@
                                 className={displayClass}
                                 style={{ width: '95px', minWidth: '95px' }}
                                 onClick={startEditing}
+                                data-raw-value={value || ''}
                             >
                                 {hasValue ? formatLabelText(value) : <span style={{color: '#9ca3af'}}>{isTop ? 'func.' : 'cat.'}</span>}
                             </span>
@@ -1935,15 +2057,13 @@
                 const words = node.text ? node.text.split(/\s+/) : [];
                 const canDivide = words.length > 1 && !node.isInserted && !node.isConsolidated;
                 const canConsolidate = words.length > 1 && !node.isInserted && !hasC;
+                // Mostrar botón de negritas en nodos terminales (sin hijos)
+                const isTerminal = !hasC;
 
                 return (
                     <div
                         className={`node-container ${node.isNucleus ? 'nucleus-node' : ''}`}
                         key={node.id}
-                        onDoubleClick={(e) => { 
-                            e.stopPropagation(); 
-                            setTree(prev => updateNode(prev, node.id, { isNucleus: !node.isNucleus })); 
-                        }}
                     >
                         {renderLabelInput(node, 'labelTop', true)}
                         
@@ -2004,6 +2124,18 @@
                                                     onClick={(e) => { e.stopPropagation(); setTree(prev => updateNode(prev, node.id, { text: '' })); }}
                                                 >
                                                     ✕
+                                                </button>
+                                            )}
+                                            {isTerminal && (
+                                                <button
+                                                    className={`nucleus-toggle-btn ${node.isNucleus ? 'is-nucleus' : ''}`}
+                                                    title={node.isNucleus ? "Quitar negritas (núcleo)" : "Marcar como núcleo (negritas)"}
+                                                    onClick={(e) => { 
+                                                        e.stopPropagation(); 
+                                                        setTree(prev => updateNode(prev, node.id, { isNucleus: !node.isNucleus })); 
+                                                    }}
+                                                >
+                                                    N
                                                 </button>
                                             )}
                                         </div>
@@ -2346,9 +2478,11 @@
                                     >
                                         ↷
                                     </button>
+                                    <span className="btn-separator"></span>
                                     <button onClick={() => fileInputRef.current.click()} className="btn btn-outline">Cargar .ent</button>
                                     <input type="file" ref={fileInputRef} style={{display:'none'}} accept=".ent,.json" onChange={handleLoadJSON} />
                                     <button onClick={handleSaveJSON} className="btn btn-outline" disabled={!tree} title="Guardar (Ctrl+S)">Guardar .ent</button>
+                                    <span className="btn-separator"></span>
                                     <button onClick={() => setExerciseMode(true)} className="btn btn-exercise">📚 Modo ejercitación</button>
                                 </>
                             ) : (
@@ -2383,7 +2517,7 @@
                                 </>
                             ) : (
                                 <>
-                                    <button onClick={() => { setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); }} className="btn btn-outline">Nuevo análisis</button>
+                                    <button onClick={() => { setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); }} className="btn btn-new-analysis">✦ Nuevo análisis</button>
                                     <button onClick={() => handleExport(false)} className="btn btn-primary">Exportar diagrama</button>
                                     <button onClick={() => handleExport(true)} className="btn btn-primary">Exportar diagrama arbóreo</button>
                                 </>
@@ -2426,7 +2560,7 @@
                                         <li><code>**texto**</code> para <strong>negritas</strong></li>
                                         <li><code>_texto_</code> para <sub>subíndice</sub></li>
                                         <li><code>¨texto¨</code> para <sup>superíndice</sup></li>
-                                        <li>Haz <strong>doble clic</strong> sobre un constituyente para marcar su nodo central en negrita.</li>
+                                        <li>Pasa el cursor por un nodo terminal y pulsa <code>N</code> para marcarlo como <strong>núcleo</strong> (negritas).</li>
                                     </ul>
                                 </div>
 
@@ -2472,6 +2606,15 @@
                                         <li>Pasa el cursor por un nodo celeste y pulsa <code>∪</code> para consolidarlo.</li>
                                         <li>Útil para perífrasis verbales o locuciones que no deben dividirse.</li>
                                         <li>Pulsa <code>÷</code> para volver a permitir la división.</li>
+                                    </ul>
+                                </div>
+
+                                <div className="instruction-card">
+                                    <h4><span className="icon">◰</span> Guardar y cargar</h4>
+                                    <ul>
+                                        <li>Usa <strong>Guardar</strong> o <span className="key">Ctrl</span>/<span className="key">⌘</span>+<span className="key">S</span> para descargar un archivo <code>.ent</code> con tu análisis.</li>
+                                        <li>Usa <strong>Cargar</strong> para abrir un archivo <code>.ent</code> guardado previamente.</li>
+                                        <li>Los archivos <code>.ent</code> conservan toda la estructura y etiquetas del análisis.</li>
                                     </ul>
                                 </div>
 
