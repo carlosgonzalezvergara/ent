@@ -493,6 +493,23 @@
             display: flex;
             transition: opacity 0.15s ease;
         }
+
+        .node-box-row{
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .node-revert-btn{
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translate(8px, calc(-50% + 1px));
+            z-index: 50;
+            pointer-events: auto;
+        }
+
         .node-box:hover .nucleus-toggle-btn { 
             opacity: 1; 
             pointer-events: auto; 
@@ -991,6 +1008,54 @@
     <script type="text/babel">
         const { useState, useRef, useEffect, useCallback } = React;
 
+        // ===========================================
+        // FORMATO DE TEXTO EN ETIQUETAS (HELPERS GLOBALES)
+        // ===========================================
+        /*
+         * Formato de etiquetas: un único "parser" para React (pantalla) y DOM (exportación).
+         * Se define fuera del componente para evitar recreación en cada render.
+         * Mantiene el mismo orden de precedencia y el mismo algoritmo de "match más temprano".
+         */
+
+        const LABEL_FORMAT_PATTERNS = [
+            { regex: /\*\*([^*]+)\*\*/, reactStyle: { fontWeight: 'bold' }, tag: 'strong', cssText: '' },
+            { regex: /\*([^*]+)\*/, reactStyle: { fontStyle: 'italic' }, tag: 'em', cssText: '' },
+            { regex: /_([^_]+)_/, reactStyle: { fontSize: '0.75em', verticalAlign: 'sub' }, tag: 'sub', cssText: 'font-size: 0.75em;' },
+            { regex: /¨([^¨]+)¨/, reactStyle: { fontSize: '0.75em', verticalAlign: 'super' }, tag: 'sup', cssText: 'font-size: 0.75em;' }
+        ];
+
+        const walkFormattedLabel = (text, handlers) => {
+            let remaining = text;
+
+            while (remaining.length > 0) {
+                let earliestMatch = null;
+                let earliestIndex = remaining.length;
+                let matchedPattern = null;
+
+                for (const pattern of LABEL_FORMAT_PATTERNS) {
+                    const match = remaining.match(pattern.regex);
+                    if (match && match.index < earliestIndex) {
+                        earliestMatch = match;
+                        earliestIndex = match.index;
+                        matchedPattern = pattern;
+                    }
+                }
+
+                if (earliestMatch && matchedPattern) {
+                    if (earliestIndex > 0) {
+                        handlers.onText(remaining.substring(0, earliestIndex));
+                    }
+                    handlers.onMatch(matchedPattern, earliestMatch[1]);
+                    remaining = remaining.substring(earliestIndex + earliestMatch[0].length);
+                } else {
+                    handlers.onText(remaining);
+                    break;
+                }
+            }
+        };
+
+
+
         const SyntaxTreeBuilder = () => {
             // ===========================================
             // ESTADO
@@ -1011,6 +1076,8 @@
             const [history, setHistory] = useState([]);
             const [historyIndex, setHistoryIndex] = useState(-1);
             const isUndoRedo = useRef(false);
+            // Cache de estados parseados para Undo/Redo (evita JSON.parse repetidos)
+            const parsedHistoryCache = useRef(new Map());
 
             // Panel de instrucciones
             const [instructionsCollapsed, setInstructionsCollapsed] = useState(true);
@@ -1018,6 +1085,8 @@
             // Referencias
             const fileInputRef = useRef(null);
             const exerciseInputRef = useRef(null);
+            const treeWrapperRef = useRef(null);
+            const treeContainerRef = useRef(null);
 
             // ===========================================
             // UTILIDADES
@@ -1189,40 +1258,62 @@
                         break;
                     }
                 }
-            };
-
-            // ===========================================
+            };            // ===========================================
             // HISTORIAL UNDO/REDO
             // ===========================================
             useEffect(() => {
                 if (tree && !isUndoRedo.current) {
+                    const serialized = JSON.stringify(tree);
+                    // Cachea el estado parseado para evitar JSON.parse repetidos en undo/redo
+                    parsedHistoryCache.current.set(serialized, tree);
+
                     setHistory(prev => {
                         const newHistory = prev.slice(0, historyIndex + 1);
-                        newHistory.push(JSON.stringify(tree));
+                        newHistory.push(serialized);
                         if (newHistory.length > 50) newHistory.shift();
                         return newHistory;
                     });
                     setHistoryIndex(prev => Math.min(prev + 1, 49));
                 }
                 isUndoRedo.current = false;
-            }, [tree]);
+            }, [tree, historyIndex]);
+
+            // Mantener el cache acotado a lo que siga presente en el historial
+            useEffect(() => {
+                const keep = new Set(history);
+                const cache = parsedHistoryCache.current;
+                for (const k of Array.from(cache.keys())) {
+                    if (!keep.has(k)) cache.delete(k);
+                }
+            }, [history]);
 
             const canUndo = historyIndex > 0;
             const canRedo = historyIndex < history.length - 1;
 
+            const getParsedHistory = (serialized) => {
+                const cache = parsedHistoryCache.current;
+                const cached = cache.get(serialized);
+                if (cached) return cached;
+                const parsed = JSON.parse(serialized);
+                cache.set(serialized, parsed);
+                return parsed;
+            };
+
             const handleUndo = useCallback(() => {
                 if (canUndo) {
                     isUndoRedo.current = true;
+                    const serialized = history[historyIndex - 1];
                     setHistoryIndex(prev => prev - 1);
-                    setTree(JSON.parse(history[historyIndex - 1]));
+                    setTree(getParsedHistory(serialized));
                 }
             }, [canUndo, history, historyIndex]);
 
             const handleRedo = useCallback(() => {
                 if (canRedo) {
                     isUndoRedo.current = true;
+                    const serialized = history[historyIndex + 1];
                     setHistoryIndex(prev => prev + 1);
-                    setTree(JSON.parse(history[historyIndex + 1]));
+                    setTree(getParsedHistory(serialized));
                 }
             }, [canRedo, history, historyIndex]);
 
@@ -1233,10 +1324,13 @@
                 if (!tree) return;
                 const blob = new Blob([JSON.stringify({ sentence, tree }, null, 2)], { type: 'application/json' });
                 const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
+                const url = URL.createObjectURL(blob);
+                a.href = url;
                 const words = sentence.trim().split(/\s+/).slice(0, 5).join('_');
                 a.download = `${words}.ent`;
                 a.click();
+                // Evita acumulación de ObjectURLs en sesiones largas
+                setTimeout(() => URL.revokeObjectURL(url), 0);
             }, [tree, sentence]);
 
             // ===========================================
@@ -1269,6 +1363,21 @@
             // ===========================================
             // ACCIONES PRINCIPALES
             // ===========================================
+            // Helpers de historial (mantienen el comportamiento actual)
+            const resetHistoryWithTree = (treeSnapshot) => {
+                const serialized = JSON.stringify(treeSnapshot);
+                parsedHistoryCache.current.clear();
+                parsedHistoryCache.current.set(serialized, treeSnapshot);
+                setHistory([serialized]);
+                setHistoryIndex(0);
+            };
+
+            const clearHistory = () => {
+                parsedHistoryCache.current.clear();
+                setHistory([]);
+                setHistoryIndex(-1);
+            };
+
             const startAnalysis = () => {
                 if (sentence.trim()) {
                     const newTree = createEmptyTree(sentence);
@@ -1279,8 +1388,7 @@
                     setModelTree(null);
                     setShowComparison(false);
                     // Reiniciar historial
-                    setHistory([JSON.stringify(newTree)]);
-                    setHistoryIndex(0);
+                    resetHistoryWithTree(newTree);
                 }
             };
 
@@ -1290,7 +1398,10 @@
                 const segments = [];
                 let start = 0;
                 
-                [...selectedCuts, words.length - 1].forEach(cut => {
+                // Asegurar que los cortes estén ordenados numéricamente
+                const sortedCuts = [...selectedCuts].sort((a, b) => a - b);
+                
+                [...sortedCuts, words.length - 1].forEach(cut => {
                     segments.push(words.slice(start, cut + 1).join(' '));
                     start = cut + 1;
                 });
@@ -1373,8 +1484,7 @@
                         setModelTree(null);
                         setShowComparison(false);
                         // Reiniciar historial con el árbol cargado
-                        setHistory([JSON.stringify(imported.tree)]);
-                        setHistoryIndex(0);
+                        resetHistoryWithTree(imported.tree);
                     } catch (error) {
                         alert('Error al leer el archivo.\n\nEl archivo no tiene un formato válido (.ent o .json) o está corrupto.\n\nDetalle: ' + error.message);
                     }
@@ -1408,8 +1518,7 @@
                         setShowComparison(false);
                         setComparisonResults(null);
                         // Reiniciar historial
-                        setHistory([JSON.stringify(newTree)]);
-                        setHistoryIndex(0);
+                        resetHistoryWithTree(newTree);
                     } catch (error) {
                         alert('Error al leer el archivo de ejercicio.\n\nEl archivo no es válido o está corrupto.\n\nDetalle: ' + error.message);
                     }
@@ -1447,6 +1556,14 @@
                 const normalizeText = (text) => (text || '').trim().toLowerCase();
                 const normalizeLabel = (label) => (label || '').trim().toLowerCase().replace(/\s+/g, '');
 
+                const countStudentSubtree = (n) => {
+                    if (!n) return 0;
+                    const kids = (n.children || []).filter(Boolean);
+                    let total = 1;
+                    for (const k of kids) total += countStudentSubtree(k);
+                    return total;
+                };
+
                 const compareNodes = (student, model, path = 'root') => {
                     if (!model) return;
                     
@@ -1462,8 +1579,8 @@
                         modelNode: model
                     };
 
-                    const modelChildren = model.children || [];
-                    const studentChildren = student?.children || [];
+                    const modelChildren = (model.children || []).filter(Boolean);
+                    const studentChildren = (student?.children || []).filter(Boolean);
 
                     if (!student || studentChildren.length !== modelChildren.length) {
                         comparison.structureMatch = false;
@@ -1496,39 +1613,38 @@
                     }
 
                     results.nodeComparisons.set(path, comparison);
+                    // Emparejar hijos por índice (orden lineal).
+                    // Esto evita desalineaciones y ramas "colgando" cuando hay repeticiones (p.ej. ∅)
+                    // o cuando el matching por texto no encuentra una correspondencia estable.
+                    for (let i = 0; i < modelChildren.length; i++) {
+                        compareNodes(studentChildren[i] || null, modelChildren[i], `${path}-${i}`);
+                    }
 
-                    if (modelChildren.length > 0 && studentChildren.length > 0) {
-                        const pairedChildren = [];
-                        const usedStudentIndices = new Set();
+                    
 
-                        modelChildren.forEach((modelChild, mi) => {
-                            let bestMatch = -1;
-                            let bestScore = -1;
+                    // Si el estudiante tiene hijos extra (más que el modelo), contarlos como error estructural
+                    // y marcarlos explícitamente para que el recuento y la visualización sean consistentes.
+                    if (studentChildren.length > modelChildren.length) {
+                        for (let j = modelChildren.length; j < studentChildren.length; j++) {
+                            const extraNode = studentChildren[j];
+                            const extraPath = `${path}-extra-${j - modelChildren.length}`;
+                            const subtreeCount = countStudentSubtree(extraNode);
 
-                            studentChildren.forEach((studentChild, si) => {
-                                if (usedStudentIndices.has(si)) return;
-                                const score = normalizeText(studentChild.text) === normalizeText(modelChild.text) ? 1 : 0;
-                                if (score > bestScore) {
-                                    bestScore = score;
-                                    bestMatch = si;
-                                }
+                            results.totalNodes += subtreeCount;
+                            results.incorrectStructure += subtreeCount;
+
+                            // Guardamos al menos el nodo raíz extra para que quede trazable en el mapa
+                            // (la UI ya lo pinta de rojo por forceIncorrect).
+                            results.nodeComparisons.set(extraPath, {
+                                path: extraPath,
+                                textMatch: false,
+                                labelTopMatch: false,
+                                labelBottomMatch: false,
+                                structureMatch: false,
+                                studentNode: extraNode,
+                                modelNode: null
                             });
-
-                            if (bestMatch >= 0) {
-                                usedStudentIndices.add(bestMatch);
-                                pairedChildren.push({ student: studentChildren[bestMatch], model: modelChild, index: mi });
-                            } else {
-                                pairedChildren.push({ student: null, model: modelChild, index: mi });
-                            }
-                        });
-
-                        pairedChildren.forEach(pair => {
-                            compareNodes(pair.student, pair.model, `${path}-${pair.index}`);
-                        });
-                    } else if (modelChildren.length > 0) {
-                        modelChildren.forEach((modelChild, mi) => {
-                            compareNodes(null, modelChild, `${path}-${mi}`);
-                        });
+                        }
                     }
                 };
 
@@ -1557,8 +1673,7 @@
                 setTree(null);
                 setSentence('');
                 // Reiniciar historial
-                setHistory([]);
-                setHistoryIndex(-1);
+                clearHistory();
             };
 
             const newExercise = () => {
@@ -1571,18 +1686,17 @@
                 setDivisionMode(null);
                 setSelectedCuts([]);
                 // Reiniciar historial
-                setHistory([]);
-                setHistoryIndex(-1);
+                clearHistory();
             };
 
             // ===========================================
             // EXPORTACIÓN
             // ===========================================
             const handleExport = async (isTechnical = false) => {
-                const treeWrapper = document.querySelector('.tree-wrapper');
+                const treeWrapper = treeWrapperRef.current || document.querySelector('.tree-wrapper');
                 if (!treeWrapper) return;
 
-                const treeContainer = document.querySelector('.tree-container');
+                const treeContainer = treeContainerRef.current || document.querySelector('.tree-container');
                 const originalOverflow = treeContainer.style.overflow;
                 const originalWidth = treeContainer.style.width;
                 const originalMaxWidth = treeContainer.style.maxWidth;
@@ -1629,14 +1743,31 @@
                     }
                 };
 
+                // Función auxiliar para encontrar el node-box directo de un node-container (solo hijos directos)
+                const findDirectNodeBox = (container) => {
+                    const directChildren = container.children;
+                    for (let child of directChildren) {
+                        if (child.tagName === 'DIV' &&
+                            !child.classList.contains('connector-v') &&
+                            !child.classList.contains('label-wrap') &&
+                            !child.querySelector(':scope > .children-container')) {
+                            const box = child.querySelector(':scope > .node-box');
+                            if (box) return box;
+                        }
+                    }
+                    return null;
+                };
+
                 const nodeContainers = treeWrapper.querySelectorAll('.node-container');
                 
                 nodeContainers.forEach(container => {
                     // Buscar tanto inputs como displays
                     const topElements = container.querySelectorAll(':scope > .label-wrap > .label-input.label-top, :scope > .label-wrap > .label-display.label-top');
                     const bottomElements = container.querySelectorAll(':scope > .label-wrap > .label-input:not(.label-top), :scope > .label-wrap > .label-display:not(.label-top)');
-                    // El node-box puede estar anidado dentro de un div flex
-                    const nodeBox = container.querySelector('.node-box');
+                    // El node-box está dentro de un div flex que es hijo directo del container
+                    // IMPORTANTE: Solo buscar en los hijos directos, NO en descendientes
+                    const nodeBox = findDirectNodeBox(container);
+                    
                     const hasChildren = container.querySelector(':scope > div > .children-container') !== null;
                     const isNucleus = container.classList.contains('nucleus-node');
                     const isRootNode = container.parentElement && container.parentElement.classList.contains('tree-wrapper');
@@ -1651,17 +1782,8 @@
                     const labelWraps = container.querySelectorAll(':scope > .label-wrap');
 
                     if (isTechnical && hasChildren) {
-                        // Guardar el texto del nodo para mostrarlo (excluyendo botones)
-                        let nodeText = '';
-                        if (nodeBox) {
-                            // Obtener solo los nodos de texto directos, excluyendo botones
-                            Array.from(nodeBox.childNodes).forEach(child => {
-                                if (child.nodeType === Node.TEXT_NODE) {
-                                    nodeText += child.textContent;
-                                }
-                            });
-                            nodeText = nodeText.trim();
-                        }
+                        // En modo técnico con hijos, NO extraemos ni mostramos el texto del nodo
+                        // para evitar redundancia y desalineación en el diagrama arbóreo.
                         if (nodeBox) nodeBox.style.display = 'none';
                         
                         let combinedText = '';
@@ -1674,27 +1796,21 @@
                         mergedSpan.style.cssText = `display: block; text-align: center; font-size: 16px; color: #111827; font-weight: ${isNucleus ? 'bold' : 'normal'}; padding: 4px; text-transform: uppercase;`;
                         applyFormatToSpan(mergedSpan, combinedText.toUpperCase());
                         
-                        // Crear span para el texto de la expresión (punto de origen de las líneas)
-                        const textSpan = document.createElement('span');
-                        textSpan.className = 'exp-text-node';
-                        textSpan.style.cssText = `display: block; text-align: center; font-size: 16px; color: #111827; font-weight: ${isNucleus ? 'bold' : 'normal'}; padding: 4px; margin-top: 2px;`;
-                        textSpan.textContent = nodeText;
-                        
                         labelWraps.forEach(lw => lw.style.display = 'none');
 
-                        inputData.push({ type: 'merged', labelWraps, box: nodeBox, span: mergedSpan, textSpan: textSpan, parent: container, slashSeparators });
+                        inputData.push({ type: 'merged', labelWraps, box: nodeBox, span: mergedSpan, textSpan: null, parent: container, slashSeparators });
                         
                         // Insertar mergedSpan al principio del container
                         container.insertBefore(mergedSpan, container.firstChild);
-                        // Insertar textSpan justo después de mergedSpan (como hijo directo del container)
-                        container.insertBefore(textSpan, mergedSpan.nextSibling);
                     } else {
+                        const directConnectors = container.querySelectorAll(':scope > .connector-v');
+
                         const processLabels = (elements, isTop, combinedVal, labelWrap) => {
                             const span = document.createElement('span');
                             
                             if (!combinedVal) {
                                 span.style.display = 'none';
-                                const allConnectors = container.querySelectorAll(':scope > .connector-v');
+                                const allConnectors = directConnectors;
 
                                 if (isTop) {
                                     if (allConnectors.length >= 1) {
@@ -1722,7 +1838,7 @@
                                 span.className = isTop ? 'exp-top' : 'exp-bottom';
                                 const textColor = isTechnical ? '#6b7280' : '#334155';
                                 const transform = isTop ? 'uppercase' : 'none';
-                                let marginStyle = isTechnical ? (isTop ? 'margin-bottom: -8px;' : 'margin-top: -8px;') : '';
+                                let marginStyle = isTechnical ? (isTop ? 'margin-bottom: 2px;' : 'margin-top: 2px;') : '';
                                 const borderStyle = isTechnical ? 'none' : '1px solid #cbd5e1';
                                 const bgStyle = isTechnical ? 'transparent' : '#f1f5f9';
 
@@ -1778,28 +1894,27 @@
                         const r = el.getBoundingClientRect();
                         return { x: r.left + r.width / 2 - rect.left, top: r.top - rect.top, bottom: r.bottom - rect.top };
                     };
-                    
+
                     const getTopConnectionPoint = (container) => {
                         const merged = container.querySelector(':scope > .exp-merged');
                         if (merged) return merged;
                         const expTop = container.querySelector(':scope > .exp-top');
                         if (expTop && expTop.style.display !== 'none') return expTop;
-                        const nodeBox = container.querySelector('.node-box'); // Sin :scope > porque puede estar anidado
+                        const nodeBox = findDirectNodeBox(container);
                         if (nodeBox && nodeBox.style.display !== 'none') return nodeBox;
                         const expBottom = container.querySelector(':scope > .exp-bottom');
                         if (expBottom && expBottom.style.display !== 'none') return expBottom;
                         return null;
                     };
                     
-                    treeWrapper.querySelectorAll('.node-container').forEach(cont => {
+                    nodeContainers.forEach(cont => {
                         const pLabel = cont.querySelector(':scope > .exp-merged');
                         const textNode = cont.querySelector(':scope > .exp-text-node');
-                        const nodeBox = cont.querySelector('.node-box'); // Sin :scope > porque puede estar anidado
+                        const nodeBox = findDirectNodeBox(cont);
                         const branches = cont.querySelector(':scope > div > .children-container');
                         
                         if (pLabel && branches) {
-                            // Usar exp-text-node (texto de la expresión) como punto de origen de las líneas
-                            // Prioridad: exp-text-node > exp-merged (ya que nodeBox está oculto en modo técnico)
+                            // Usar exp-merged (ya que nodeBox y textSpan están ocultos/nulos en modo técnico para padres)
                             let connectionSource = pLabel;
                             if (textNode && textNode.textContent.trim()) {
                                 connectionSource = textNode;
@@ -2050,6 +2165,24 @@
             // ===========================================
             // RENDERIZADO DE NODOS
             // ===========================================
+            // Estructura visual común del nodo (vista normal y comparación)
+            const NodeScaffold = ({ nodeClass, nodeKey, topLabel, isEmpty, middle, bottomLabel, childrenBlock }) => (
+                <div className={nodeClass} key={nodeKey}>
+                    {topLabel}
+                    {isEmpty ? (
+                        <div className="connector-v" style={{ height: '36px' }} />
+                    ) : (
+                        <>
+                            <div className="connector-v" style={{ height: '12px' }} />
+                            {middle}
+                            <div className="connector-v" style={{ height: '12px' }} />
+                        </>
+                    )}
+                    {bottomLabel}
+                    {childrenBlock}
+                </div>
+            );
+
             const renderNode = (node) => {
                 const isDiv = divisionMode === node.id;
                 const hasC = node.children && node.children.length > 0;
@@ -2060,116 +2193,113 @@
                 // Mostrar botón de negritas en nodos terminales (sin hijos)
                 const isTerminal = !hasC;
 
-                return (
-                    <div
-                        className={`node-container ${node.isNucleus ? 'nucleus-node' : ''}`}
-                        key={node.id}
-                    >
-                        {renderLabelInput(node, 'labelTop', true)}
-                        
-                        {isEmpty ? (
-                            <div className="connector-v" style={{ height: '36px' }} />
-                        ) : (
-                            <>
-                                <div className="connector-v" style={{ height: '12px' }} />
-                                
-                                {isDiv ? (
-                                    <div style={{background:'#f8fafc', padding:'15px', border:'1px solid #374151', borderRadius:'4px'}}>
-                                        <div style={{display:'flex', gap:'4px', marginBottom:'10px'}}>
-                                            {words.map((w, i) => (
-                                                <React.Fragment key={i}>
-                                                    <span style={{padding:'6px 10px', background:'white', border:'1px solid #cbd5e1'}}>{w}</span>
-                                                    {i < words.length - 1 && (
-                                                        <button
-                                                            onClick={() => setSelectedCuts(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i].sort())}
-                                                            style={{width:'10px', background: selectedCuts.includes(i) ? '#374151' : '#e2e8f0', border:'none', cursor:'pointer'}}
-                                                        />
-                                                    )}
-                                                </React.Fragment>
-                                            ))}
-                                        </div>
-                                        <div style={{display:'flex', gap:'8px', justifyContent:'center'}}>
-                                            <button onClick={handleDivide} className="btn btn-primary" style={{padding:'5px 12px'}}>Dividir</button>
-                                            <button onClick={() => setDivisionMode(null)} className="btn btn-outline" style={{padding:'5px 12px'}}>Cancelar</button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
-                                        <div
-                                            className={`node-box ${canDivide ? 'can-divide' : ''}`}
-                                            onClick={() => !hasC && canDivide && setDivisionMode(node.id)}
-                                        >
-                                            {node.text}
-                                            {canConsolidate && (
-                                                <button
-                                                    className="consolidate-btn"
-                                                    title={node.isConsolidated ? "Permitir división" : "Consolidar (no dividir)"}
-                                                    onClick={(e) => { e.stopPropagation(); toggleConsolidated(node.id); }}
-                                                >
-                                                    {node.isConsolidated ? '÷' : '∪'}
-                                                </button>
-                                            )}
-                                            {canDivide && hasC && (
-                                                <button
-                                                    className="add-node-btn"
-                                                    title="Agregar nodo hijo"
-                                                    onClick={(e) => { e.stopPropagation(); addChildNode(node.id); }}
-                                                >
-                                                    +
-                                                </button>
-                                            )}
-                                            {hasC && (
-                                                <button
-                                                    className="clear-text-btn"
-                                                    onClick={(e) => { e.stopPropagation(); setTree(prev => updateNode(prev, node.id, { text: '' })); }}
-                                                >
-                                                    ✕
-                                                </button>
-                                            )}
-                                            {isTerminal && (
-                                                <button
-                                                    className={`nucleus-toggle-btn ${node.isNucleus ? 'is-nucleus' : ''}`}
-                                                    title={node.isNucleus ? "Quitar negritas (núcleo)" : "Marcar como núcleo (negritas)"}
-                                                    onClick={(e) => { 
-                                                        e.stopPropagation(); 
-                                                        setTree(prev => updateNode(prev, node.id, { isNucleus: !node.isNucleus })); 
-                                                    }}
-                                                >
-                                                    N
-                                                </button>
-                                            )}
-                                        </div>
-                                        {hasC && (
-                                            <button 
-                                                onClick={() => setTree(prev => updateNode(prev, node.id, { children: null }))} 
-                                                className="btn btn-danger-soft"
-                                            >
-                                                ↩
-                                            </button>
-                                        )}
-                                    </div>
-                                )}
-                                
-                                <div className="connector-v" style={{ height: '12px' }} />
-                            </>
-                        )}
+                const nodeClass = `node-container ${node.isNucleus ? 'nucleus-node' : ''}`;
 
-                        {renderLabelInput(node, 'labelBottom', false)}
-                        
+                const middle = isDiv ? (
+                    <div style={{background:'#f8fafc', padding:'15px', border:'1px solid #374151', borderRadius:'4px'}}>
+                        <div style={{display:'flex', gap:'4px', marginBottom:'10px'}}>
+                            {words.map((w, i) => (
+                                <React.Fragment key={i}>
+                                    <span style={{padding:'6px 10px', background:'white', border:'1px solid #cbd5e1'}}>{w}</span>
+                                    {i < words.length - 1 && (
+                                        <button
+                                            onClick={() => setSelectedCuts(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i].sort((a, b) => a - b))}
+                                            style={{width:'10px', background: selectedCuts.includes(i) ? '#374151' : '#e2e8f0', border:'none', cursor:'pointer'}}
+                                        />
+                                    )}
+                                </React.Fragment>
+                            ))}
+                        </div>
+                        <div style={{display:'flex', gap:'8px', justifyContent:'center'}}>
+                            <button onClick={handleDivide} className="btn btn-primary" style={{padding:'5px 12px'}}>Dividir</button>
+                            <button onClick={() => setDivisionMode(null)} className="btn btn-outline" style={{padding:'5px 12px'}}>Cancelar</button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="node-box-row">
+                        <div
+                            className={`node-box ${canDivide ? 'can-divide' : ''}`}
+                            onClick={() => !hasC && canDivide && setDivisionMode(node.id)}
+                        >
+                            {node.text}
+                            {canConsolidate && (
+                                <button
+                                    className="consolidate-btn"
+                                    title={node.isConsolidated ? "Permitir división" : "Consolidar (no dividir)"}
+                                    onClick={(e) => { e.stopPropagation(); toggleConsolidated(node.id); }}
+                                >
+                                    {node.isConsolidated ? '÷' : '∪'}
+                                </button>
+                            )}
+                            {canDivide && hasC && (
+                                <button
+                                    className="add-node-btn"
+                                    title="Agregar nodo hijo"
+                                    onClick={(e) => { e.stopPropagation(); addChildNode(node.id); }}
+                                >
+                                    +
+                                </button>
+                            )}
+                            {hasC && (
+                                <button
+                                    className="clear-text-btn"
+                                    onClick={(e) => { e.stopPropagation(); setTree(prev => updateNode(prev, node.id, { text: '' })); }}
+                                >
+                                    ✕
+                                </button>
+                            )}
+                            {isTerminal && (
+                                <button
+                                    className={`nucleus-toggle-btn ${node.isNucleus ? 'is-nucleus' : ''}`}
+                                    title={node.isNucleus ? "Quitar negritas (núcleo)" : "Marcar como núcleo (negritas)"}
+                                    onClick={(e) => { 
+                                        e.stopPropagation(); 
+                                        setTree(prev => updateNode(prev, node.id, { isNucleus: !node.isNucleus })); 
+                                    }}
+                                >
+                                    N
+                                </button>
+                            )}
+                        </div>
                         {hasC && (
-                            <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
-                                <div className="connector-v" style={{height:'24px'}} />
-                                <div className="children-container">
-                                    {node.children.map((c) => (
-                                        <div className="child-branch" key={c.id}>
-                                            <div className="v-line-stem" />
-                                            {renderNode(c)}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            <button
+                                className="btn-danger-soft node-revert-btn"
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setTree(prev => updateNode(prev, node.id, { children: null }));
+                                }}
+                            >
+                                ↩
+                            </button>
                         )}
                     </div>
+                );
+
+                const childrenBlock = hasC ? (
+                    <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
+                        <div className="connector-v" style={{height:'24px'}} />
+                        <div className="children-container">
+                            {node.children.map((c) => (
+                                <div className="child-branch" key={c.id}>
+                                    <div className="v-line-stem" />
+                                    {renderNode(c)}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ) : null;
+
+                return (
+                    <NodeScaffold
+                        nodeClass={nodeClass}
+                        nodeKey={node.id}
+                        topLabel={renderLabelInput(node, 'labelTop', true)}
+                        isEmpty={isEmpty}
+                        middle={middle}
+                        bottomLabel={renderLabelInput(node, 'labelBottom', false)}
+                        childrenBlock={childrenBlock}
+                    />
                 );
             };
 
@@ -2179,7 +2309,7 @@
             const renderStaticNode = (node, comparisons, path = 'root', isModel = false, forceIncorrect = false) => {
                 const comparison = comparisons?.get(path);
 
-                if (!node && comparison && !isModel) {
+                if (!node && !isModel) {
                     node = {
                         id: `missing-${path}`,
                         text: '∅',
@@ -2249,7 +2379,7 @@
 
                 let childrenToRender = [];
                 if (!isModel && comparison?.modelNode?.children?.length) {
-                    const modelLen = comparison.modelNode.children.length;
+                    const modelLen = (comparison.modelNode.children || []).filter(Boolean).length;
 
                     for (let i = 0; i < modelLen; i++) {
                         const childPath = `${path}-${i}`;
@@ -2261,7 +2391,7 @@
                         });
                     }
 
-                    const extra = (node.children || []).slice(modelLen);
+                    const extra = (node.children || []).filter(Boolean).slice(modelLen);
                     extra.forEach((extraNode, j) => {
                         childrenToRender.push({
                             node: extraNode,
@@ -2270,53 +2400,49 @@
                         });
                     });
                 } else {
-                    childrenToRender = (node.children || []).map((c, i) => ({ 
-                        node: c, 
-                        path: `${path}-${i}`, 
-                        forceIncorrect: false 
+                    childrenToRender = (node.children || []).filter(Boolean).map((c, i) => ({
+                        node: c,
+                        path: `${path}-${i}`,
+                        forceIncorrect: !!forceIncorrect
                     }));
                 }
 
-                return (
-                    <div className={nodeClass} key={node.id || path}>
-                        {shouldShowTop && renderStaticLabel(
-                            isModel ? studentTop : (studentTop || (modelTop ? '∅' : '')), 
-                            true, 
-                            labelTopClass
-                        )}
+                const topLabel = shouldShowTop ? renderStaticLabel(
+                    isModel ? studentTop : (studentTop || (modelTop ? '∅' : '')),
+                    true,
+                    labelTopClass
+                ) : null;
 
-                        {isEmpty ? (
-                            <div className="connector-v" style={{ height: '36px' }} />
-                        ) : (
-                            <>
-                                <div className="connector-v" style={{ height: '12px' }} />
-                                <div className="node-box" style={{ cursor: 'default' }}>
-                                    {node.text}
+                const bottomLabel = shouldShowBottom ? renderStaticLabel(
+                    isModel ? studentBottom : (studentBottom || (modelBottom ? '∅' : '')),
+                    false,
+                    labelBottomClass
+                ) : null;
+
+                const childrenBlock = childrenToRender.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                        <div className="connector-v" style={{ height: '24px' }} />
+                        <div className="children-container">
+                            {childrenToRender.map((item, i) => (
+                                <div className="child-branch" key={(item.node?.id) || item.path || i}>
+                                    <div className="v-line-stem" />
+                                    {renderStaticNode(item.node, comparisons, item.path, isModel, item.forceIncorrect)}
                                 </div>
-                                <div className="connector-v" style={{ height: '12px' }} />
-                            </>
-                        )}
-
-                        {shouldShowBottom && renderStaticLabel(
-                            isModel ? studentBottom : (studentBottom || (modelBottom ? '∅' : '')), 
-                            false, 
-                            labelBottomClass
-                        )}
-
-                        {childrenToRender.length > 0 && (
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                                <div className="connector-v" style={{ height: '24px' }} />
-                                <div className="children-container">
-                                    {childrenToRender.map((item, i) => (
-                                        <div className="child-branch" key={(item.node?.id) || item.path || i}>
-                                            <div className="v-line-stem" />
-                                            {renderStaticNode(item.node, comparisons, item.path, isModel, item.forceIncorrect)}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                            ))}
+                        </div>
                     </div>
+                ) : null;
+
+                return (
+                    <NodeScaffold
+                        nodeClass={nodeClass}
+                        nodeKey={node.id || path}
+                        topLabel={topLabel}
+                        isEmpty={isEmpty}
+                        middle={<div className="node-box" style={{ cursor: 'default' }}>{node.text}</div>}
+                        bottomLabel={bottomLabel}
+                        childrenBlock={childrenBlock}
+                    />
                 );
             };
 
@@ -2497,9 +2623,9 @@
                     </div>
 
                     {!(exerciseMode && !modelTree) && (
-                        <div className="tree-container">
+                        <div className="tree-container" ref={treeContainerRef}>
                             {tree ? (
-                                <div className="tree-wrapper">{renderNode(tree)}</div>
+                                <div className="tree-wrapper" ref={treeWrapperRef}>{renderNode(tree)}</div>
                             ) : (
                                 <p style={{textAlign:'center', color:'#9ca3af', marginTop:'100px'}}>
                                     Escribe una expresión o carga un archivo .ent para editarlo
@@ -2517,7 +2643,7 @@
                                 </>
                             ) : (
                                 <>
-                                    <button onClick={() => { setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); }} className="btn btn-new-analysis">✦ Nuevo análisis</button>
+                                    <button onClick={() => { setTree(null); setSentence(''); clearHistory(); }} className="btn btn-new-analysis">✦ Nuevo análisis</button>
                                     <button onClick={() => handleExport(false)} className="btn btn-primary">Exportar diagrama</button>
                                     <button onClick={() => handleExport(true)} className="btn btn-primary">Exportar diagrama arbóreo</button>
                                 </>
