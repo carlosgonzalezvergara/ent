@@ -513,7 +513,24 @@
             background: #1f2937;
         }
 
-        /* ===========================================
+        
+        /* --- Botón ↩ (revertir división) sin empujar el nodo --- */
+        .node-box-row{
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .node-revert-btn{
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translate(2px, -50%);
+            z-index: 50;
+            pointer-events: auto;
+        }
+
+/* ===========================================
            ACCIONES INFERIORES E INSTRUCCIONES
            =========================================== */
         .bottom-actions { 
@@ -1430,8 +1447,6 @@
             const compareTrees = (studentTree, modelTree) => {
                 const results = {
                     totalNodes: 0,
-                    // Estructura se evalúa solo en nodos que el modelo efectivamente divide ("objetivos" estructurales)
-                    totalStructureTargets: 0,
                     correctStructure: 0,
                     correctLabelTop: 0,
                     correctLabelBottom: 0,
@@ -1470,26 +1485,11 @@
                     const modelChildren = model.children || [];
                     const studentChildren = student?.children || [];
 
-                    // Un nodo es "objetivo" estructural si el modelo lo divide (tiene hijos).
-                    // Solo esos nodos deben poder dar "aciertos" por estructura.
-                    const modelHasChildren = modelChildren.length > 0;
-                    comparison.isStructureTarget = modelHasChildren;
-
-                    // structureMatch sigue describiendo si la aridad de hijos coincide (sirve para visualización y para cortar secciones).
                     if (!student || studentChildren.length !== modelChildren.length) {
                         comparison.structureMatch = false;
-                        // Penalizar errores estructurales:
-                        // - si el modelo divide y el estudiante no coincide
-                        // - o si el modelo NO divide (0) pero el estudiante sí dividió (hijos extra)
-                        if (modelHasChildren || studentChildren.length > 0) {
-                            results.incorrectStructure++;
-                        }
+                        results.incorrectStructure++;
                     } else {
-                        comparison.structureMatch = true;
-                        // Contar como acierto solo si el modelo esperaba división (nodo celeste divisible en el modelo)
-                        if (modelHasChildren) {
-                            results.correctStructure++;
-                        }
+                        results.correctStructure++;
                     }
 
                     const modelTop = (model.labelTop || '').trim();
@@ -1517,11 +1517,37 @@
 
                     results.nodeComparisons.set(path, comparison);
 
-                    // Emparejamiento por índice (orden lineal). Evita desalineaciones con repeticiones como ∅.
-                    if (modelChildren.length > 0) {
+                    if (modelChildren.length > 0 && studentChildren.length > 0) {
+                        const pairedChildren = [];
+                        const usedStudentIndices = new Set();
+
                         modelChildren.forEach((modelChild, mi) => {
-                            const studentChild = studentChildren[mi] || null;
-                            compareNodes(studentChild, modelChild, `${path}-${mi}`);
+                            let bestMatch = -1;
+                            let bestScore = -1;
+
+                            studentChildren.forEach((studentChild, si) => {
+                                if (usedStudentIndices.has(si)) return;
+                                const score = normalizeText(studentChild.text) === normalizeText(modelChild.text) ? 1 : 0;
+                                if (score > bestScore) {
+                                    bestScore = score;
+                                    bestMatch = si;
+                                }
+                            });
+
+                            if (bestMatch >= 0) {
+                                usedStudentIndices.add(bestMatch);
+                                pairedChildren.push({ student: studentChildren[bestMatch], model: modelChild, index: mi });
+                            } else {
+                                pairedChildren.push({ student: null, model: modelChild, index: mi });
+                            }
+                        });
+
+                        pairedChildren.forEach(pair => {
+                            compareNodes(pair.student, pair.model, `${path}-${pair.index}`);
+                        });
+                    } else if (modelChildren.length > 0) {
+                        modelChildren.forEach((modelChild, mi) => {
+                            compareNodes(null, modelChild, `${path}-${mi}`);
                         });
                     }
                 };
@@ -2104,7 +2130,7 @@
                                         </div>
                                     </div>
                                 ) : (
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
+	                                    <div className="node-box-row">
                                         <div
                                             className={`node-box ${canDivide ? 'can-divide' : ''}`}
                                             onClick={() => !hasC && canDivide && setDivisionMode(node.id)}
@@ -2150,14 +2176,19 @@
                                             )}
                                         </div>
                                         {hasC && (
-                                            <button 
-                                                onClick={() => setTree(prev => updateNode(prev, node.id, { children: null }))} 
-                                                className="btn btn-danger-soft"
+                                            <button
+                                                className="btn-danger-soft node-revert-btn"
+                                                onMouseDown={(e) => e.stopPropagation()}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setTree(prev => updateNode(prev, node.id, { children: null }));
+                                                }}
+                                                title="Deshacer división"
+                                                aria-label="Deshacer división"
                                             >
                                                 ↩
                                             </button>
-                                        )}
-                                    </div>
+                                        )}</div>
                                 )}
                                 
                                 <div className="connector-v" style={{ height: '12px' }} />
@@ -2187,7 +2218,7 @@
             // RENDERIZADO ESTÁTICO (COMPARACIÓN)
             // ===========================================
             const renderStaticNode = (node, comparisons, path = 'root', isModel = false, forceIncorrect = false) => {
-                const comparison = (comparisons && typeof comparisons.get === 'function') ? comparisons.get(path) : null;
+                const comparison = comparisons?.get(path);
 
                 if (!node && comparison && !isModel) {
                     node = {
@@ -2211,14 +2242,7 @@
                     if (forceIncorrect) {
                         nodeClass += ' node-incorrect';
                     } else if (comparison) {
-                        const modelHasChildren = Array.isArray(comparison.modelNode?.children) && comparison.modelNode.children.length > 0;
-                        // Verde/rojo SOLO para nodos que el modelo divide (nodos "objetivo").
-                        // Si el modelo no divide, no se premia el "no dividir"; pero si el estudiante sí dividió, se marca rojo.
-                        if (modelHasChildren) {
-                            nodeClass += comparison.structureMatch ? ' node-correct' : ' node-incorrect';
-                        } else if (hasC) {
-                            nodeClass += ' node-incorrect';
-                        }
+                        nodeClass += comparison.structureMatch ? ' node-correct' : ' node-incorrect';
                     }
                 }
 
@@ -2264,19 +2288,17 @@
                     );
                 };
 
-                const showBadSectionNotice = (!isModel && comparison && Array.isArray(comparison.modelNode?.children) && comparison.modelNode.children.length > 0 && !comparison.structureMatch);
-
                 let childrenToRender = [];
                 if (!isModel && comparison?.modelNode?.children?.length) {
                     const modelLen = comparison.modelNode.children.length;
 
                     for (let i = 0; i < modelLen; i++) {
                         const childPath = `${path}-${i}`;
-                        const childComp = (comparisons && typeof comparisons.get === 'function') ? comparisons.get(childPath) : null;
+                        const childComp = comparisons?.get(childPath);
                         childrenToRender.push({
                             node: childComp?.studentNode ?? null,
                             path: childPath,
-                            forceIncorrect: !childComp || (Array.isArray(childComp.modelNode?.children) && childComp.modelNode.children.length > 0 && !childComp.structureMatch)
+                            forceIncorrect: !childComp || !childComp.structureMatch
                         });
                     }
 
@@ -2322,40 +2344,18 @@
                             labelBottomClass
                         )}
 
-                        {showBadSectionNotice ? (
+                        {childrenToRender.length > 0 && (
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                                 <div className="connector-v" style={{ height: '24px' }} />
-                                <div
-                                    className="node-box"
-                                    style={{
-                                        cursor: 'default',
-                                        borderColor: '#ef4444',
-                                        backgroundColor: '#fff1f2',
-                                        color: '#991b1b',
-                                        fontSize: '13px',
-                                        lineHeight: '1.35',
-                                        padding: '12px 16px',
-                                        minWidth: '280px',
-                                        maxWidth: '520px'
-                                    }}
-                                >
-                                    Constituyente mal analizado. Todo el análisis de esta sección se considera incorrecto.
+                                <div className="children-container">
+                                    {childrenToRender.map((item, i) => (
+                                        <div className="child-branch" key={(item.node?.id) || item.path || i}>
+                                            <div className="v-line-stem" />
+                                            {renderStaticNode(item.node, comparisons, item.path, isModel, item.forceIncorrect)}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
-                        ) : (
-                            childrenToRender.length > 0 && (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                                    <div className="connector-v" style={{ height: '24px' }} />
-                                    <div className="children-container">
-                                        {childrenToRender.map((item, i) => (
-                                            <div className="child-branch" key={(item.node?.id) || item.path || i}>
-                                                <div className="v-line-stem" />
-                                                {renderStaticNode(item.node, comparisons, item.path, isModel, item.forceIncorrect)}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )
                         )}
                     </div>
                 );
@@ -2417,8 +2417,8 @@
                                 </div>
                             </div>
                             <p style={{margin: 0, fontSize: '15px', color: '#374151', lineHeight: '1.6'}}>
-                                Los constituyentes con borde y fondo <span style={{color: '#10b981', backgroundColor: '#d1fae5', padding: '1px 4px', borderRadius: '2px'}}>verde</span> tienen estructura correcta; 
-                                los de borde y fondo <span style={{color: '#991b1b', backgroundColor: '#fee2e2', padding: '1px 4px', borderRadius: '2px'}}>rojo</span> presentan diferencias estructurales. <br/>
+                                Los nodos con borde <span style={{color: '#10b981'}}>verde</span> tienen estructura correcta; 
+                                los de borde <span style={{color: '#ef4444'}}>rojo</span> presentan diferencias estructurales. <br/>
                                 Las etiquetas en <span style={{color: '#10b981', backgroundColor: '#d1fae5', padding: '1px 4px', borderRadius: '2px'}}>verde</span> son correctas; 
                                 las de <span style={{color: '#991b1b', backgroundColor: '#fee2e2', padding: '1px 4px', borderRadius: '2px'}}>rojo</span> difieren del modelo.
                             </p>
