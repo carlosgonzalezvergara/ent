@@ -1467,67 +1467,60 @@
                 const normalizeText = (text) => (text || '').trim().toLowerCase();
                 const normalizeLabel = (label) => (label || '').trim().toLowerCase().replace(/\s+/g, '');
 
-                const compareNodes = (student, model, path = 'root') => {
+                const compareNodes = (student, model, path = 'root', isBranchValid = true) => {
                     if (!model) return;
                     
+                    // 1. PUNTAJE IDEAL: Siempre se suma basándose exclusivamente en el modelo
                     results.totalNodes++;
+                    const modelTop = (model.labelTop || '').trim();
+                    const modelBottom = (model.labelBottom || '').trim();
+                    if (modelTop) results.totalLabelTopExpected++;
+                    if (modelBottom) results.totalLabelBottomExpected++;
+
+                    // 2. DETERMINAR VALIDEZ DEL ESTUDIANTE
+                    // El nodo del estudiante solo cuenta si la rama viene siendo válida y el nodo existe
+                    const hasStudent = !!student && isBranchValid;
                     
                     const comparison = {
                         path,
-                        textMatch: normalizeText(student?.text) === normalizeText(model.text),
-                        labelTopMatch: normalizeLabel(student?.labelTop) === normalizeLabel(model.labelTop),
-                        labelBottomMatch: normalizeLabel(student?.labelBottom) === normalizeLabel(model.labelBottom),
-                        structureMatch: true,
-                        studentNode: student,
+                        textMatch: hasStudent && normalizeText(student.text) === normalizeText(model.text),
+                        labelTopMatch: hasStudent && normalizeLabel(student.labelTop) === normalizeLabel(model.labelTop),
+                        labelBottomMatch: hasStudent && normalizeLabel(student.labelBottom) === normalizeLabel(model.labelBottom),
+                        structureMatch: hasStudent && (student.children?.length === model.children?.length),
+                        studentNode: hasStudent ? student : null,
                         modelNode: model
                     };
 
-                    const modelChildren = model.children || [];
-                    const studentChildren = student?.children || [];
-
-                    if (!student || studentChildren.length !== modelChildren.length) {
-                        comparison.structureMatch = false;
-                        results.incorrectStructure++;
-                    } else {
-                        results.correctStructure++;
-                    }
-
-                    const modelTop = (model.labelTop || '').trim();
-                    const modelBottom = (model.labelBottom || '').trim();
-
-                    if (comparison.labelTopMatch) results.correctLabelTop++;
-                    if (modelTop) {
-                        results.totalLabelTopExpected++;
-                        if (comparison.labelTopMatch) {
-                            results.correctLabelTopExpected++;
-                        } else {
-                            results.incorrectLabelTop++;
-                        }
-                    }
-
-                    if (comparison.labelBottomMatch) results.correctLabelBottom++;
-                    if (modelBottom) {
-                        results.totalLabelBottomExpected++;
-                        if (comparison.labelBottomMatch) {
-                            results.correctLabelBottomExpected++;
-                        } else {
-                            results.incorrectLabelBottom++;
-                        }
-                    }
+                    // 3. ACIERTOS: Solo se suman si la rama es válida y el dato coincide
+                    if (comparison.structureMatch) results.correctStructure++;
+                    if (comparison.labelTopMatch && modelTop) results.correctLabelTopExpected++;
+                    if (comparison.labelBottomMatch && modelBottom) results.correctLabelBottomExpected++;
 
                     results.nodeComparisons.set(path, comparison);
 
-                    if (modelChildren.length > 0 && studentChildren.length > 0) {
-                        const pairedChildren = [];
-                        const usedStudentIndices = new Set();
+                    // 4. RECURSIÓN: Siempre recorremos el modelo completo para asegurar el puntaje ideal constante
+                    const modelChildren = model.children || [];
+                    const studentChildren = student?.children || [];
 
+                    // Verificar si hay nodos insertados (isInserted) que requieren emparejamiento flexible
+                    const hasInsertedNodes = modelChildren.some(c => c.isInserted) || 
+                                             studentChildren.some(c => c.isInserted);
+
+                    if (comparison.structureMatch && hasInsertedNodes) {
+                        // Emparejamiento flexible: solo para casos con nodos insertados
+                        const usedStudentIndices = new Set();
+                        
                         modelChildren.forEach((modelChild, mi) => {
                             let bestMatch = -1;
                             let bestScore = -1;
 
                             studentChildren.forEach((studentChild, si) => {
                                 if (usedStudentIndices.has(si)) return;
-                                const score = normalizeText(studentChild.text) === normalizeText(modelChild.text) ? 1 : 0;
+                                // Coincidencia por texto
+                                const textMatches = normalizeText(studentChild.text) === normalizeText(modelChild.text);
+                                // Coincidencia por isInserted (ambos deben ser insertados o ambos no)
+                                const insertedMatches = !!studentChild.isInserted === !!modelChild.isInserted;
+                                const score = (textMatches ? 2 : 0) + (insertedMatches ? 1 : 0);
                                 if (score > bestScore) {
                                     bestScore = score;
                                     bestMatch = si;
@@ -1536,23 +1529,24 @@
 
                             if (bestMatch >= 0) {
                                 usedStudentIndices.add(bestMatch);
-                                pairedChildren.push({ student: studentChildren[bestMatch], model: modelChild, index: mi });
+                                compareNodes(studentChildren[bestMatch], modelChild, `${path}-${mi}`, true);
                             } else {
-                                pairedChildren.push({ student: null, model: modelChild, index: mi });
+                                compareNodes(null, modelChild, `${path}-${mi}`, false);
                             }
                         });
-
-                        pairedChildren.forEach(pair => {
-                            compareNodes(pair.student, pair.model, `${path}-${pair.index}`);
-                        });
-                    } else if (modelChildren.length > 0) {
+                    } else {
+                        // Emparejamiento posicional estricto: caso normal sin nodos insertados
                         modelChildren.forEach((modelChild, mi) => {
-                            compareNodes(null, modelChild, `${path}-${mi}`);
+                            let nextStudentChild = null;
+                            if (comparison.structureMatch && studentChildren[mi]) {
+                                nextStudentChild = studentChildren[mi];
+                            }
+                            compareNodes(nextStudentChild, modelChild, `${path}-${mi}`, comparison.structureMatch);
                         });
                     }
                 };
 
-                compareNodes(studentTree, modelTree);
+                compareNodes(studentTree, modelTree, 'root', true);
 
                 results.totalElements = results.totalNodes + results.totalLabelTopExpected + results.totalLabelBottomExpected;
                 results.correctElements = results.correctStructure + results.correctLabelTopExpected + results.correctLabelBottomExpected;
@@ -2344,18 +2338,40 @@
                             labelBottomClass
                         )}
 
-                        {childrenToRender.length > 0 && (
+                        {/* Si el estudiante dividió mal, mostramos el recuadro de error en lugar de los hijos */}
+                        {!isModel && comparison && !comparison.structureMatch ? (
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                                 <div className="connector-v" style={{ height: '24px' }} />
-                                <div className="children-container">
-                                    {childrenToRender.map((item, i) => (
-                                        <div className="child-branch" key={(item.node?.id) || item.path || i}>
-                                            <div className="v-line-stem" />
-                                            {renderStaticNode(item.node, comparisons, item.path, isModel, item.forceIncorrect)}
-                                        </div>
-                                    ))}
+                                <div style={{
+                                    padding: '8px 16px',
+                                    backgroundColor: '#fef2f2',
+                                    border: '2px solid #ef4444',
+                                    borderRadius: '6px',
+                                    color: '#b91c1c',
+                                    fontSize: '12px',
+                                    fontWeight: 'bold',
+                                    textAlign: 'center',
+                                    maxWidth: '150px',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                }}>
+                                    Constituyente dividido incorrectamente
                                 </div>
                             </div>
+                        ) : (
+                            /* Si la división es correcta (o es el modelo), mostramos los hijos normalmente */
+                            childrenToRender.length > 0 && (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                                    <div className="connector-v" style={{ height: '24px' }} />
+                                    <div className="children-container">
+                                        {childrenToRender.map((item, i) => (
+                                            <div className="child-branch" key={(item.node?.id) || item.path || i}>
+                                                <div className="v-line-stem" />
+                                                {renderStaticNode(item.node, comparisons, item.path, isModel, item.forceIncorrect)}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )
                         )}
                     </div>
                 );
