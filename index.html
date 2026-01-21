@@ -1337,6 +1337,29 @@
                 });
             };
 
+            const expandNode = (nodeId) => {
+                setTree(prev => {
+                    const node = findNodeById(prev, nodeId);
+                    if (!node || node.children) return prev;
+                    
+                    // Crear un hijo con el mismo texto del nodo padre
+                    const childNode = {
+                        id: `${nodeId}-child-${Date.now()}`,
+                        text: node.text,
+                        labelTop: '',
+                        labelBottom: '',
+                        children: null,
+                        isNucleus: node.isNucleus,
+                        isConsolidated: false
+                    };
+                    
+                    return updateNode(prev, nodeId, { 
+                        children: [childNode],
+                        isNucleus: false
+                    });
+                });
+            };
+
             const addChildNode = (parentId) => {
                 const txt = window.prompt('Texto del nodo extra:');
                 if (txt === null) return;
@@ -2087,6 +2110,8 @@
                 const words = node.text ? node.text.split(/\s+/) : [];
                 const canDivide = words.length > 1 && !node.isInserted && !node.isConsolidated;
                 const canConsolidate = words.length > 1 && !node.isInserted && !hasC;
+                // Nodos de una sola palabra pueden expandirse para agregar hijos
+                const canExpand = words.length === 1 && !node.isInserted && !hasC;
                 // Mostrar botón de negritas en nodos terminales (sin hijos)
                 const isTerminal = !hasC;
 
@@ -2139,7 +2164,16 @@
                                                     {node.isConsolidated ? '÷' : '∪'}
                                                 </button>
                                             )}
-                                            {canDivide && hasC && (
+                                            {canExpand && (
+                                                <button
+                                                    className="consolidate-btn"
+                                                    title="Expandir (agregar constituyentes)"
+                                                    onClick={(e) => { e.stopPropagation(); expandNode(node.id); }}
+                                                >
+                                                    ÷
+                                                </button>
+                                            )}
+                                            {hasC && !node.isInserted && (
                                                 <button
                                                     className="add-node-btn"
                                                     title="Agregar nodo hijo"
@@ -2601,6 +2635,7 @@
                                         <li>Haz clic en un <strong>recuadro celeste</strong> para dividir una estructura sintáctica en constituyentes.</li>
                                         <li>Haz clic en las <strong>barras grises</strong> entre palabras para marcar fronteras entre constituyentes.</li>
                                         <li>Haz clic en <code>↩</code> junto al recuadro celeste para revertir la división.</li>
+                                        <li>Pasa el cursor por un nodo terminal y pulsa <code>N</code> para marcarlo como <strong>núcleo</strong> (negritas).</li>
                                     </ul>
                                 </div>
 
@@ -2619,16 +2654,6 @@
                                         <li><code>**texto**</code> para <strong>negritas</strong></li>
                                         <li><code>_texto_</code> para <sub>subíndice</sub></li>
                                         <li><code>¨texto¨</code> para <sup>superíndice</sup></li>
-                                        <li>Pasa el cursor por un nodo terminal y pulsa <code>N</code> para marcarlo como <strong>núcleo</strong> (negritas).</li>
-                                    </ul>
-                                </div>
-
-                                <div className="instruction-card">
-                                    <h4><span className="icon">＋</span> Agregar constituyentes extra</h4>
-                                    <ul>
-                                        <li>Pasa el cursor por el nodo bajo el cual quieres crear un constituyente extra y haz clic en <code>+</code>.</li>
-                                        <li>Escribe el texto y elige la posición donde insertarlo.</li>
-                                        <li>Util para indicar constituyentes elididos y similares.</li>
                                     </ul>
                                 </div>
 
@@ -2637,6 +2662,14 @@
                                     <ul>
                                         <li>Pasa el cursor por la etiqueta y pulsa <code>⇄</code> para dividir o unir.</li>
                                         <li>Útil para análisis con múltiples funciones o categorías.</li>
+                                    </ul>
+                                </div>
+
+                                <div className="instruction-card">
+                                    <h4><span className="icon">＋</span> Agregar constituyentes extra</h4>
+                                    <ul>
+                                        <li>Pasa el cursor por el nodo bajo el cual quieres crear un constituyente extra y haz clic en <code>+</code>.</li>
+                                        <li>Escribe el texto y elige la posición donde insertarlo.</li>
                                     </ul>
                                 </div>
 
@@ -2665,6 +2698,15 @@
                                         <li>Pasa el cursor por un nodo celeste y pulsa <code>∪</code> para consolidarlo.</li>
                                         <li>Útil para perífrasis verbales o locuciones que no deben dividirse.</li>
                                         <li>Pulsa <code>÷</code> para volver a permitir la división.</li>
+                                    </ul>
+                                </div>
+
+                                <div className="instruction-card">
+                                    <h4><span className="icon">÷</span> Expandir nodos</h4>
+                                    <ul>
+                                        <li>Pasa el cursor por un nodo terminal y pulsa <code>÷</code> para expandirlo.</li>
+                                        <li>Se crea un hijo con el mismo texto. Usa <code>+</code> para agregar constituyentes extra.</li>
+                                        <li>Útil para añadir constituyentes elididos.</li>
                                     </ul>
                                 </div>
 
