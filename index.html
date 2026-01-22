@@ -2573,7 +2573,7 @@
                                     </button>
                                     <span className="btn-separator"></span>
                                     <button onClick={() => fileInputRef.current.click()} className="btn btn-outline">Cargar .ent</button>
-                                    <input type="file" ref={fileInputRef} style={{display:'none'}} accept=".ent,.json" onChange={handleLoadJSON} />
+                                    <input type="file" ref={fileInputRef} style={{display:'none'}} accept=".ent,.json,application/json,text/plain" onChange={handleLoadJSON} />
                                     <button onClick={handleSaveJSON} className="btn btn-outline" disabled={!tree} title="Guardar (Ctrl+S)">Guardar .ent</button>
                                     <span className="btn-separator"></span>
                                     <button onClick={() => setExerciseMode(true)} className="btn btn-exercise">📚 Modo ejercitación</button>
