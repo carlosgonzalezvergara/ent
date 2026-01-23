@@ -413,6 +413,144 @@
         }
 
         /* ===========================================
+           SELECTOR DE ETIQUETAS GTG (RAE)
+           =========================================== */
+        .label-with-dropdown {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .dropdown-trigger {
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 18px;
+            height: 14px;
+            border-radius: 3px;
+            border: 1px solid #c7d2fe;
+            background: #eef2ff;
+            color: #6366f1;
+            font-size: 9px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            padding: 0;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .label-with-dropdown:hover .dropdown-trigger {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .dropdown-trigger:hover {
+            background: #c7d2fe;
+            border-color: #818cf8;
+            color: #4338ca;
+        }
+
+        .dropdown-trigger:active {
+            background: #a5b4fc;
+        }
+
+        .label-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 1000;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            min-width: 240px;
+            max-height: 320px;
+            overflow-y: auto;
+            margin-top: 4px;
+        }
+
+        .dropdown-section {
+            padding: 4px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .dropdown-section:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-section-title {
+            padding: 4px 12px;
+            font-size: 9px;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: #f9fafb;
+        }
+
+        .dropdown-item {
+            padding: 5px 12px;
+            font-size: 11px;
+            color: #374151;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.1s ease;
+        }
+
+        .dropdown-item:hover {
+            background: #f0f7ff;
+        }
+
+        .dropdown-item-abbr {
+            font-weight: 600;
+            min-width: 50px;
+            color: #1f2937;
+        }
+
+        .dropdown-item-full {
+            color: #6b7280;
+            font-size: 10px;
+        }
+
+        .dropdown-search {
+            padding: 8px;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .dropdown-search input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 11px;
+            outline: none;
+        }
+
+        .dropdown-search input:focus {
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        .dropdown-empty {
+            padding: 12px;
+            color: #9ca3af;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        /* ===========================================
            BOTONES DE ACCIÓN EN NODOS
            =========================================== */
         .clear-text-btn { 
@@ -1007,6 +1145,155 @@
 
     <script type="text/babel">
         const { useState, useRef, useEffect, useCallback } = React;
+
+        // ===========================================
+        // CATÁLOGO DE ETIQUETAS GTG (RAE)
+        // Basado en el Glosario de términos gramaticales
+        // ===========================================
+        const GTG_LABELS = {
+            // FUNCIONES SINTÁCTICAS (etiqueta superior)
+            oracionesFunciones: {
+                title: 'Oraciones y cláusulas',
+                items: [
+                    { abbr: 'TXT', full: 'texto' },
+                    { abbr: 'O', full: 'oración' },
+                    { abbr: 'CL', full: 'cláusula' },
+                    { abbr: 'CLM', full: 'cláusula matriz' },
+                    { abbr: 'CLS', full: 'cláusula subordinada' },
+                    { abbr: 'CLS SUS', full: 'cláusula subordinada sustantiva' },
+                    { abbr: 'CLS ADJ', full: 'cláusula subordinada adjetiva' },
+                    { abbr: 'CLS ADV', full: 'cláusula subordinada adverbial' },
+                    { abbr: 'COORD', full: 'coordinación' },
+                ]
+            },
+            funciones: {
+                title: 'Funciones sintácticas',
+                items: [
+                    { abbr: 'Suj', full: 'sujeto' },
+                    { abbr: 'CD', full: 'complemento directo' },
+                    { abbr: 'CI', full: 'complemento indirecto' },
+                    { abbr: 'CRég', full: 'complemento de régimen' },
+                    { abbr: 'CC', full: 'complemento circunstancial' },
+                    { abbr: 'CCT', full: 'c. circunstancial de tiempo' },
+                    { abbr: 'CCL', full: 'c. circunstancial de lugar' },
+                    { abbr: 'CCM', full: 'c. circunstancial de modo' },
+                    { abbr: 'CCCAUS', full: 'c. circunstancial de causa' },
+                    { abbr: 'CCFIN', full: 'c. circunstancial de finalidad' },
+                    { abbr: 'CCINST', full: 'c. circunstancial de instrumento' },
+                    { abbr: 'CCCANT', full: 'c. circunstancial de cantidad' },
+                    { abbr: 'CCCOMP', full: 'c. circunstancial de compañía' },
+                    { abbr: 'CAg', full: 'complemento agente' },
+                    { abbr: 'Atr', full: 'atributo' },
+                    { abbr: 'CPvo', full: 'complemento predicativo' },
+                    { abbr: 'Tér', full: 'término' },
+                    { abbr: 'CN', full: 'complemento del nombre' },
+                    { abbr: 'CAdj', full: 'complemento del adjetivo' },
+                    { abbr: 'CAdv', full: 'complemento del adverbio' },
+                    { abbr: 'CPro', full: 'complemento del pronombre' },
+                    { abbr: 'Apos', full: 'aposición' },
+                    { abbr: 'Voc', full: 'vocativo' },
+                ]
+            },
+            funcionesInternas: {
+                title: 'Funciones internas',
+                items: [
+                    { abbr: 'N', full: 'núcleo' },
+                    { abbr: 'Mod', full: 'modificador' },
+                    { abbr: 'Det', full: 'determinante' },
+                    { abbr: 'Ady', full: 'adyacente' },
+                    { abbr: 'Enl', full: 'enlace' },
+                    { abbr: 'Nx', full: 'nexo' },
+                ]
+            },
+            // CATEGORÍAS / CLASES DE PALABRAS (etiqueta inferior)
+            sintagmas: {
+                title: 'Sintagmas / Grupos',
+                items: [
+                    { abbr: 'FN', full: 'frase nominal' },
+                    { abbr: 'FV', full: 'frase verbal' },
+                    { abbr: 'FPrep', full: 'frase preposicional' },
+                    { abbr: 'FAdj', full: 'frase adjetival' },
+                    { abbr: 'FAdv', full: 'frase adverbial' },                    
+                    { abbr: 'FInf', full: 'frase de infinitivo' },
+                    { abbr: 'FGer', full: 'frase de gerundio' },
+                    { abbr: 'FPart', full: 'frase participio' },
+                    { abbr: 'FPro', full: 'frase pronominal' },
+                ]
+            },
+            palabras: {
+                title: 'Clases de palabras',
+                items: [
+                    { abbr: 'v', full: 'verbo' },
+                    { abbr: 'sust', full: 'sustantivo común' },
+                    { abbr: 'np', full: 'nombre propio' },
+                    { abbr: 'adj cal', full: 'adjetivo calificativo' },
+                    { abbr: 'adj rel', full: 'adjetivo relacional' },
+                    { abbr: 'det', full: 'determinante' },
+                    { abbr: 'pron', full: 'pronombre' },                  
+                    { abbr: 'adv', full: 'adverbio' },
+                    { abbr: 'advt', full: 'adverbio de tiempo' },
+                    { abbr: 'advl', full: 'adverbio de lugar' },
+                    { abbr: 'advm', full: 'adverbio de modo' },
+                    { abbr: 'advc', full: 'adverbio de cantidad' },
+                    { abbr: 'advaf', full: 'adverbio afirmativo' },
+                    { abbr: 'advneg', full: 'adverbio negativo' },
+                    { abbr: 'advdud', full: 'adverbio de duda' },
+                    { abbr: 'prep', full: 'preposición' },
+                    { abbr: 'conj', full: 'conjunción' },
+                    { abbr: 'conjcop', full: 'conjunción copulativa' },
+                    { abbr: 'conjdisy', full: 'conjunción disyuntiva' },
+                    { abbr: 'conjadv', full: 'conjunción adverbial' },
+                    { abbr: 'interj', full: 'interjección' },
+                ]
+            },
+            determinantes: {
+                title: 'Tipos de determinantes',
+                items: [
+                    { abbr: 'art det', full: 'artículo determinado' },
+                    { abbr: 'art ind', full: 'artículo indeterminado' },
+                    { abbr: 'dem', full: 'demostrativo' },
+                    { abbr: 'pos', full: 'posesivo' },
+                    { abbr: 'cuant', full: 'cuantificador' },
+                    { abbr: 'num', full: 'numeral' },
+                    { abbr: 'indef', full: 'indefinido' },
+                    { abbr: 'interr', full: 'interrogativo' },
+                    { abbr: 'excl', full: 'exclamativo' },
+                    { abbr: 'rel', full: 'relativo' },
+                ]
+            },
+            pronombres: {
+                title: 'Tipos de pronombres',
+                items: [
+                    { abbr: 'pron pers', full: 'pronombre personal' },
+                    { abbr: 'pron dem', full: 'pronombre demostrativo' },
+                    { abbr: 'pron pos', full: 'pronombre posesivo' },
+                    { abbr: 'pron indef', full: 'pronombre indefinido' },
+                    { abbr: 'pron interr', full: 'pronombre interrogativo' },
+                    { abbr: 'pron rel', full: 'pronombre relativo' },
+                    { abbr: 'pron excl', full: 'pronombre exclamativo' },
+                ]
+            },
+            oracionesCat: {
+                title: 'Oraciones y cláusulas',
+                items: [
+                    { abbr: 'TXT', full: 'texto' },
+                    { abbr: 'O', full: 'oración' },
+                    { abbr: 'CL', full: 'cláusula' },
+                    { abbr: 'CLM', full: 'cláusula matriz' },
+                    { abbr: 'CLS', full: 'cláusula subordinada' },
+                    { abbr: 'CLS SUS', full: 'cláusula subordinada sustantiva' },
+                    { abbr: 'CLS ADJ', full: 'cláusula subordinada adjetiva' },
+                    { abbr: 'CLS ADV', full: 'cláusula subordinada adverbial' },
+                    { abbr: 'COORD', full: 'coordinación' },
+                ]
+            }
+        };
+
+        // Secciones para etiqueta superior (funciones)
+        const FUNC_SECTIONS = ['oracionesFunciones', 'funciones', 'funcionesInternas'];
+        
+        // Secciones para etiqueta inferior (categorías)
+        const CAT_SECTIONS = ['sintagmas', 'palabras', 'determinantes', 'pronombres', 'oracionesCat'];
 
         const SyntaxTreeBuilder = () => {
             // ===========================================
@@ -1669,9 +1956,9 @@
                 const nodeContainers = treeWrapper.querySelectorAll('.node-container');
                 
                 nodeContainers.forEach(container => {
-                    // Buscar tanto inputs como displays
-                    const topElements = container.querySelectorAll(':scope > .label-wrap > .label-input.label-top, :scope > .label-wrap > .label-display.label-top');
-                    const bottomElements = container.querySelectorAll(':scope > .label-wrap > .label-input:not(.label-top), :scope > .label-wrap > .label-display:not(.label-top)');
+                    // Buscar tanto inputs como displays (incluyendo los que están dentro de label-with-dropdown)
+                    const topElements = container.querySelectorAll(':scope > .label-wrap > .label-input.label-top, :scope > .label-wrap > .label-display.label-top, :scope > .label-wrap > .label-with-dropdown > .label-input.label-top, :scope > .label-wrap > .label-with-dropdown > .label-display.label-top');
+                    const bottomElements = container.querySelectorAll(':scope > .label-wrap > .label-input:not(.label-top), :scope > .label-wrap > .label-display:not(.label-top), :scope > .label-wrap > .label-with-dropdown > .label-input:not(.label-top), :scope > .label-wrap > .label-with-dropdown > .label-display:not(.label-top)');
                     
                     // El node-box está dentro de un div flex que es hijo directo del container
                     // IMPORTANTE: Solo buscar en los hijos directos, NO en descendientes
@@ -1931,9 +2218,93 @@
             };
 
             // ===========================================
-            // RENDERIZADO DE ETIQUETAS
+            // RENDERIZADO DE ETIQUETAS CON DROPDOWN GTG
             // ===========================================
             const [editingLabel, setEditingLabel] = useState(null);
+            const [dropdownOpen, setDropdownOpen] = useState(null);
+            const [dropdownSearch, setDropdownSearch] = useState('');
+
+            // Componente Dropdown para seleccionar etiquetas GTG
+            const LabelDropdown = ({ isTop, onSelect, onClose }) => {
+                const sections = isTop ? FUNC_SECTIONS : CAT_SECTIONS;
+                const searchLower = dropdownSearch.toLowerCase();
+                
+                const filteredSections = sections.map(sectionKey => {
+                    const section = GTG_LABELS[sectionKey];
+                    const filtered = section.items.filter(item => 
+                        item.abbr.toLowerCase().includes(searchLower) ||
+                        item.full.toLowerCase().includes(searchLower)
+                    );
+                    return { ...section, items: filtered, key: sectionKey };
+                }).filter(s => s.items.length > 0);
+
+                return (
+                    <div className="label-dropdown" onClick={(e) => e.stopPropagation()}>
+                        <div className="dropdown-search">
+                            <input
+                                type="text"
+                                placeholder="Buscar etiqueta..."
+                                value={dropdownSearch}
+                                onChange={(e) => setDropdownSearch(e.target.value)}
+                                autoFocus
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        </div>
+                        {filteredSections.map(section => (
+                            <div key={section.key} className="dropdown-section">
+                                <div className="dropdown-section-title">{section.title}</div>
+                                {section.items.map(item => (
+                                    <div 
+                                        key={item.abbr}
+                                        className="dropdown-item"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                            onSelect(item.abbr);
+                                        }}
+                                    >
+                                        <span className="dropdown-item-abbr">{item.abbr}</span>
+                                        <span className="dropdown-item-full">{item.full}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        ))}
+                        {filteredSections.length === 0 && (
+                            <div className="dropdown-empty">Sin resultados</div>
+                        )}
+                    </div>
+                );
+            };
+
+            // Cerrar dropdown al hacer clic fuera
+            const dropdownRef = useRef(null);
+            
+            useEffect(() => {
+                const handleClickOutside = (e) => {
+                    // Si no hay dropdown abierto, no hacer nada
+                    if (!dropdownOpen) return;
+                    
+                    // Buscar si el clic fue dentro de algún dropdown o botón trigger
+                    const clickedDropdown = e.target.closest('.label-dropdown');
+                    const clickedTrigger = e.target.closest('.dropdown-trigger');
+                    
+                    // Si el clic fue fuera de dropdowns y triggers, cerrar
+                    if (!clickedDropdown && !clickedTrigger) {
+                        setDropdownOpen(null);
+                        setDropdownSearch('');
+                    }
+                };
+                
+                // Usar setTimeout para que el listener se agregue después del render
+                const timeoutId = setTimeout(() => {
+                    document.addEventListener('click', handleClickOutside);
+                }, 0);
+                
+                return () => {
+                    clearTimeout(timeoutId);
+                    document.removeEventListener('click', handleClickOutside);
+                };
+            }, [dropdownOpen]);
 
             const renderLabelInput = (node, field, isTop) => {
                 const value = (node[field] || '');
@@ -1941,6 +2312,7 @@
                 const isSplit = parts.length > 1;
                 const hasValue = value.trim() !== '';
                 const isEditing = editingLabel === `${node.id}-${field}`;
+                const dropdownId = `${node.id}-${field}`;
                 const baseClass = `label-input ${isTop ? 'label-top' : ''} ${hasValue ? (isTop ? 'has-value-top' : 'has-value-bottom') : ''}`;
 
                 const setValue = (newVal) => setTree(prev => updateNode(prev, node.id, { [field]: newVal }));
@@ -1962,16 +2334,19 @@
                 };
 
                 const handleBlur = (e) => {
-                    // Verificar si el nuevo foco está dentro del mismo label-wrap
                     const labelWrap = e.currentTarget.closest('.label-wrap');
                     const relatedTarget = e.relatedTarget;
                     
-                    // Si el foco va a otro elemento dentro del mismo label-wrap, no cerrar
+                    // Si el foco va a otro elemento dentro del mismo label-wrap (incluido el dropdown), no cerrar
                     if (labelWrap && relatedTarget && labelWrap.contains(relatedTarget)) {
                         return;
                     }
                     
-                    // Pequeño delay para permitir clic en el otro input
+                    // Si el foco va a un botón de dropdown o al dropdown mismo, no cerrar
+                    if (relatedTarget && (relatedTarget.closest('.dropdown-trigger') || relatedTarget.closest('.label-dropdown'))) {
+                        return;
+                    }
+                    
                     setTimeout(() => {
                         setEditingLabel(prev => {
                             if (prev === `${node.id}-${field}`) {
@@ -1979,7 +2354,7 @@
                             }
                             return prev;
                         });
-                    }, 150);
+                    }, 200);
                 };
 
                 const handleKeyDown = (e) => {
@@ -1989,55 +2364,137 @@
                     }
                 };
 
-                // Modo edición: mostrar inputs
+                const handleDropdownSelect = (abbr, partIndex = null) => {
+                    if (isSplit && partIndex !== null) {
+                        const newParts = [...parts];
+                        newParts[partIndex] = abbr;
+                        setValue(newParts.join(' / '));
+                    } else {
+                        setValue(abbr);
+                    }
+                    setDropdownOpen(null);
+                    setDropdownSearch('');
+                    // Cerrar el modo edición para que la etiqueta se muestre en modo visualización
+                    setEditingLabel(null);
+                };
+
+                const openDropdown = (e, suffix = '') => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const newId = dropdownId + suffix;
+                    // Si ya está abierto este mismo dropdown, cerrarlo; si no, abrirlo
+                    if (dropdownOpen === newId) {
+                        setDropdownOpen(null);
+                        setDropdownSearch('');
+                    } else {
+                        setDropdownOpen(newId);
+                        setDropdownSearch('');
+                    }
+                };
+
+                // Modo edición: mostrar inputs con botones de dropdown
                 if (isEditing) {
                     return (
                         <div className="label-wrap">
                             {isSplit ? (
                                 <>
+                                    <div className="label-with-dropdown">
+                                        <input
+                                            type="text"
+                                            value={parts[0] || ''}
+                                            onChange={(e) => {
+                                                const left = e.target.value;
+                                                const right = parts.slice(1).join('/').trim();
+                                                setValue(left + ' / ' + right);
+                                            }}
+                                            onBlur={handleBlur}
+                                            onKeyDown={handleKeyDown}
+                                            autoFocus
+                                            className={baseClass}
+                                            style={{ width: '65px' }}
+                                            placeholder={isTop ? 'func.' : 'cat.'}
+                                        />
+                                        <button 
+                                            type="button" 
+                                            className="dropdown-trigger"
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            onClick={(e) => openDropdown(e, '-0')}
+                                            title="Seleccionar etiqueta del catálogo GTG (RAE)"
+                                        >
+                                            ☰
+                                        </button>
+                                        {dropdownOpen === `${dropdownId}-0` && (
+                                            <LabelDropdown
+                                                isTop={isTop}
+                                                onSelect={(abbr) => handleDropdownSelect(abbr, 0)}
+                                                onClose={() => { setDropdownOpen(null); setDropdownSearch(''); }}
+                                            />
+                                        )}
+                                    </div>
+                                    <span className="slash-separator" style={{ color: '#6b7280', fontWeight: 'bold', fontSize: '12px' }}>•</span>
+                                    <div className="label-with-dropdown">
+                                        <input
+                                            type="text"
+                                            value={parts.slice(1).join('/').trim()}
+                                            onChange={(e) => {
+                                                const right = e.target.value;
+                                                const left = (parts[0] || '').trim();
+                                                setValue(left + ' / ' + right);
+                                            }}
+                                            onBlur={handleBlur}
+                                            onKeyDown={handleKeyDown}
+                                            className={baseClass}
+                                            style={{ width: '65px' }}
+                                            placeholder={isTop ? 'func.' : 'cat.'}
+                                        />
+                                        <button 
+                                            type="button" 
+                                            className="dropdown-trigger"
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            onClick={(e) => openDropdown(e, '-1')}
+                                            title="Seleccionar etiqueta del catálogo GTG (RAE)"
+                                        >
+                                            ☰
+                                        </button>
+                                        {dropdownOpen === `${dropdownId}-1` && (
+                                            <LabelDropdown
+                                                isTop={isTop}
+                                                onSelect={(abbr) => handleDropdownSelect(abbr, 1)}
+                                                onClose={() => { setDropdownOpen(null); setDropdownSearch(''); }}
+                                            />
+                                        )}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="label-with-dropdown">
                                     <input
                                         type="text"
-                                        value={parts[0] || ''}
-                                        onChange={(e) => {
-                                            const left = e.target.value;
-                                            const right = parts.slice(1).join('/').trim();
-                                            setValue(left + ' / ' + right);
-                                        }}
+                                        value={value}
+                                        onChange={(e) => setValue(e.target.value)}
                                         onBlur={handleBlur}
                                         onKeyDown={handleKeyDown}
                                         autoFocus
                                         className={baseClass}
-                                        style={{ width: '80px' }}
+                                        style={{ width: '78px' }}
                                         placeholder={isTop ? 'func.' : 'cat.'}
                                     />
-                                    <span className="slash-separator" style={{ color: '#6b7280', fontWeight: 'bold', fontSize: '12px' }}>•</span>
-                                    <input
-                                        type="text"
-                                        value={parts.slice(1).join('/').trim()}
-                                        onChange={(e) => {
-                                            const right = e.target.value;
-                                            const left = (parts[0] || '').trim();
-                                            setValue(left + ' / ' + right);
-                                        }}
-                                        onBlur={handleBlur}
-                                        onKeyDown={handleKeyDown}
-                                        className={baseClass}
-                                        style={{ width: '80px' }}
-                                        placeholder={isTop ? 'func.' : 'cat.'}
-                                    />
-                                </>
-                            ) : (
-                                <input
-                                    type="text"
-                                    value={value}
-                                    onChange={(e) => setValue(e.target.value)}
-                                    onBlur={handleBlur}
-                                    onKeyDown={handleKeyDown}
-                                    autoFocus
-                                    className={baseClass}
-                                    style={{ width: '95px' }}
-                                    placeholder={isTop ? 'func.' : 'cat.'}
-                                />
+                                    <button 
+                                        type="button" 
+                                        className="dropdown-trigger"
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        onClick={(e) => openDropdown(e)}
+                                        title="Seleccionar etiqueta del catálogo GTG (RAE)"
+                                    >
+                                        ☰
+                                    </button>
+                                    {dropdownOpen === dropdownId && (
+                                        <LabelDropdown
+                                            isTop={isTop}
+                                            onSelect={(abbr) => handleDropdownSelect(abbr)}
+                                            onClose={() => { setDropdownOpen(null); setDropdownSearch(''); }}
+                                        />
+                                    )}
+                                </div>
                             )}
                             <button
                                 type="button"
@@ -2640,10 +3097,11 @@
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">☖</span> Etiquetas</h4>
+                                    <h4><span className="icon">☖</span> Etiquetas (GTG-RAE)</h4>
                                     <ul>
-                                        <li>En la etiqueta <strong>superior</strong> indica la función (N, DET, SUJ, CD, CI, etc.).</li>
-                                        <li>En la etiqueta <strong>inferior</strong> indica la categoría de la palabra (v, sust, etc.) o la frase (FN, FV, etc.).</li>
+                                        <li>En la etiqueta <strong>superior</strong> indica la función sintáctica (Suj, CD, CI, N, Det, etc.).</li>
+                                        <li>En la etiqueta <strong>inferior</strong> indica la categoría (sust, v, SN, SV, etc.).</li>
+                                        <li>Haz clic en <code>☰</code> para seleccionar etiquetas del <em>Glosario de términos gramaticales</em> de la RAE.</li>
                                     </ul>
                                 </div>
 
