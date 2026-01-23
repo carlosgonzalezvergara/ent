@@ -1558,17 +1558,18 @@
                 const handleKeyDown = (e) => {
                     const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
                     const modifier = isMac ? e.metaKey : e.ctrlKey;
+                    const key = e.key.toLowerCase();
                     
-                    if (modifier && e.key === 'z' && !e.shiftKey) {
+                    if (modifier && key === 'z' && !e.shiftKey) {
                         e.preventDefault();
                         handleUndo();
-                    } else if (modifier && e.key === 'z' && e.shiftKey) {
+                    } else if (modifier && key === 'z' && e.shiftKey) {
                         e.preventDefault();
                         handleRedo();
-                    } else if (modifier && e.key === 'y') {
+                    } else if (modifier && key === 'y') {
                         e.preventDefault();
                         handleRedo();
-                    } else if (modifier && e.key === 's') {
+                    } else if (modifier && key === 's') {
                         e.preventDefault();
                         handleSaveJSON();
                     }
