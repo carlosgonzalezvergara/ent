@@ -3798,7 +3798,16 @@
                                             </div>
                                             <p className="files-help-text">
                                                 Pega la URL de una carpeta pública de Google Drive que contenga archivos <code>.ent</code>.<br/>
-                                                La carpeta debe estar compartida como "Cualquier persona con el enlace".
+                                                La carpeta debe estar compartida como "Cualquier persona con el enlace".<br/><br/>
+                                                ¿No tienes una carpeta o un enlace? Prueba con el <a 
+                                                    href="#" 
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        setDriveUrl('https://drive.google.com/drive/folders/1faSpC1f2qUUJag87xRVKuJf2VBk--d7r?usp=share_link');
+                                                        setTimeout(() => handleConnectDrive(), 100);
+                                                    }}
+                                                    style={{color: '#3b82f6', textDecoration: 'underline', cursor: 'pointer'}}
+                                                >banco de ejemplos de ENT</a>.
                                             </p>
 
                                             {driveStatus.type && (
