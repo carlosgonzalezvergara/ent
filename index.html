@@ -1030,6 +1030,287 @@
         }
 
         /* ===========================================
+           MODAL DE ARCHIVOS
+           =========================================== */
+        .files-modal {
+            width: min(600px, calc(100vw - 32px));
+            max-height: calc(100vh - 64px);
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,.18);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .files-modal-header {
+            padding: 18px 20px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .files-modal-title {
+            font-weight: 700;
+            color: #111827;
+            margin: 0 0 16px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .files-tabs {
+            display: flex;
+            gap: 0;
+        }
+
+        .files-tab {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6b7280;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .files-tab:hover {
+            color: #374151;
+            background: #f9fafb;
+        }
+
+        .files-tab.active {
+            color: #374151;
+            border-bottom-color: #374151;
+        }
+
+        .files-modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .files-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .files-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .files-btn-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .files-btn-row .btn {
+            flex: 1;
+            min-width: 140px;
+            justify-content: center;
+        }
+
+        /* Banco de ejemplos */
+        .drive-connect-row {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        .drive-url-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .drive-url-input:focus {
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .drive-url-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .drive-status {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .drive-status.loading {
+            background: #f0f9ff;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+
+        .drive-status.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .drive-status.success {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .drive-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #bae6fd;
+            border-top-color: #0369a1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .drive-files-list {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .drive-folder {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .drive-folder:last-child {
+            border-bottom: none;
+        }
+
+        .drive-folder-header {
+            padding: 10px 14px;
+            background: #f9fafb;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.15s ease;
+        }
+
+        .drive-folder-header:hover {
+            background: #f3f4f6;
+        }
+
+        .drive-folder-toggle {
+            font-size: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .drive-folder-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .drive-folder-content {
+            max-height: 500px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .drive-folder-content.collapsed {
+            max-height: 0;
+        }
+
+        .drive-file-item {
+            padding: 10px 14px 10px 28px;
+            font-size: 13px;
+            color: #374151;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.15s ease;
+        }
+
+        .drive-file-item:last-child {
+            border-bottom: none;
+        }
+
+        .drive-file-item:hover {
+            background: #f0f7ff;
+        }
+
+        .drive-file-item.selected {
+            background: #eff6ff;
+            border-left: 3px solid #3b82f6;
+            padding-left: 25px;
+        }
+
+        .drive-file-icon {
+            font-size: 14px;
+        }
+
+        .drive-file-name {
+            flex: 1;
+        }
+
+        /* Opciones de carga */
+        .drive-load-options {
+            padding: 16px;
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .drive-load-options .btn {
+            min-width: 160px;
+        }
+
+        .files-modal-footer {
+            padding: 14px 20px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .drive-root-files {
+            padding: 4px 0;
+        }
+
+        .files-help-text {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        .files-help-text code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        /* ===========================================
            PIE DE PÁGINA
            =========================================== */
         .footer {
@@ -1169,44 +1450,44 @@
             funciones: {
                 title: 'Funciones sintácticas',
                 items: [
-                    { abbr: 'Suj', full: 'sujeto' },
-                    { abbr: 'SujDes', full: 'sujeto desinencial' },
-                    { abbr: 'SujTac', full: 'sujeto tácito' },
-                    { abbr: 'SujInd', full: 'sujeto indeterminado' },
-                    { abbr: 'SujImp', full: 'sujeto impersonal' },
+                    { abbr: 'SUJ', full: 'sujeto' },
+                    { abbr: 'SUJ DES', full: 'sujeto desinencial' },
+                    { abbr: 'SUJ TAC', full: 'sujeto tácito' },
+                    { abbr: 'SUJ IND', full: 'sujeto indeterminado' },
+                    { abbr: 'SUN IMP', full: 'sujeto impersonal' },
                     { abbr: 'CD', full: 'complemento directo' },
                     { abbr: 'CI', full: 'complemento indirecto' },
-                    { abbr: 'CReg', full: 'complemento de régimen' },
+                    { abbr: 'C REG', full: 'complemento de régimen' },
                     { abbr: 'CC', full: 'complemento circunstancial' },
-                    { abbr: 'CCT', full: 'c. circunstancial de tiempo' },
-                    { abbr: 'CCL', full: 'c. circunstancial de lugar' },
-                    { abbr: 'CCM', full: 'c. circunstancial de modo' },
-                    { abbr: 'CCCAUS', full: 'c. circunstancial de causa' },
-                    { abbr: 'CCFIN', full: 'c. circunstancial de finalidad' },
-                    { abbr: 'CCINST', full: 'c. circunstancial de instrumento' },
-                    { abbr: 'CCCANT', full: 'c. circunstancial de cantidad' },
-                    { abbr: 'CCCOMP', full: 'c. circunstancial de compañía' },
-                    { abbr: 'CAg', full: 'complemento agente' },
-                    { abbr: 'Atr', full: 'atributo' },
-                    { abbr: 'CPvo', full: 'complemento predicativo' },
-                    { abbr: 'Ter', full: 'término' },
+                    { abbr: 'CC T', full: 'c. circunstancial de tiempo' },
+                    { abbr: 'CC LOC', full: 'c. circunstancial de lugar' },
+                    { abbr: 'CC MOD', full: 'c. circunstancial de modo' },
+                    { abbr: 'CC CAUS', full: 'c. circunstancial de causa' },
+                    { abbr: 'CC FIN', full: 'c. circunstancial de finalidad' },
+                    { abbr: 'CC INST', full: 'c. circunstancial de instrumento' },
+                    { abbr: 'CC CANT', full: 'c. circunstancial de cantidad' },
+                    { abbr: 'CC COMP', full: 'c. circunstancial de compañía' },
+                    { abbr: 'C AG', full: 'complemento agente' },
+                    { abbr: 'ATR', full: 'atributo' },
+                    { abbr: 'C PVO', full: 'complemento predicativo' },
+                    { abbr: 'TER', full: 'término' },
                     { abbr: 'CN', full: 'complemento del nombre' },
-                    { abbr: 'CAdj', full: 'complemento del adjetivo' },
-                    { abbr: 'CAdv', full: 'complemento del adverbio' },
-                    { abbr: 'CPro', full: 'complemento del pronombre' },
-                    { abbr: 'Apos', full: 'aposición' },
-                    { abbr: 'Voc', full: 'vocativo' },
+                    { abbr: 'C ADJ', full: 'complemento del adjetivo' },
+                    { abbr: 'C ADV', full: 'complemento del adverbio' },
+                    { abbr: 'CPRO', full: 'complemento del pronombre' },
+                    { abbr: 'APOS', full: 'aposición' },
+                    { abbr: 'VOC', full: 'vocativo' },
                 ]
             },
             funcionesInternas: {
                 title: 'Funciones internas',
                 items: [
                     { abbr: 'NUC', full: 'núcleo' },
-                    { abbr: 'Mod', full: 'modificador' },
-                    { abbr: 'Det', full: 'determinante' },
-                    { abbr: 'Ady', full: 'adyacente' },
-                    { abbr: 'Enl', full: 'enlace' },
-                    { abbr: 'Nx', full: 'nexo' },
+                    { abbr: 'MOD', full: 'modificador' },
+                    { abbr: 'DET', full: 'determinante' },
+                    { abbr: 'ADY', full: 'adyacente' },
+                    { abbr: 'ENL', full: 'enlace' },
+                    { abbr: 'NX', full: 'nexo' },
                 ]
             },
             // CATEGORÍAS / CLASES DE PALABRAS (etiqueta inferior)
@@ -1236,22 +1517,22 @@
                     { abbr: 'det', full: 'determinante' },
                     { abbr: 'pron', full: 'pronombre' },                  
                     { abbr: 'adv', full: 'adverbio' },
-                    { abbr: 'advt', full: 'adverbio de tiempo' },
-                    { abbr: 'advl', full: 'adverbio de lugar' },
-                    { abbr: 'advm', full: 'adverbio de modo' },
-                    { abbr: 'advc', full: 'adverbio de cantidad' },
-                    { abbr: 'advaf', full: 'adverbio afirmativo' },
-                    { abbr: 'advneg', full: 'adverbio negativo' },
-                    { abbr: 'advdud', full: 'adverbio de duda' },
+                    { abbr: 'adv t', full: 'adverbio de tiempo' },
+                    { abbr: 'adv loc', full: 'adverbio de lugar' },
+                    { abbr: 'adv mod', full: 'adverbio de modo' },
+                    { abbr: 'adv cant', full: 'adverbio de cantidad' },
+                    { abbr: 'adv af', full: 'adverbio de afirmación' },
+                    { abbr: 'adv neg', full: 'adverbio de negación' },
+                    { abbr: 'adv dud', full: 'adverbio de duda' },
                     { abbr: 'conj', full: 'conjunción' },
-                    { abbr: 'conjcop', full: 'conjunción copulativa' },
-                    { abbr: 'conjdisy', full: 'conjunción disyuntiva' },
-                    { abbr: 'conjadv', full: 'conjunción adverbial' },
+                    { abbr: 'conj cop', full: 'conjunción copulativa' },
+                    { abbr: 'conj disy', full: 'conjunción disyuntiva' },
+                    { abbr: 'conj adv', full: 'conjunción adverbial' },
                     { abbr: 'interj', full: 'interjección' },
                     { abbr: 'clit', full: 'clítico' },
-                    { abbr: 'clitacus', full: 'clítico acusativo' },
-                    { abbr: 'clitdat', full: 'clítico dativo' },
-                    { abbr: 'clitrefl', full: 'clítico reflexivo' },
+                    { abbr: 'clit acus', full: 'clítico acusativo' },
+                    { abbr: 'clit dat', full: 'clítico dativo' },
+                    { abbr: 'clit refl', full: 'clítico reflexivo' },
                 ]
             },
             determinantes: {
@@ -1326,6 +1607,15 @@
 
             // Panel de instrucciones
             const [instructionsCollapsed, setInstructionsCollapsed] = useState(true);
+
+            // Modal de archivos
+            const [showFilesModal, setShowFilesModal] = useState(false);
+            const [filesActiveTab, setFilesActiveTab] = useState('local');
+            const [driveUrl, setDriveUrl] = useState(() => localStorage.getItem('ent_drive_url') || '');
+            const [driveStatus, setDriveStatus] = useState({ type: null, message: '' });
+            const [driveFiles, setDriveFiles] = useState([]);
+            const [selectedDriveFile, setSelectedDriveFile] = useState(null);
+            const [collapsedFolders, setCollapsedFolders] = useState({});
 
             // Referencias
             const fileInputRef = useRef(null);
@@ -1550,6 +1840,163 @@
                 a.download = `${words}.ent`;
                 a.click();
             }, [tree, sentence]);
+
+            // ===========================================
+            // GOOGLE DRIVE API
+            // ===========================================
+            const GOOGLE_API_KEY = 'AIzaSyB1XWEgGpX-SWi6GlzqXcOOk7pFc6jLCsU';
+
+            const extractFolderId = (url) => {
+                // Soportar varios formatos de URL de Google Drive
+                const patterns = [
+                    /\/folders\/([a-zA-Z0-9_-]+)/,
+                    /id=([a-zA-Z0-9_-]+)/,
+                    /^([a-zA-Z0-9_-]+)$/
+                ];
+                for (const pattern of patterns) {
+                    const match = url.match(pattern);
+                    if (match) return match[1];
+                }
+                return null;
+            };
+
+            const fetchDriveFolder = async (folderId, folderName = 'Raíz') => {
+                const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents&key=${GOOGLE_API_KEY}&fields=files(id,name,mimeType)&orderBy=name`;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error?.message || 'Error al acceder a la carpeta');
+                }
+                const data = await response.json();
+                return { folderId, folderName, files: data.files || [] };
+            };
+
+            const organizeFiles = async (rootFolderId) => {
+                const result = [];
+                const rootData = await fetchDriveFolder(rootFolderId, 'Raíz');
+                
+                // Separar archivos .ent y subcarpetas
+                const entFiles = rootData.files.filter(f => f.name.endsWith('.ent'));
+                const folders = rootData.files.filter(f => f.mimeType === 'application/vnd.google-apps.folder');
+                
+                // Agregar archivos de la raíz
+                if (entFiles.length > 0) {
+                    result.push({ folderName: null, files: entFiles });
+                }
+                
+                // Procesar subcarpetas
+                for (const folder of folders) {
+                    try {
+                        const folderData = await fetchDriveFolder(folder.id, folder.name);
+                        const folderEntFiles = folderData.files.filter(f => f.name.endsWith('.ent'));
+                        if (folderEntFiles.length > 0) {
+                            result.push({ folderName: folder.name, folderId: folder.id, files: folderEntFiles });
+                        }
+                    } catch (e) {
+                        console.warn(`No se pudo acceder a la carpeta ${folder.name}:`, e);
+                    }
+                }
+                
+                return result;
+            };
+
+            const handleConnectDrive = async () => {
+                const folderId = extractFolderId(driveUrl.trim());
+                if (!folderId) {
+                    setDriveStatus({ type: 'error', message: 'URL no válida. Ingresa una URL de carpeta de Google Drive.' });
+                    return;
+                }
+
+                // Guardar la URL en localStorage
+                localStorage.setItem('ent_drive_url', driveUrl.trim());
+                
+                setDriveStatus({ type: 'loading', message: 'Conectando con Google Drive...' });
+                setDriveFiles([]);
+                setSelectedDriveFile(null);
+
+                try {
+                    const files = await organizeFiles(folderId);
+                    if (files.length === 0 || files.every(f => f.files.length === 0)) {
+                        setDriveStatus({ type: 'error', message: 'No se encontraron archivos .ent en esta carpeta.' });
+                        return;
+                    }
+                    setDriveFiles(files);
+                    setDriveStatus({ type: 'success', message: `Se encontraron ${files.reduce((sum, f) => sum + f.files.length, 0)} archivos .ent` });
+                } catch (error) {
+                    console.error('Error al conectar con Google Drive:', error);
+                    if (error.message.includes('API key')) {
+                        setDriveStatus({ type: 'error', message: 'Error de API Key. Verifica la configuración.' });
+                    } else if (error.message.includes('not found') || error.message.includes('404')) {
+                        setDriveStatus({ type: 'error', message: 'Carpeta no encontrada. Verifica que la URL sea correcta.' });
+                    } else if (error.message.includes('permission') || error.message.includes('403')) {
+                        setDriveStatus({ type: 'error', message: 'Sin permisos. La carpeta debe ser pública (compartida con "Cualquier persona con el enlace").' });
+                    } else {
+                        setDriveStatus({ type: 'error', message: `Error: ${error.message}` });
+                    }
+                }
+            };
+
+            const fetchDriveFile = async (fileId) => {
+                const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${GOOGLE_API_KEY}`;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('No se pudo descargar el archivo');
+                }
+                return await response.json();
+            };
+
+            const handleLoadFromDrive = async (asExercise = false) => {
+                if (!selectedDriveFile) return;
+
+                setDriveStatus({ type: 'loading', message: 'Cargando archivo...' });
+
+                try {
+                    const data = await fetchDriveFile(selectedDriveFile.id);
+                    
+                    if (!data.tree || !data.sentence) {
+                        setDriveStatus({ type: 'error', message: 'El archivo no tiene el formato esperado.' });
+                        return;
+                    }
+
+                    if (asExercise) {
+                        // Cargar como ejercicio
+                        const originalSentence = data.sentence || '';
+                        setSentence(originalSentence);
+                        setModelTree(data.tree);
+                        const newTree = createEmptyTree(originalSentence);
+                        setTree(newTree);
+                        setDivisionMode(null);
+                        setSelectedCuts([]);
+                        setExerciseMode(true);
+                        setShowComparison(false);
+                        setComparisonResults(null);
+                        setHistory([JSON.stringify(newTree)]);
+                        setHistoryIndex(0);
+                    } else {
+                        // Cargar como referencia (para ver/editar)
+                        setSentence(data.sentence || '');
+                        setTree(data.tree);
+                        setExerciseMode(false);
+                        setModelTree(null);
+                        setShowComparison(false);
+                        setHistory([JSON.stringify(data.tree)]);
+                        setHistoryIndex(0);
+                    }
+
+                    setShowFilesModal(false);
+                    setSelectedDriveFile(null);
+                } catch (error) {
+                    console.error('Error al cargar archivo:', error);
+                    setDriveStatus({ type: 'error', message: `Error al cargar: ${error.message}` });
+                }
+            };
+
+            const toggleFolder = (folderId) => {
+                setCollapsedFolders(prev => ({
+                    ...prev,
+                    [folderId]: !prev[folderId]
+                }));
+            };
 
             // ===========================================
             // ATAJOS DE TECLADO
@@ -2989,11 +3436,72 @@
                                     <p>Analiza la expresión y compara tu resultado con el modelo cuando termines</p>
                                 </div>
                             </div>
-                            <p style={{marginBottom: '24px'}}>Carga un archivo con extensión .ent con el ejercicio de análisis</p>
-                            <div style={{display: 'flex', gap: '12px'}}>
-                                <button onClick={() => exerciseInputRef.current.click()} className="btn btn-primary">Cargar archivo .ent</button>
-                                <button onClick={resetExercise} className="btn btn-outline">Salir del modo ejercitación</button>
+                            <p style={{marginBottom: '16px', color: '#6b7280'}}>Selecciona un ejercicio desde tu computador o desde el banco de ejemplos</p>
+                            
+                            <div style={{display: 'flex', gap: '12px', marginBottom: '16px'}}>
+                                <button onClick={() => exerciseInputRef.current.click()} className="btn btn-primary">📂 Cargar archivo local</button>
+                                <button onClick={() => { setShowFilesModal(true); setFilesActiveTab('cloud'); }} className="btn btn-primary">☁️ Banco de ejemplos</button>
                             </div>
+                            
+                            {driveFiles.length > 0 && (
+                                <div style={{width: '100%', maxWidth: '500px', marginBottom: '16px'}}>
+                                    <div className="drive-files-list" style={{maxHeight: '200px'}}>
+                                        {driveFiles.map((folder, idx) => (
+                                            folder.folderName ? (
+                                                <div className="drive-folder" key={folder.folderId || idx}>
+                                                    <div 
+                                                        className="drive-folder-header"
+                                                        onClick={() => toggleFolder(folder.folderId)}
+                                                    >
+                                                        <span className={`drive-folder-toggle ${collapsedFolders[folder.folderId] ? 'collapsed' : ''}`}>▼</span>
+                                                        📁 {folder.folderName}
+                                                        <span style={{marginLeft: 'auto', fontSize: '11px', color: '#9ca3af'}}>
+                                                            {folder.files.length} archivo{folder.files.length !== 1 ? 's' : ''}
+                                                        </span>
+                                                    </div>
+                                                    <div className={`drive-folder-content ${collapsedFolders[folder.folderId] ? 'collapsed' : ''}`}>
+                                                        {folder.files.map(file => (
+                                                            <div 
+                                                                key={file.id}
+                                                                className={`drive-file-item ${selectedDriveFile?.id === file.id ? 'selected' : ''}`}
+                                                                onClick={() => setSelectedDriveFile(file)}
+                                                            >
+                                                                <span className="drive-file-icon">📄</span>
+                                                                <span className="drive-file-name">{file.name}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="drive-root-files" key="root">
+                                                    {folder.files.map(file => (
+                                                        <div 
+                                                            key={file.id}
+                                                            className={`drive-file-item ${selectedDriveFile?.id === file.id ? 'selected' : ''}`}
+                                                            onClick={() => setSelectedDriveFile(file)}
+                                                        >
+                                                            <span className="drive-file-icon">📄</span>
+                                                            <span className="drive-file-name">{file.name}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )
+                                        ))}
+                                    </div>
+                                    {selectedDriveFile && (
+                                        <div style={{marginTop: '12px', textAlign: 'center'}}>
+                                            <button 
+                                                className="btn btn-exercise"
+                                                onClick={() => handleLoadFromDrive(true)}
+                                            >
+                                                📚 Iniciar ejercicio con "{selectedDriveFile.name}"
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            
+                            <button onClick={resetExercise} className="btn btn-outline">Salir del modo ejercitación</button>
                         </div>
                     )}
 
@@ -3038,9 +3546,8 @@
                                         ↷
                                     </button>
                                     <span className="btn-separator"></span>
-                                    <button onClick={() => fileInputRef.current.click()} className="btn btn-outline">Cargar .ent</button>
+                                    <button onClick={() => setShowFilesModal(true)} className="btn btn-outline">📁 Archivos</button>
                                     <input type="file" ref={fileInputRef} style={{display:'none'}} accept=".ent,.json,application/json,text/plain,*/*" onChange={handleLoadJSON} />
-                                    <button onClick={handleSaveJSON} className="btn btn-outline" disabled={!tree} title="Guardar (Ctrl+S)">Guardar .ent</button>
                                     <span className="btn-separator"></span>
                                     <button onClick={() => setExerciseMode(true)} className="btn btn-exercise">📚 Modo ejercitación</button>
                                 </>
@@ -3178,11 +3685,22 @@
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">◰</span> Guardar y cargar</h4>
+                                    <h4><span className="icon">◰</span> Archivos</h4>
                                     <ul>
-                                        <li>Usa <strong>Guardar</strong> o <span className="key">Ctrl</span>/<span className="key">⌘</span>+<span className="key">S</span> para descargar un archivo <code>.ent</code> con tu análisis.</li>
-                                        <li>Usa <strong>Cargar</strong> para abrir un archivo <code>.ent</code> guardado previamente.</li>
-                                        <li>Los archivos <code>.ent</code> conservan toda la estructura y etiquetas del análisis.</li>
+                                        <li>Haz clic en <strong>📁 Archivos</strong> para abrir el gestor de archivos.</li>
+                                        <li>Pestaña <strong>Local</strong>: guarda o carga archivos <code>.ent</code> desde tu computador.</li>
+                                        <li>Pestaña <strong>Banco de ejemplos</strong>: conecta con Google Drive para acceder a ejemplos compartidos.</li>
+                                        <li>Atajo: <span className="key">Ctrl</span>/<span className="key">⌘</span>+<span className="key">S</span> guarda directamente.</li>
+                                    </ul>
+                                </div>
+
+                                <div className="instruction-card">
+                                    <h4><span className="icon">§</span> Nota para profesores</h4>
+                                    <ul>
+                                        <li>Para crear un banco de ejemplos, sube archivos <code>.ent</code> a una carpeta de Google Drive.</li>
+                                        <li>Haz clic derecho en la carpeta → <strong>Compartir</strong> → <strong>Cualquier persona con el enlace</strong> (como Lector).</li>
+                                        <li>Copia el enlace y compártelo con tus estudiantes.</li>
+                                        <li>Puedes organizar los ejemplos en subcarpetas (por tema, dificultad, etc.).</li>
                                     </ul>
                                 </div>
 
@@ -3190,9 +3708,9 @@
                                 <div className="instruction-card">
                                     <h4 style={{color: '#5b21b6'}}><span className="icon" style={{backgroundColor: '#5b21b6'}}>✎</span> Modo ejercitación</h4>
                                     <ul>
-                                        <li>Carga un archivo .ent con un diagrama.</li>
-                                        <li>Haz tu análisis de la expresión propuesta.</li>
-                                        <li>Compara tu resultado con el modelo.</li>
+                                        <li>Haz clic en <strong>📚 Modo ejercitación</strong> para practicar.</li>
+                                        <li>Carga un ejercicio desde tu computador o desde el <strong>banco de ejemplos</strong> en Google Drive.</li>
+                                        <li>Analiza la expresión propuesta y compara tu resultado con el modelo.</li>
                                     </ul>
                                 </div>
                                 )}
@@ -3210,6 +3728,163 @@
                             </div>
                         </div>
                     </div>
+
+                    {showFilesModal && (
+                        <div className="pos-overlay" onClick={() => setShowFilesModal(false)}>
+                            <div className="files-modal" onClick={(e) => e.stopPropagation()}>
+                                <div className="files-modal-header">
+                                    <h4 className="files-modal-title">📁 Archivos</h4>
+                                    <div className="files-tabs">
+                                        <button 
+                                            className={`files-tab ${filesActiveTab === 'local' ? 'active' : ''}`}
+                                            onClick={() => setFilesActiveTab('local')}
+                                        >
+                                            💻 Local
+                                        </button>
+                                        <button 
+                                            className={`files-tab ${filesActiveTab === 'cloud' ? 'active' : ''}`}
+                                            onClick={() => setFilesActiveTab('cloud')}
+                                        >
+                                            ☁️ Banco de ejemplos
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="files-modal-body">
+                                    {filesActiveTab === 'local' && (
+                                        <div className="files-section">
+                                            <div className="files-section-title">Gestión de archivos locales</div>
+                                            <div className="files-btn-row">
+                                                <button 
+                                                    onClick={() => { fileInputRef.current.click(); setShowFilesModal(false); }} 
+                                                    className="btn btn-outline"
+                                                >
+                                                    📂 Cargar .ent
+                                                </button>
+                                                <button 
+                                                    onClick={() => { handleSaveJSON(); setShowFilesModal(false); }} 
+                                                    className="btn btn-primary" 
+                                                    disabled={!tree}
+                                                    title="Guardar (Ctrl+S)"
+                                                >
+                                                    💾 Guardar .ent
+                                                </button>
+                                            </div>
+                                            <p className="files-help-text">
+                                                Los archivos <code>.ent</code> guardan tu análisis completo (expresión, estructura y etiquetas).
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {filesActiveTab === 'cloud' && (
+                                        <div className="files-section">
+                                            <div className="files-section-title">Conectar con Google Drive</div>
+                                            <div className="drive-connect-row">
+                                                <input 
+                                                    type="text"
+                                                    className="drive-url-input"
+                                                    placeholder="URL de carpeta de Google Drive..."
+                                                    value={driveUrl}
+                                                    onChange={(e) => setDriveUrl(e.target.value)}
+                                                    onKeyPress={(e) => e.key === 'Enter' && handleConnectDrive()}
+                                                />
+                                                <button 
+                                                    className="btn btn-primary" 
+                                                    onClick={handleConnectDrive}
+                                                    disabled={!driveUrl.trim()}
+                                                >
+                                                    Conectar
+                                                </button>
+                                            </div>
+                                            <p className="files-help-text">
+                                                Pega la URL de una carpeta pública de Google Drive que contenga archivos <code>.ent</code>.<br/>
+                                                La carpeta debe estar compartida como "Cualquier persona con el enlace".
+                                            </p>
+
+                                            {driveStatus.type && (
+                                                <div className={`drive-status ${driveStatus.type}`}>
+                                                    {driveStatus.type === 'loading' && <div className="drive-spinner"></div>}
+                                                    {driveStatus.type === 'error' && <span>⚠️</span>}
+                                                    {driveStatus.type === 'success' && <span>✓</span>}
+                                                    <span>{driveStatus.message}</span>
+                                                </div>
+                                            )}
+
+                                            {driveFiles.length > 0 && (
+                                                <>
+                                                    <div className="files-section-title" style={{marginTop: '16px'}}>Archivos disponibles</div>
+                                                    <div className="drive-files-list">
+                                                        {driveFiles.map((folder, idx) => (
+                                                            folder.folderName ? (
+                                                                <div className="drive-folder" key={folder.folderId || idx}>
+                                                                    <div 
+                                                                        className="drive-folder-header"
+                                                                        onClick={() => toggleFolder(folder.folderId)}
+                                                                    >
+                                                                        <span className={`drive-folder-toggle ${collapsedFolders[folder.folderId] ? 'collapsed' : ''}`}>▼</span>
+                                                                        📁 {folder.folderName}
+                                                                        <span style={{marginLeft: 'auto', fontSize: '11px', color: '#9ca3af'}}>
+                                                                            {folder.files.length} archivo{folder.files.length !== 1 ? 's' : ''}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className={`drive-folder-content ${collapsedFolders[folder.folderId] ? 'collapsed' : ''}`}>
+                                                                        {folder.files.map(file => (
+                                                                            <div 
+                                                                                key={file.id}
+                                                                                className={`drive-file-item ${selectedDriveFile?.id === file.id ? 'selected' : ''}`}
+                                                                                onClick={() => setSelectedDriveFile(file)}
+                                                                            >
+                                                                                <span className="drive-file-icon">📄</span>
+                                                                                <span className="drive-file-name">{file.name}</span>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="drive-root-files" key="root">
+                                                                    {folder.files.map(file => (
+                                                                        <div 
+                                                                            key={file.id}
+                                                                            className={`drive-file-item ${selectedDriveFile?.id === file.id ? 'selected' : ''}`}
+                                                                            onClick={() => setSelectedDriveFile(file)}
+                                                                        >
+                                                                            <span className="drive-file-icon">📄</span>
+                                                                            <span className="drive-file-name">{file.name}</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )
+                                                        ))}
+                                                    </div>
+
+                                                    {selectedDriveFile && (
+                                                        <div className="drive-load-options">
+                                                            <button 
+                                                                className="btn btn-outline"
+                                                                onClick={() => handleLoadFromDrive(false)}
+                                                            >
+                                                                📖 Cargar como referencia
+                                                            </button>
+                                                            <button 
+                                                                className="btn btn-exercise"
+                                                                onClick={() => handleLoadFromDrive(true)}
+                                                            >
+                                                                📚 Cargar como ejercicio
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="files-modal-footer">
+                                    <button className="btn btn-outline" onClick={() => setShowFilesModal(false)}>Cerrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {posPicker && (
                         <div className="pos-overlay" onClick={() => setPosPicker(null)}>
