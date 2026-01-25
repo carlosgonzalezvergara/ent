@@ -3703,6 +3703,14 @@
                                     <input type="file" ref={fileInputRef} style={{display:'none'}} accept=".ent,.json,application/json,text/plain,*/*" onChange={handleLoadJSON} />
                                     <span className="btn-separator"></span>
                                     <button onClick={() => setExerciseMode(true)} className="btn btn-exercise">📚 Modo ejercitación</button>
+                                    <span className="btn-separator"></span>
+                                    <button 
+                                        onClick={() => window.open('manual.html', '_blank')} 
+                                        className="btn btn-outline"
+                                        title="Consultar manual detallado"
+                                    >
+                                        🗂 Manual
+                                    </button>
                                 </>
                             ) : (
                                 modelTree && (
@@ -3749,7 +3757,7 @@
                             className="instructions-header" 
                             onClick={() => setInstructionsCollapsed(!instructionsCollapsed)}
                         >
-                            <span>Instrucciones</span>
+                            <span>Guía rápida</span>
                             <span className={`instructions-toggle ${instructionsCollapsed ? 'collapsed' : ''}`}>▼</span>
                         </div>
                         <div className={`instructions-content ${instructionsCollapsed ? 'collapsed' : ''}`}>
