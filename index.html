@@ -1509,6 +1509,7 @@
                 title: 'Clases de palabras',
                 items: [
                     { abbr: 'v', full: 'verbo' },
+                    { abbr: 'perif verb', full: 'perífrasis verbal' },
                     { abbr: 'sust', full: 'sustantivo común' },
                     { abbr: 'np', full: 'nombre propio' },
                     { abbr: 'prep', full: 'preposición' },
@@ -1533,6 +1534,15 @@
                     { abbr: 'clit acus', full: 'clítico acusativo' },
                     { abbr: 'clit dat', full: 'clítico dativo' },
                     { abbr: 'clit refl', full: 'clítico reflexivo' },
+                    { abbr: 'loc verb', full: 'locución verbal' },
+                    { abbr: 'loc nom', full: 'locución nominal' },
+                    { abbr: 'loc prep', full: 'locución preposicional' },
+                    { abbr: 'loc adj', full: 'locución adjetival' },
+                    { abbr: 'loc adv', full: 'locución adverbial' },
+                    { abbr: 'loc conj', full: 'locución conjuntiva' },
+                    { abbr: 'inf', full: 'infinitivo' },
+                    { abbr: 'ger', full: 'gerundio' },
+                    { abbr: 'part', full: 'participio' },
                 ]
             },
             determinantes: {
@@ -2213,12 +2223,7 @@
             const compareTrees = (studentTree, modelTree) => {
                 const results = {
                     totalNodes: 0,
-                    correctStructure: 0,
-                    correctLabelTop: 0,
-                    correctLabelBottom: 0,
-                    incorrectStructure: 0,
-                    incorrectLabelTop: 0,
-                    incorrectLabelBottom: 0,
+                    correctNodes: 0,
                     totalLabelTopExpected: 0,
                     totalLabelBottomExpected: 0,
                     correctLabelTopExpected: 0,
@@ -2232,8 +2237,76 @@
 
                 const normalizeText = (text) => (text || '').trim().toLowerCase();
                 const normalizeLabel = (label) => (label || '').trim().toLowerCase().replace(/\s+/g, '');
+                const getChildCount = (node) => (node?.children?.length) || 0;
 
-                const compareNodes = (student, model, path = 'root', isBranchValid = true) => {
+                // Verifica si los hijos del estudiante coinciden con los del modelo
+                // Para nodos normales: verificar texto exacto en la misma posición
+                // Para nodos extra (isInserted): solo verificar que las etiquetas coincidan (ignorar texto y posición)
+                const childrenMatch = (studentNode, modelNode) => {
+                    const studentChildren = studentNode?.children || [];
+                    const modelChildren = modelNode?.children || [];
+                    
+                    // Separar nodos normales y nodos extra
+                    const studentNormal = studentChildren.filter(c => !c.isInserted);
+                    const studentExtra = studentChildren.filter(c => c.isInserted);
+                    const modelNormal = modelChildren.filter(c => !c.isInserted);
+                    const modelExtra = modelChildren.filter(c => c.isInserted);
+                    
+                    // Verificar que la cantidad de nodos normales coincida
+                    if (studentNormal.length !== modelNormal.length) return false;
+                    
+                    // Verificar que la cantidad de nodos extra coincida
+                    if (studentExtra.length !== modelExtra.length) return false;
+                    
+                    // Verificar que cada nodo normal tenga el mismo texto en la misma posición
+                    for (let i = 0; i < modelNormal.length; i++) {
+                        if (normalizeText(studentNormal[i]?.text) !== normalizeText(modelNormal[i]?.text)) {
+                            return false;
+                        }
+                    }
+                    
+                    // Para nodos extra: verificar que cada nodo extra del estudiante 
+                    // tenga etiquetas que coincidan con algún nodo extra del modelo
+                    const usedModelExtras = new Set();
+                    for (const studentExtraNode of studentExtra) {
+                        const studentLabelTop = normalizeLabel(studentExtraNode.labelTop);
+                        const studentLabelBottom = normalizeLabel(studentExtraNode.labelBottom);
+                        
+                        // Buscar un nodo extra del modelo con las mismas etiquetas que aún no haya sido usado
+                        let foundMatch = false;
+                        for (let j = 0; j < modelExtra.length; j++) {
+                            if (usedModelExtras.has(j)) continue;
+                            
+                            const modelLabelTop = normalizeLabel(modelExtra[j].labelTop);
+                            const modelLabelBottom = normalizeLabel(modelExtra[j].labelBottom);
+                            
+                            if (studentLabelTop === modelLabelTop && studentLabelBottom === modelLabelBottom) {
+                                usedModelExtras.add(j);
+                                foundMatch = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!foundMatch) return false;
+                    }
+                    
+                    return true;
+                };
+
+                // Cuenta todos los elementos del modelo (para el puntaje total)
+                const countModelElements = (modelNode) => {
+                    const children = modelNode.children || [];
+                    children.forEach((child) => {
+                        results.totalNodes++;
+                        const childTop = (child.labelTop || '').trim();
+                        const childBottom = (child.labelBottom || '').trim();
+                        if (childTop) results.totalLabelTopExpected++;
+                        if (childBottom) results.totalLabelBottomExpected++;
+                        countModelElements(child);
+                    });
+                };
+
+                const compareNodes = (student, model, path = 'root') => {
                     if (!model) return;
                     
                     // 1. PUNTAJE IDEAL: Siempre se suma basándose exclusivamente en el modelo
@@ -2243,79 +2316,111 @@
                     if (modelTop) results.totalLabelTopExpected++;
                     if (modelBottom) results.totalLabelBottomExpected++;
 
-                    // 2. DETERMINAR VALIDEZ DEL ESTUDIANTE
-                    // El nodo del estudiante solo cuenta si la rama viene siendo válida y el nodo existe
-                    const hasStudent = !!student && isBranchValid;
+                    // 2. Verificar si el estudiante tiene este nodo y si está correctamente identificado
+                    const hasStudent = !!student;
+                    const isExtraNode = model.isInserted;
                     
+                    // Para nodos normales: verificar que el texto coincida
+                    // Para nodos extra (isInserted): verificar que las etiquetas coincidan (ignorar texto)
+                    let nodeIdentifiedCorrectly;
+                    if (isExtraNode) {
+                        // Nodo extra: identificado correctamente si las etiquetas coinciden
+                        nodeIdentifiedCorrectly = hasStudent && 
+                            normalizeLabel(student.labelTop) === normalizeLabel(model.labelTop) &&
+                            normalizeLabel(student.labelBottom) === normalizeLabel(model.labelBottom);
+                    } else {
+                        // Nodo normal: identificado correctamente si el texto coincide
+                        nodeIdentifiedCorrectly = hasStudent && normalizeText(student.text) === normalizeText(model.text);
+                    }
+                    
+                    // 3. Verificar si la división es correcta (hijos coinciden exactamente)
+                    const divisionCorrect = nodeIdentifiedCorrectly && childrenMatch(student, model);
+                    
+                    // 4. Verificar etiquetas
+                    const labelTopMatch = hasStudent && normalizeLabel(student.labelTop) === normalizeLabel(model.labelTop);
+                    const labelBottomMatch = hasStudent && normalizeLabel(student.labelBottom) === normalizeLabel(model.labelBottom);
+
                     const comparison = {
                         path,
-                        textMatch: hasStudent && normalizeText(student.text) === normalizeText(model.text),
-                        labelTopMatch: hasStudent && normalizeLabel(student.labelTop) === normalizeLabel(model.labelTop),
-                        labelBottomMatch: hasStudent && normalizeLabel(student.labelBottom) === normalizeLabel(model.labelBottom),
-                        structureMatch: hasStudent && (student.children?.length === model.children?.length),
+                        // El nodo está correctamente identificado
+                        nodeCorrect: nodeIdentifiedCorrectly,
+                        // La división es correcta (hijos coinciden)
+                        divisionCorrect,
+                        labelTopMatch,
+                        labelBottomMatch,
                         studentNode: hasStudent ? student : null,
-                        modelNode: model
+                        modelNode: model,
+                        isExtraNode,
+                        // Flag que indica si debemos mostrar mensaje de error y truncar
+                        // (nodo identificado correctamente pero mal dividido)
+                        shouldTruncate: nodeIdentifiedCorrectly && !divisionCorrect && (getChildCount(model) > 0 || getChildCount(student) > 0)
                     };
 
-                    // 3. ACIERTOS: Solo se suman si la rama es válida y el dato coincide
-                    if (comparison.structureMatch) results.correctStructure++;
-                    if (comparison.labelTopMatch && modelTop) results.correctLabelTopExpected++;
-                    if (comparison.labelBottomMatch && modelBottom) results.correctLabelBottomExpected++;
+                    // 5. ACIERTOS
+                    // El nodo cuenta como acierto si está correctamente identificado
+                    if (nodeIdentifiedCorrectly) {
+                        results.correctNodes++;
+                    }
+                    // Las etiquetas se evalúan si el nodo está correctamente identificado
+                    // Para nodos extra, las etiquetas ya se contaron como parte de nodeIdentifiedCorrectly
+                    if (!isExtraNode) {
+                        if (labelTopMatch && modelTop) results.correctLabelTopExpected++;
+                        if (labelBottomMatch && modelBottom) results.correctLabelBottomExpected++;
+                    }
 
                     results.nodeComparisons.set(path, comparison);
 
-                    // 4. RECURSIÓN: Siempre recorremos el modelo completo para asegurar el puntaje ideal constante
-                    const modelChildren = model.children || [];
-                    const studentChildren = student?.children || [];
-
-                    // Verificar si hay nodos insertados (isInserted) que requieren emparejamiento flexible
-                    const hasInsertedNodes = modelChildren.some(c => c.isInserted) || 
-                                             studentChildren.some(c => c.isInserted);
-
-                    if (comparison.structureMatch && hasInsertedNodes) {
-                        // Emparejamiento flexible: solo para casos con nodos insertados
-                        const usedStudentIndices = new Set();
+                    // 6. RECURSIÓN: Solo continuar si la división es correcta
+                    if (divisionCorrect) {
+                        const modelChildren = model.children || [];
+                        const studentChildren = student?.children || [];
                         
-                        modelChildren.forEach((modelChild, mi) => {
-                            let bestMatch = -1;
-                            let bestScore = -1;
-
-                            studentChildren.forEach((studentChild, si) => {
-                                if (usedStudentIndices.has(si)) return;
-                                // Coincidencia por texto
-                                const textMatches = normalizeText(studentChild.text) === normalizeText(modelChild.text);
-                                // Coincidencia por isInserted (ambos deben ser insertados o ambos no)
-                                const insertedMatches = !!studentChild.isInserted === !!modelChild.isInserted;
-                                const score = (textMatches ? 2 : 0) + (insertedMatches ? 1 : 0);
-                                if (score > bestScore) {
-                                    bestScore = score;
-                                    bestMatch = si;
+                        // Separar nodos normales y extra
+                        const modelNormal = modelChildren.filter(c => !c.isInserted);
+                        const modelExtra = modelChildren.filter(c => c.isInserted);
+                        const studentNormal = studentChildren.filter(c => !c.isInserted);
+                        const studentExtra = studentChildren.filter(c => c.isInserted);
+                        
+                        // Emparejar nodos normales por posición
+                        modelNormal.forEach((modelChild, mi) => {
+                            const studentChild = studentNormal[mi] || null;
+                            compareNodes(studentChild, modelChild, `${path}-n${mi}`);
+                        });
+                        
+                        // Emparejar nodos extra por etiquetas
+                        const usedStudentExtras = new Set();
+                        modelExtra.forEach((modelChild, mi) => {
+                            const modelLabelTop = normalizeLabel(modelChild.labelTop);
+                            const modelLabelBottom = normalizeLabel(modelChild.labelBottom);
+                            
+                            // Buscar un nodo extra del estudiante con las mismas etiquetas
+                            let matchedStudent = null;
+                            for (let si = 0; si < studentExtra.length; si++) {
+                                if (usedStudentExtras.has(si)) continue;
+                                
+                                const studentLabelTop = normalizeLabel(studentExtra[si].labelTop);
+                                const studentLabelBottom = normalizeLabel(studentExtra[si].labelBottom);
+                                
+                                if (studentLabelTop === modelLabelTop && studentLabelBottom === modelLabelBottom) {
+                                    usedStudentExtras.add(si);
+                                    matchedStudent = studentExtra[si];
+                                    break;
                                 }
-                            });
-
-                            if (bestMatch >= 0) {
-                                usedStudentIndices.add(bestMatch);
-                                compareNodes(studentChildren[bestMatch], modelChild, `${path}-${mi}`, true);
-                            } else {
-                                compareNodes(null, modelChild, `${path}-${mi}`, false);
                             }
+                            
+                            compareNodes(matchedStudent, modelChild, `${path}-e${mi}`);
                         });
                     } else {
-                        // Emparejamiento posicional estricto: caso normal sin nodos insertados
-                        modelChildren.forEach((modelChild, mi) => {
-                            let nextStudentChild = null;
-                            if (comparison.structureMatch && studentChildren[mi]) {
-                                nextStudentChild = studentChildren[mi];
-                            }
-                            compareNodes(nextStudentChild, modelChild, `${path}-${mi}`, comparison.structureMatch);
-                        });
+                        // Si hay error de división (o nodo no identificado), contar elementos restantes 
+                        // del modelo para puntaje total, pero NO sumar aciertos
+                        countModelElements(model);
                     }
                 };
 
-                compareNodes(studentTree, modelTree, 'root', true);
+                compareNodes(studentTree, modelTree, 'root');
 
                 results.totalElements = results.totalNodes + results.totalLabelTopExpected + results.totalLabelBottomExpected;
-                results.correctElements = results.correctStructure + results.correctLabelTopExpected + results.correctLabelBottomExpected;
+                results.correctElements = results.correctNodes + results.correctLabelTopExpected + results.correctLabelBottomExpected;
                 results.errorElements = results.totalElements - results.correctElements;
                 results.accuracy = results.totalElements ? (results.correctElements / results.totalElements) : 1;
 
@@ -3158,33 +3263,22 @@
             // ===========================================
             // RENDERIZADO ESTÁTICO (COMPARACIÓN)
             // ===========================================
-            const renderStaticNode = (node, comparisons, path = 'root', isModel = false, forceIncorrect = false) => {
+            const renderStaticNode = (node, comparisons, path = 'root', isModel = false) => {
                 const comparison = comparisons?.get(path);
 
-                if (!node && comparison && !isModel) {
-                    node = {
-                        id: `missing-${path}`,
-                        text: '∅',
-                        labelTop: '',
-                        labelBottom: '',
-                        children: null,
-                        isNucleus: false
-                    };
-                }
+                // Para el árbol del estudiante, si no hay nodo, no renderizamos nada
+                // (ya no creamos nodos fantasma ∅)
                 if (!node) return null;
 
-                const hasC = node.children && node.children.length > 0;
                 const isEmpty = !node.text || node.text.trim() === '';
 
                 let nodeClass = 'node-container';
                 if (node.isNucleus) nodeClass += ' nucleus-node';
 
-                if (!isModel) {
-                    if (forceIncorrect) {
-                        nodeClass += ' node-incorrect';
-                    } else if (comparison) {
-                        nodeClass += comparison.structureMatch ? ' node-correct' : ' node-incorrect';
-                    }
+                // Colorear el nodo según si fue IDENTIFICADO correctamente (no según división)
+                // Un nodo verde significa que el estudiante identificó correctamente este constituyente
+                if (!isModel && comparison) {
+                    nodeClass += comparison.nodeCorrect ? ' node-correct' : ' node-incorrect';
                 }
 
                 const modelTop = comparison?.modelNode?.labelTop?.trim() || '';
@@ -3229,35 +3323,87 @@
                     );
                 };
 
+                // Determinar qué hijos renderizar
                 let childrenToRender = [];
-                if (!isModel && comparison?.modelNode?.children?.length) {
-                    const modelLen = comparison.modelNode.children.length;
-
-                    for (let i = 0; i < modelLen; i++) {
-                        const childPath = `${path}-${i}`;
-                        const childComp = comparisons?.get(childPath);
-                        childrenToRender.push({
-                            node: childComp?.studentNode ?? null,
-                            path: childPath,
-                            forceIncorrect: !childComp || !childComp.structureMatch
+                
+                // Si es el modelo, o si la división es correcta, mostrar los hijos
+                if (isModel || (comparison && comparison.divisionCorrect)) {
+                    const children = node.children || [];
+                    const normalizeLabel = (label) => (label || '').trim().toLowerCase().replace(/\s+/g, '');
+                    
+                    // Contar índices separados para nodos normales y extra
+                    let normalIndex = 0;
+                    let extraIndex = 0;
+                    
+                    if (isModel) {
+                        // Para el modelo: recorrer en orden original, asignando paths según tipo
+                        children.forEach((c) => {
+                            if (c.isInserted) {
+                                childrenToRender.push({ 
+                                    node: c, 
+                                    path: `${path}-e${extraIndex}`
+                                });
+                                extraIndex++;
+                            } else {
+                                childrenToRender.push({ 
+                                    node: c, 
+                                    path: `${path}-n${normalIndex}`
+                                });
+                                normalIndex++;
+                            }
+                        });
+                    } else {
+                        // Para el estudiante: recorrer en orden original, pero emparejar extras por etiquetas
+                        const modelExtra = (comparison?.modelNode?.children || []).filter(c => c.isInserted);
+                        
+                        // Crear un mapa de etiquetas del modelo a índice
+                        const modelExtraByLabels = new Map();
+                        modelExtra.forEach((mc, mi) => {
+                            const key = normalizeLabel(mc.labelTop) + '|' + normalizeLabel(mc.labelBottom);
+                            if (!modelExtraByLabels.has(key)) {
+                                modelExtraByLabels.set(key, mi);
+                            }
+                        });
+                        
+                        const usedModelExtraIndices = new Set();
+                        
+                        children.forEach((c) => {
+                            if (c.isInserted) {
+                                // Buscar el índice del modelo que corresponde a este nodo extra por etiquetas
+                                const key = normalizeLabel(c.labelTop) + '|' + normalizeLabel(c.labelBottom);
+                                let modelIdx = modelExtraByLabels.get(key);
+                                
+                                // Si ya se usó ese índice, buscar otro con las mismas etiquetas
+                                if (modelIdx !== undefined && usedModelExtraIndices.has(modelIdx)) {
+                                    modelIdx = undefined;
+                                    for (let mi = 0; mi < modelExtra.length; mi++) {
+                                        if (usedModelExtraIndices.has(mi)) continue;
+                                        const mKey = normalizeLabel(modelExtra[mi].labelTop) + '|' + normalizeLabel(modelExtra[mi].labelBottom);
+                                        if (mKey === key) {
+                                            modelIdx = mi;
+                                            break;
+                                        }
+                                    }
+                                }
+                                
+                                if (modelIdx !== undefined) {
+                                    usedModelExtraIndices.add(modelIdx);
+                                    childrenToRender.push({ 
+                                        node: c, 
+                                        path: `${path}-e${modelIdx}`
+                                    });
+                                }
+                            } else {
+                                childrenToRender.push({ 
+                                    node: c, 
+                                    path: `${path}-n${normalIndex}`
+                                });
+                                normalIndex++;
+                            }
                         });
                     }
-
-                    const extra = (node.children || []).slice(modelLen);
-                    extra.forEach((extraNode, j) => {
-                        childrenToRender.push({
-                            node: extraNode,
-                            path: `${path}-extra-${j}`,
-                            forceIncorrect: true
-                        });
-                    });
-                } else {
-                    childrenToRender = (node.children || []).map((c, i) => ({ 
-                        node: c, 
-                        path: `${path}-${i}`, 
-                        forceIncorrect: false 
-                    }));
                 }
+                // Si hay error de división (shouldTruncate), no mostramos hijos, solo el mensaje
 
                 return (
                     <div className={nodeClass} key={node.id || path}>
@@ -3275,7 +3421,10 @@
                                 <div className="node-box" style={{ cursor: 'default' }}>
                                     {node.text}
                                 </div>
-                                <div className="connector-v" style={{ height: '12px' }} />
+                                {/* Solo mostrar línea inferior si hay etiqueta inferior, hijos, o mensaje de error */}
+                                {(shouldShowBottom || childrenToRender.length > 0 || (!isModel && comparison?.shouldTruncate)) && (
+                                    <div className="connector-v" style={{ height: '12px' }} />
+                                )}
                             </>
                         )}
 
@@ -3285,8 +3434,8 @@
                             labelBottomClass
                         )}
 
-                        {/* Si el estudiante dividió mal, mostramos el recuadro de error en lugar de los hijos */}
-                        {!isModel && comparison && !comparison.structureMatch ? (
+                        {/* Si hay error de división, mostrar mensaje y truncar */}
+                        {!isModel && comparison?.shouldTruncate ? (
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                                 <div className="connector-v" style={{ height: '24px' }} />
                                 <div style={{
@@ -3305,7 +3454,7 @@
                                 </div>
                             </div>
                         ) : (
-                            /* Si la división es correcta (o es el modelo), mostramos los hijos normalmente */
+                            /* Si la división es correcta (o es el modelo), mostramos los hijos */
                             childrenToRender.length > 0 && (
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                                     <div className="connector-v" style={{ height: '24px' }} />
@@ -3313,7 +3462,7 @@
                                         {childrenToRender.map((item, i) => (
                                             <div className="child-branch" key={(item.node?.id) || item.path || i}>
                                                 <div className="v-line-stem" />
-                                                {renderStaticNode(item.node, comparisons, item.path, isModel, item.forceIncorrect)}
+                                                {renderStaticNode(item.node, comparisons, item.path, isModel)}
                                             </div>
                                         ))}
                                     </div>
@@ -3381,8 +3530,8 @@
                             </div>
                             <p style={{margin: 0, fontSize: '15px', color: '#374151', lineHeight: '1.6'}}>
                                 <ul>
-                                    <li>Los constituyentes de fondo y borde <span style={{color: '#10b981'}}>verde</span> tienen estructura correcta; 
-                                    los de fondo y borde <span style={{color: '#ef4444'}}>rojo</span> presentan diferencias estructurales. </li>
+                                    <li>Los constituyentes en <span style={{color: '#10b981'}}>verde</span> tienen estructura correcta; 
+                                    los que están en<span style={{color: '#ef4444'}}>rojo</span> presentan diferencias estructurales. </li>
                                     <li>Las etiquetas en <span style={{color: '#10b981'}}>verde</span> tienen información correcta;
                                     las de <span style={{color: '#ef4444'}}>rojo</span> tienen información que difiere del modelo.  </li>
                                 </ul>
@@ -3391,7 +3540,7 @@
 
                         <div className="comparison-container">
                             <div className="comparison-panel student">
-                                <h3>📝 Tu análisis</h3>
+                                <h3>✎ Tu análisis</h3>
                                 <div className="comparison-tree">
                                     <div className="tree-wrapper">
                                         {renderStaticNode(tree, comparisonResults.nodeComparisons, 'root', false)}
@@ -3733,25 +3882,27 @@
                         <div className="pos-overlay" onClick={() => setShowFilesModal(false)}>
                             <div className="files-modal" onClick={(e) => e.stopPropagation()}>
                                 <div className="files-modal-header">
-                                    <h4 className="files-modal-title">📁 Archivos</h4>
-                                    <div className="files-tabs">
-                                        <button 
-                                            className={`files-tab ${filesActiveTab === 'local' ? 'active' : ''}`}
-                                            onClick={() => setFilesActiveTab('local')}
-                                        >
-                                            💻 Local
-                                        </button>
-                                        <button 
-                                            className={`files-tab ${filesActiveTab === 'cloud' ? 'active' : ''}`}
-                                            onClick={() => setFilesActiveTab('cloud')}
-                                        >
-                                            ☁️ Banco de ejemplos
-                                        </button>
-                                    </div>
+                                    <h4 className="files-modal-title">{exerciseMode ? '☁️ Banco de ejemplos' : '📁 Archivos'}</h4>
+                                    {!exerciseMode && (
+                                        <div className="files-tabs">
+                                            <button 
+                                                className={`files-tab ${filesActiveTab === 'local' ? 'active' : ''}`}
+                                                onClick={() => setFilesActiveTab('local')}
+                                            >
+                                                💻 Local
+                                            </button>
+                                            <button 
+                                                className={`files-tab ${filesActiveTab === 'cloud' ? 'active' : ''}`}
+                                                onClick={() => setFilesActiveTab('cloud')}
+                                            >
+                                                ☁️ Banco de ejemplos
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="files-modal-body">
-                                    {filesActiveTab === 'local' && (
+                                    {!exerciseMode && filesActiveTab === 'local' && (
                                         <div className="files-section">
                                             <div className="files-section-title">Gestión de archivos locales</div>
                                             <div className="files-btn-row">
@@ -3776,7 +3927,7 @@
                                         </div>
                                     )}
 
-                                    {filesActiveTab === 'cloud' && (
+                                    {(exerciseMode || filesActiveTab === 'cloud') && (
                                         <div className="files-section">
                                             <div className="files-section-title">Conectar con Google Drive</div>
                                             <div className="drive-connect-row">
@@ -3868,12 +4019,14 @@
 
                                                     {selectedDriveFile && (
                                                         <div className="drive-load-options">
-                                                            <button 
-                                                                className="btn btn-outline"
-                                                                onClick={() => handleLoadFromDrive(false)}
-                                                            >
-                                                                📖 Cargar como referencia
-                                                            </button>
+                                                            {!exerciseMode && (
+                                                                <button 
+                                                                    className="btn btn-outline"
+                                                                    onClick={() => handleLoadFromDrive(false)}
+                                                                >
+                                                                    📖 Cargar como referencia
+                                                                </button>
+                                                            )}
                                                             <button 
                                                                 className="btn btn-exercise"
                                                                 onClick={() => handleLoadFromDrive(true)}
