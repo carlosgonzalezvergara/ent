@@ -3756,7 +3756,7 @@
                             <div className="instructions-grid">
                                 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">✂</span> Dividir constituyentes</h4>
+                                    <h4><span className="icon">✂</span> Constituyentes</h4>
                                     <ul>
                                         <li>Haz clic en un <strong>recuadro celeste</strong> para dividir una estructura sintáctica en constituyentes.</li>
                                         <li>Haz clic en las <strong>barras grises</strong> entre palabras para marcar fronteras entre constituyentes.</li>
@@ -3787,6 +3787,7 @@
                                     <ul>
                                         <li>Pasa el cursor por el nodo bajo el cual quieres crear un constituyente extra y haz clic en <code>+</code>.</li>
                                         <li>Escribe el texto y elige la posición donde insertarlo.</li>
+                                        <li>Útil para añadir constituyentes elididos.</li>
                                     </ul>
                                 </div>
 
@@ -3801,7 +3802,7 @@
                                 </div> 
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">⌨</span> Atajos de teclado</h4>
+                                    <h4><span className="icon">⌘</span> Atajos de teclado</h4>
                                             <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '40px', marginTop: '8px' }}>
                                             <ul className="shortcut-list">
                                                 <li style={{ marginBottom: '10px', opacity: 0.7, fontSize: '11px', fontWeight: 'bold', color: '#6b7280' }}>WINDOWS / LINUX</li>
@@ -3823,7 +3824,7 @@
                                     <h4><span className="icon">∪</span> Consolidar nodos</h4>
                                     <ul>
                                         <li>Pasa el cursor por un nodo celeste y pulsa <code>∪</code> para consolidarlo.</li>
-                                        <li>Útil para perífrasis verbales o locuciones que no deben dividirse.</li>
+                                        <li>Útil para perífrasis verbales o locuciones, que no deben dividirse sintácticamente.</li>
                                         <li>Pulsa <code>÷</code> para volver a permitir la división.</li>
                                     </ul>
                                 </div>
@@ -3833,7 +3834,6 @@
                                     <ul>
                                         <li>Pasa el cursor por un nodo terminal y pulsa <code>÷</code> para expandirlo.</li>
                                         <li>Se crea un hijo con el mismo texto. Usa <code>+</code> para agregar constituyentes extra.</li>
-                                        <li>Útil para añadir constituyentes elididos.</li>
                                     </ul>
                                 </div>
 
@@ -3848,7 +3848,7 @@
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">§</span> Nota para profesores</h4>
+                                    <h4><span className="icon">☷</span> Banco de ejemplos</h4>
                                     <ul>
                                         <li>Para crear un banco de ejemplos, sube archivos <code>.ent</code> a una carpeta de Google Drive.</li>
                                         <li>Haz clic derecho en la carpeta → <strong>Compartir</strong> → <strong>Cualquier persona con el enlace</strong> (como Lector).</li>
@@ -3859,10 +3859,10 @@
 
                                 {!exerciseMode && (
                                 <div className="instruction-card">
-                                    <h4 style={{color: '#5b21b6'}}><span className="icon" style={{backgroundColor: '#5b21b6'}}>✎</span> Modo ejercitación</h4>
+                                    <h4><span className="icon">✎</span> Modo ejercitación</h4>
                                     <ul>
                                         <li>Haz clic en <strong>📚 Modo ejercitación</strong> para practicar.</li>
-                                        <li>Carga un ejercicio desde tu computador o desde el <strong>banco de ejemplos</strong> en Google Drive.</li>
+                                        <li>Carga un ejercicio desde tu computador o desde un <strong>banco de ejemplos</strong> en Google Drive.</li>
                                         <li>Analiza la expresión propuesta y compara tu resultado con el modelo.</li>
                                     </ul>
                                 </div>
