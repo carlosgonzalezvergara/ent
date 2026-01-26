@@ -181,7 +181,7 @@
 <section id="fundamentos">
 <h2>1. Fundamentos del sistema</h2>
 <p>
-<strong>ENT</strong> es un entorno digital diseñado para asistir en el análisis sintáctico basado en el modelo de <strong>constituyentes inmediatos</strong>. Su objetivo es proporcionar una interfaz intuitiva para la creación de diagramas arbóreos.
+<strong>ENT</strong> es un entorno digital diseñado para asistir en el análisis sintáctico basado en el modelo de <strong>constituyentes inmediatos</strong>. Su objetivo es ofrecer una interfaz intuitiva para la creación de diagramas arbóreos.
         </p>
 <p>
             ENT es un asistente manual: el usuario toma todas las decisiones analíticas, mientras que el programa gestiona la visualización jerárquica, la consistencia de las etiquetas y la generación de imágenes.
@@ -193,7 +193,7 @@
             ENT permite guardar y cargar el progreso del análisis mediante archivos con extensión propia <code>.ent</code>. Estos archivos son documentos de datos JSON, que preservan la estructura del árbol, las etiquetas y la expresión original.
         </p>
 <ul>
-<li><strong>Guardar:</strong> Accede a <span class="ui-element">📁 Archivos</span> y selecciona <span class="ui-element">💾 Guardar .ent</span>. El archivo se descargará en su ordenador.</li>
+<li><strong>Guardar:</strong> Accede a <span class="ui-element">📁 Archivos</span> y selecciona <span class="ui-element">💾 Guardar .ent</span>. El archivo se descargará en tu ordenador.</li>
 <li><strong>Cargar:</strong> Usa la opción <span class="ui-element">📂 Cargar .ent</span> para importar un análisis previamente guardado.</li>
 </ul><p>Al guardar, el nombre del archivo se genera automáticamente a partir de las primeras palabras de la oración.</p>
 </section>
@@ -210,9 +210,14 @@
 Desde ese punto, el trabajo consiste en ir dividiendo constituyentes, asignar etiquetas y, cuando sea necesario, introducir nodos extra o marcar núcleos.
 </p>
 
+<h3>Deshacer y rehacer</h3>
+<p>
+ENT cuenta con un sistema de historial que permite <strong>deshacer</strong> y <strong>rehacer</strong> acciones. En la barra de herramientas, junto al botón "Analizar", encontrarás los botones <strong>↶</strong> (deshacer) y <strong>↷</strong> (rehacer). Esto te permite corregir errores fácilmente o experimentar con diferentes análisis sin temor a perder tu trabajo. También puedes usar los atajos de teclado (ver sección 9).
+</p>
+
 <h3>Normalización</h3>
 <p>
-Al iniciar el análisis, ENT aplica una normalización ligera de ciertas contracciones y amalgamas (por ejemplo, <em>del</em>/<em>al</em> o <em>conmigo</em>), para que pueda hacerse una divisón sintáctica precisa y etiquetar por separado sus componentes.
+Al iniciar el análisis, ENT aplica una normalización ligera de ciertas contracciones y amalgamas (por ejemplo, <em>del</em>/<em>al</em> o <em>conmigo</em>), para permitir una división sintáctica precisa y etiquetar por separado sus componentes.
 </p>
 
 </section>
@@ -237,12 +242,12 @@ Si un nodo tiene más de una palabra ortográfica pero es solo una palabra sint�
 
 <h3>Deshacer una división</h3>
 <p>
-Si has dividio un nodo en sus nodos hijos, pero te arrepientes y quieres volver atrás, usa el botón <strong>↩</strong> (<em>Deshacer división</em>). Esto elimina los hijos del nodo.
+Si has dividido un nodo en sus nodos hijos, pero te arrepientes y quieres volver atrás, usa el botón <strong>↩</strong> (<em>Deshacer división</em>). Esto elimina los hijos del nodo.
 </p>
 
 <h3>Expandir un nodo de una palabra</h3>
 <p>
-Si un nodo terminal tiene <strong>una sola palabra</strong>, ENT permite “expandirlo” para comenzar a agregar constituyentes debajo. Esto es útil para añadir, por ejemplo, constituyentes elididos. Aprieta el botón <strong>÷</strong> de la esquina superior izquierda. Esto generará un nodo hijo idéntico y aparecerá un botón <strong>+</strong> bajo el nodo, lo que te permitirá agregar constituyentes extra.
+Si un nodo terminal tiene <strong>una sola palabra</strong>, ENT permite “expandirlo” para agregar constituyentes debajo. Esto es útil para añadir, por ejemplo, constituyentes elididos. Pulsa el botón <strong>÷</strong> de la esquina superior izquierda. Esto generará un nodo hijo idéntico y aparecerá un botón <strong>+</strong> bajo el nodo, lo que te permitirá agregar constituyentes extra.
 </p>
 
 <h3>Eliminar el texto de un nodo</h3>
@@ -250,12 +255,17 @@ Si un nodo terminal tiene <strong>una sola palabra</strong>, ENT permite “expa
 Si lo prefieres, puedes eliminar el texto de un nodo una vez que lo has dividido. Para eso, puedes usar el botón <strong>⨉</strong> rojo que encontrarás en la esquina superior derecha del nodo.
 </p>
 
+<h3>Marcar un nodo como núcleo</h3>
+<p>
+En los nodos terminales (los que no tienen hijos), encontrarás un botón <strong>N</strong> que permite marcar ese constituyente como <strong>núcleo</strong>. Al activarlo, el texto del nodo se mostrará en negrita, lo que facilita identificar visualmente los núcleos de cada sintagma en el diagrama.
+</p>
+
 </section>
 <section id="etiquetado">
-<h2>5. El Sistema de etiquetas</h2>
+<h2>5. El sistema de etiquetas</h2>
 
 <p>
-Cada nodo ofrece dos campos: etiqueta superior (<strong>función</strong>) y etiqueta inferior (<strong>categoría</strong>). Para editar, haz clic en la etiqueta y escribe la información que prefieras.
+Cada nodo ofrece dos campos: etiqueta superior (<strong>función</strong>) y etiqueta inferior (<strong>categoría</strong>). Para editar, haz clic en la etiqueta y escribe el valor que corresponda.
 </p>
 
 <h3>Acceso a sugerencias</h3>
@@ -298,14 +308,14 @@ Al crear un nodo extra, ENT te pedirá el texto y luego la posición: <em>Al ini
 <h2>7. Modo ejercitación</h2>
 
 <p>
-El modo ejercitación sirve para que un estudiante analice una oración teniendo un <strong>modelo</strong> en segundo plano. Se trabaja con un árbol “en blanco” y luego se compara con la solución.</p>
+El modo ejercitación permite analizar una oración teniendo un <strong>modelo de referencia</strong> en segundo plano. Se trabaja con un árbol “en blanco” y luego se compara con la solución.</p>
 <p>Al entrar en el modo ejercitación, se te pedirá que cargues un archivo .ent desde tu computador o desde un banco de ejemplos.
 </p>
 
 <h3>Cómo iniciar un ejercicio desde el Banco de ejemplos</h3>
 <ol>
   <li>Abre <span class="ui-element">☁️ Banco de ejemplos</span> desde el panel de archivos o con el botón correspondiente del modo ejercitación.</li>
-  <li>Ingresa la dirección web del Banco de ejemplos (esto corresponde a la URL de una carpeta en Google Drive con archivos .ent) </li>
+  <li>Pega la URL de la carpeta de Google Drive que contiene los archivos .ent </li>
   <li>Selecciona un archivo <code>.ent</code> del banco.</li>
   <li>Elige <strong>📚 Cargar como ejercicio</strong>. ENT crea un árbol vacío para el estudiante y guarda el árbol del archivo como modelo.</li>
 </ol>
@@ -314,7 +324,7 @@ El modo ejercitación sirve para que un estudiante analice una oración teniendo
 <p>
 Cuando termines el análisis del ejercicio, usa <strong>Comparar</strong>. ENT mostrará dos paneles: <strong>Tu análisis</strong>, a la izquierda, y <strong>Análisis modelo</strong>, a la derecha. Las diferencias se marcan visualmente: en verde aparecen los constituyentes y etiquetas bien identificados; en rojo, los erróneos.
 </p>
-<p> En la parte superior de la vista de comparación podrás ver tu cantidad y porcentaje de aciertos en relación con el modelo</p>
+<p> En la parte superior de la vista de comparación podrás ver la cantidad de aciertos y el porcentaje de logro en relación con el modelo</p>
 
 <p>
 Desde esa vista puedes volver a editar (<strong>← Volver a editar</strong>) o iniciar otro ejercicio (<strong>Nuevo ejercicio</strong>).
@@ -323,6 +333,11 @@ Desde esa vista puedes volver a editar (<strong>← Volver a editar</strong>) o 
 <section id="banco-nube">
 <h2>8. Banco de ejemplos (Google Drive)</h2>
 <p>Permite a los docentes crear una biblioteca de ejercicios accesible desde la nube.</p>
+
+<p>
+Si no dispones de una carpeta propia, ENT ofrece un enlace al <strong>banco de ejemplos de ENT</strong>, una carpeta de prueba con ejercicios de muestra que puedes usar para familiarizarte con el sistema.
+</p>
+
 <div class="note-block">
   <p><strong>Requisitos mínimos</strong></p>
   <ul>
@@ -352,19 +367,19 @@ Desde esa vista puedes volver a editar (<strong>← Volver a editar</strong>) o 
 </thead>
 <tbody>
 <tr>
-<td><strong>Deshacer / Rehacer</strong></td>
-<td><span class="key-tip">Ctrl</span>+<span class="key-tip">Z</span> / <span class="key-tip">Ctrl</span>+<span class="key-tip">Y</span></td>
-<td><span class="key-tip">⌘</span>+<span class="key-tip">Z</span> / <span class="key-tip">⌘</span>+<span class="key-tip">⇧</span>+<span class="key-tip">Z</span></td>
+<td><strong>Deshacer</strong></td>
+<td><span class="key-tip">Ctrl</span>+<span class="key-tip">Z</span></td>
+<td><span class="key-tip">⌘</span>+<span class="key-tip">Z</span></td>
+</tr>
+<tr>
+<td><strong>Rehacer</strong></td>
+<td><span class="key-tip">Ctrl</span>+<span class="key-tip">Y</span> o <span class="key-tip">Ctrl</span>+<span class="key-tip">⇧</span>+<span class="key-tip">Z</span></td>
+<td><span class="key-tip">⌘</span>+<span class="key-tip">⇧</span>+<span class="key-tip">Z</span></td>
 </tr>
 <tr>
 <td><strong>Guardar .ent</strong></td>
 <td><span class="key-tip">Ctrl</span>+<span class="key-tip">S</span></td>
 <td><span class="key-tip">⌘</span>+<span class="key-tip">S</span></td>
-</tr>
-<tr>
-<td><strong>Marcar Núcleo</strong></td>
-<td>Pulsar <span class="key-tip">N</span> sobre un nodo</td>
-<td>Pulsar <span class="key-tip">N</span> sobre un nodo</td>
 </tr>
 </tbody>
 </table>
@@ -390,7 +405,3 @@ Durante la exportación, ENT oculta automáticamente los botones interactivos pa
 <p>Desarrollado por Carlos González Vergara (<a href="mailto:cgonzalv@uc.cl">cgonzalv@uc.cl</a>)</p>
 <p>Departamento de Ciencias del Lenguaje • Facultad de Letras • Pontificia Universidad Católica de Chile</p>
 <p>2026 - Licencia Creative Commons BY-NC-ND 4.0</p>
-</footer>
-</div>
-</body>
-</html>

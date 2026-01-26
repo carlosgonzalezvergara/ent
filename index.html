@@ -2228,10 +2228,10 @@
                 const results = {
                     totalNodes: 0,
                     correctNodes: 0,
-                    totalLabelTopExpected: 0,
-                    totalLabelBottomExpected: 0,
-                    correctLabelTopExpected: 0,
-                    correctLabelBottomExpected: 0,
+                    totalLabelTopParts: 0,
+                    totalLabelBottomParts: 0,
+                    correctLabelTopParts: 0,
+                    correctLabelBottomParts: 0,
                     totalElements: 0,
                     correctElements: 0,
                     errorElements: 0,
@@ -2240,7 +2240,42 @@
                 };
 
                 const normalizeText = (text) => (text || '').trim().toLowerCase();
-                const normalizeLabel = (label) => (label || '').trim().toLowerCase().replace(/\s+/g, '');
+                
+                // Extrae las partes normalizadas de una etiqueta
+                const getLabelParts = (label) => {
+                    if (!label) return [];
+                    return label.split('/')
+                        .map(p => p.trim().toLowerCase().replace(/\s+/g, ''))
+                        .filter(p => p);
+                };
+                
+                // Normaliza una etiqueta completa (para comparación de igualdad total)
+                const normalizeLabel = (label) => {
+                    const parts = getLabelParts(label);
+                    return parts.sort().join('•');
+                };
+                
+                // Compara dos etiquetas y retorna cuántas partes del modelo fueron acertadas
+                const compareLabelParts = (studentLabel, modelLabel) => {
+                    const studentParts = getLabelParts(studentLabel);
+                    const modelParts = getLabelParts(modelLabel);
+                    
+                    if (modelParts.length === 0) {
+                        return { total: 0, correct: 0, allMatch: true };
+                    }
+                    
+                    const studentSet = new Set(studentParts);
+                    let correct = 0;
+                    for (const part of modelParts) {
+                        if (studentSet.has(part)) correct++;
+                    }
+                    
+                    // allMatch es true si todas las partes coinciden (mismo contenido, sin importar orden)
+                    const allMatch = correct === modelParts.length && studentParts.length === modelParts.length;
+                    
+                    return { total: modelParts.length, correct, allMatch };
+                };
+                
                 const getChildCount = (node) => (node?.children?.length) || 0;
 
                 // Verifica si los hijos del estudiante coinciden con los del modelo
@@ -2302,10 +2337,10 @@
                     const children = modelNode.children || [];
                     children.forEach((child) => {
                         results.totalNodes++;
-                        const childTop = (child.labelTop || '').trim();
-                        const childBottom = (child.labelBottom || '').trim();
-                        if (childTop) results.totalLabelTopExpected++;
-                        if (childBottom) results.totalLabelBottomExpected++;
+                        const topParts = getLabelParts(child.labelTop);
+                        const bottomParts = getLabelParts(child.labelBottom);
+                        results.totalLabelTopParts += topParts.length;
+                        results.totalLabelBottomParts += bottomParts.length;
                         countModelElements(child);
                     });
                 };
@@ -2315,10 +2350,10 @@
                     
                     // 1. PUNTAJE IDEAL: Siempre se suma basándose exclusivamente en el modelo
                     results.totalNodes++;
-                    const modelTop = (model.labelTop || '').trim();
-                    const modelBottom = (model.labelBottom || '').trim();
-                    if (modelTop) results.totalLabelTopExpected++;
-                    if (modelBottom) results.totalLabelBottomExpected++;
+                    const modelTopParts = getLabelParts(model.labelTop);
+                    const modelBottomParts = getLabelParts(model.labelBottom);
+                    results.totalLabelTopParts += modelTopParts.length;
+                    results.totalLabelBottomParts += modelBottomParts.length;
 
                     // 2. Verificar si el estudiante tiene este nodo y si está correctamente identificado
                     const hasStudent = !!student;
@@ -2340,9 +2375,13 @@
                     // 3. Verificar si la división es correcta (hijos coinciden exactamente)
                     const divisionCorrect = nodeIdentifiedCorrectly && childrenMatch(student, model);
                     
-                    // 4. Verificar etiquetas
-                    const labelTopMatch = hasStudent && normalizeLabel(student.labelTop) === normalizeLabel(model.labelTop);
-                    const labelBottomMatch = hasStudent && normalizeLabel(student.labelBottom) === normalizeLabel(model.labelBottom);
+                    // 4. Comparar etiquetas por partes
+                    const topComparison = hasStudent 
+                        ? compareLabelParts(student.labelTop, model.labelTop)
+                        : { total: modelTopParts.length, correct: 0, allMatch: modelTopParts.length === 0 };
+                    const bottomComparison = hasStudent 
+                        ? compareLabelParts(student.labelBottom, model.labelBottom)
+                        : { total: modelBottomParts.length, correct: 0, allMatch: modelBottomParts.length === 0 };
 
                     const comparison = {
                         path,
@@ -2350,8 +2389,12 @@
                         nodeCorrect: nodeIdentifiedCorrectly,
                         // La división es correcta (hijos coinciden)
                         divisionCorrect,
-                        labelTopMatch,
-                        labelBottomMatch,
+                        // Comparación completa de etiquetas (todas las partes coinciden)
+                        labelTopMatch: topComparison.allMatch,
+                        labelBottomMatch: bottomComparison.allMatch,
+                        // Información detallada de partes para visualización
+                        labelTopComparison: topComparison,
+                        labelBottomComparison: bottomComparison,
                         studentNode: hasStudent ? student : null,
                         modelNode: model,
                         isExtraNode,
@@ -2365,11 +2408,11 @@
                     if (nodeIdentifiedCorrectly) {
                         results.correctNodes++;
                     }
-                    // Las etiquetas se evalúan si el nodo está correctamente identificado
+                    // Las etiquetas se evalúan por partes
                     // Para nodos extra, las etiquetas ya se contaron como parte de nodeIdentifiedCorrectly
-                    if (!isExtraNode) {
-                        if (labelTopMatch && modelTop) results.correctLabelTopExpected++;
-                        if (labelBottomMatch && modelBottom) results.correctLabelBottomExpected++;
+                    if (!isExtraNode && hasStudent) {
+                        results.correctLabelTopParts += topComparison.correct;
+                        results.correctLabelBottomParts += bottomComparison.correct;
                     }
 
                     results.nodeComparisons.set(path, comparison);
@@ -2423,8 +2466,8 @@
 
                 compareNodes(studentTree, modelTree, 'root');
 
-                results.totalElements = results.totalNodes + results.totalLabelTopExpected + results.totalLabelBottomExpected;
-                results.correctElements = results.correctNodes + results.correctLabelTopExpected + results.correctLabelBottomExpected;
+                results.totalElements = results.totalNodes + results.totalLabelTopParts + results.totalLabelBottomParts;
+                results.correctElements = results.correctNodes + results.correctLabelTopParts + results.correctLabelBottomParts;
                 results.errorElements = results.totalElements - results.correctElements;
                 results.accuracy = results.totalElements ? (results.correctElements / results.totalElements) : 1;
 
@@ -3304,6 +3347,9 @@
                 const renderStaticLabel = (valueToShow, isTop, extraClass) => {
                     if (!valueToShow || !valueToShow.trim()) return null;
                     const showAsEmpty = valueToShow.trim() === '∅';
+                    
+                    // Formatear el valor para mostrar • en vez de / como separador
+                    const displayValue = valueToShow.split('/').map(p => p.trim()).filter(p => p).join(' • ');
 
                     return (
                         <div
@@ -3322,7 +3368,7 @@
                                 color: extraClass ? undefined : '#334155'
                             }}
                         >
-                            {valueToShow}
+                            {displayValue}
                         </div>
                     );
                 };
@@ -3333,7 +3379,14 @@
                 // Si es el modelo, o si la división es correcta, mostrar los hijos
                 if (isModel || (comparison && comparison.divisionCorrect)) {
                     const children = node.children || [];
-                    const normalizeLabel = (label) => (label || '').trim().toLowerCase().replace(/\s+/g, '');
+                    const normalizeLabel = (label) => {
+                        if (!label) return '';
+                        return label.split('/')
+                            .map(p => p.trim().toLowerCase().replace(/\s+/g, ''))
+                            .filter(p => p)
+                            .sort()
+                            .join('•');
+                    };
                     
                     // Contar índices separados para nodos normales y extra
                     let normalIndex = 0;
