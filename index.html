@@ -2352,8 +2352,11 @@
                     results.totalNodes++;
                     const modelTopParts = getLabelParts(model.labelTop);
                     const modelBottomParts = getLabelParts(model.labelBottom);
-                    results.totalLabelTopParts += modelTopParts.length;
-                    results.totalLabelBottomParts += modelBottomParts.length;
+                    // Para nodos extra, solo contamos el nodo (las etiquetas se evalúan como parte de la identificación)
+                    if (!model.isInserted) {
+                        results.totalLabelTopParts += modelTopParts.length;
+                        results.totalLabelBottomParts += modelBottomParts.length;
+                    }
 
                     // 2. Verificar si el estudiante tiene este nodo y si está correctamente identificado
                     const hasStudent = !!student;
