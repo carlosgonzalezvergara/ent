@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Technical Reference Manual - ENT</title>
+<style>
+        :root {
+            --primary-dark: #1f2937;
+            --accent-blue: #2563eb;
+            --accent-purple: #5b21b6;
+            --bg-gray: #f3f4f6;
+            --border: #d1d5db;
+            --text-main: #374151;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Charter', 'Bitstream Charter', 'Sitka Text', Cambria, serif;
+            line-height: 1.7;
+            color: var(--text-main);
+            background-color: #ffffff;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 80px 50px;
+        }
+
+        header {
+            border-bottom: 3px solid var(--primary-dark);
+            margin-bottom: 50px;
+            padding-bottom: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin: 0;
+            color: var(--primary-dark);
+            line-height: 1.1;
+        }
+
+        .author-info {
+            font-family: system-ui, sans-serif;
+            margin-top: 15px;
+            font-size: 1rem;
+            color: #4b5563;
+        }
+
+        nav.toc {
+            background: var(--bg-gray);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 60px;
+            font-family: system-ui, sans-serif;
+            border: 1px solid var(--border);
+        }
+
+        nav.toc strong { display: block; margin-bottom: 15px; font-size: 1.1rem; }
+        nav.toc ul { list-style: none; padding: 0; margin: 0; column-count: 2; }
+        nav.toc li { margin-bottom: 10px; }
+        nav.toc a { color: var(--accent-blue); text-decoration: none; font-weight: 500; }
+        nav.toc a:hover { text-decoration: underline; }
+
+        section { margin-bottom: 70px; scroll-margin-top: 20px; }
+        
+        h2 {
+            font-family: system-ui, sans-serif;
+            font-size: 1.8rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            margin-top: 60px;
+            color: var(--primary-dark);
+        }
+
+        h3 { 
+            font-family: system-ui, sans-serif; 
+            margin-top: 40px; 
+            color: var(--accent-purple);
+            font-size: 1.4rem;
+        }
+
+        p { margin-bottom: 20px; }
+
+        .ui-element {
+            display: inline-block;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: system-ui, sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .example-card {
+            border-left: 5px solid var(--accent-blue);
+            background: var(--bg-gray);
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .note-block {
+            background-color: #fffbeb;
+            border: 1px solid #fef3c7;
+            color: #92400e;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+            font-size: 0.95rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            font-family: system-ui, sans-serif;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 15px;
+            border: 1px solid var(--border);
+        }
+
+        th { background-color: #e5e7eb; font-weight: 700; }
+
+        .key-tip {
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-weight: bold;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+        }
+
+        footer {
+            margin-top: 100px;
+            padding-top: 40px;
+            border-top: 1px solid var(--border);
+            font-family: system-ui, sans-serif;
+            font-size: 0.9rem;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 40px 20px; }
+            nav.toc ul { column-count: 1; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+<header>
+<h1>ENT<br/>User manual and technical reference</h1>
+</header>
+<nav class="toc">
+<strong>Table of Contents</strong>
+<ul>
+<li><a href="#fundamentos">1. System fundamentals</a></li>
+<li><a href="#gestion-local">2. Local file management</a></li>
+<li><a href="#proceso">3. Analysis process</a></li>
+<li><a href="#division">4. Division mechanics</a></li>
+<li><a href="#etiquetado">5. The label system</a></li>
+<li><a href="#nodos-extra">6. Extra nodes and elision</a></li>
+<li><a href="#ejercitacion">7. Exercise mode</a></li>
+<li><a href="#banco-nube">8. Example bank (Google Drive)</a></li>
+<li><a href="#atajos">9. Keyboard shortcuts</a></li>
+<li><a href="#exportacion">10. Exporting results</a></li>
+</ul>
+</nav>
+<section id="fundamentos">
+<h2>1. System fundamentals</h2>
+<p>
+<strong>ENT</strong> is a digital environment designed to assist in syntactic analysis based on the <strong>immediate constituent</strong> model. Its goal is to offer an intuitive interface for creating tree diagrams.
+        </p>
+<p>
+            ENT is a manual assistant: the user makes all analytical decisions, while the program manages hierarchical visualization, label consistency, and image generation.
+        </p>
+</section>
+<section id="gestion-local">
+<h2>2. Local file management</h2>
+<p>
+            ENT allows you to save and load analysis progress using files with the proprietary <code>.ent</code> extension. These files are JSON data documents that preserve the tree structure, labels, and original expression.
+        </p>
+<ul>
+<li><strong>Save:</strong> Access <span class="ui-element">📁 Files</span> and select <span class="ui-element">💾 Save .ent</span>. The file will be downloaded to your computer.</li>
+<li><strong>Load:</strong> Use the <span class="ui-element">📂 Load .ent</span> option to import a previously saved analysis.</li>
+</ul>
+<p>When saving, the filename is automatically generated from the first words of the sentence.</p>
+</section>
+<section id="proceso">
+<h2>3. Analysis process</h2>
+
+<h3>Creating the base tree</h3>
+<ol>
+  <li>Type the sentence in the main field.</li>
+  <li>Click <strong>Analyze</strong>. The root node is created with the complete sentence.</li>
+</ol>
+
+<p>
+From that point, the work consists of dividing constituents, assigning labels, and when necessary, introducing extra nodes or marking heads.
+</p>
+
+<h3>Undo and redo</h3>
+<p>
+ENT has a history system that allows you to <strong>undo</strong> and <strong>redo</strong> actions. In the toolbar, next to the "Analyze" button, you'll find the <strong>↶</strong> (undo) and <strong>↷</strong> (redo) buttons. This allows you to easily correct errors or experiment with different analyses without fear of losing your work. You can also use keyboard shortcuts (see section 9).
+</p>
+
+<h3>Normalization</h3>
+<p>
+When starting the analysis, ENT applies light normalization of certain contractions and amalgams (for example, <em>del</em>/<em>al</em> or <em>conmigo</em> in Spanish), to allow precise syntactic division and separate labeling of their components.
+</p>
+
+</section>
+<section id="division">
+<h2>4. Division mechanics</h2>
+
+<h3>Dividing a terminal node</h3>
+<p>
+To divide a constituent, click on a light blue text box (the node). ENT enters "division mode" and displays cut bars between words so you can select the boundaries between constituents.
+</p>
+
+<ul>
+  <li><strong>Select one or more cuts</strong> (between words). Each cut creates a new constituent.</li>
+  <li>Click <strong>Split</strong> to generate the child nodes.</li>
+  <li>Use <strong>Cancel</strong> if you entered division mode by mistake.</li>
+</ul>
+
+<h3>Consolidating to prevent division</h3>
+<p>
+If a node has more than one orthographic word but is only one syntactic word, you can "consolidate" it so it cannot be divided. Use the <strong>∪</strong> button you'll find in the upper left corner of the node. The node will turn white and the <strong>÷</strong> button will appear in its upper left corner, in case you want to make it divisible again.
+</p>
+
+<h3>Undoing a division</h3>
+<p>
+If you have divided a node into its child nodes but regret it and want to go back, use the <strong>↩</strong> button (<em>Undo split</em>). This removes the node's children.
+</p>
+
+<h3>Expanding a single-word node</h3>
+<p>
+If a terminal node has <strong>a single word</strong>, ENT allows you to "expand" it to add constituents below. This is useful for adding, for example, elided constituents. Press the <strong>÷</strong> button in the upper left corner. This will generate an identical child node and a <strong>+</strong> button will appear below the node, allowing you to add extra constituents.
+</p>
+
+<h3>Deleting node text</h3>
+<p>
+If you prefer, you can delete a node's text once you've divided it. To do this, you can use the red <strong>⨉</strong> button you'll find in the upper right corner of the node.
+</p>
+
+<h3>Marking a node as head</h3>
+<p>
+In terminal nodes (those without children), you'll find an <strong>H</strong> button that allows you to mark that constituent as <strong>head</strong>. When activated, the node's text will be displayed in bold, making it easier to visually identify the heads of each phrase in the diagram.
+</p>
+
+</section>
+<section id="etiquetado">
+<h2>5. The label system</h2>
+
+<p>
+Each node offers two fields: upper label (<strong>function</strong>) and lower label (<strong>category</strong>). To edit, click on the label and type the corresponding value.
+</p>
+
+<h3>Accessing suggestions</h3>
+<p>
+In the labels you can open the suggestion selector by pressing the <strong>☰</strong> button. This will open a window with a list where you can search for your preferred labels. When choosing a label, ENT inserts its abbreviation in the corresponding space.
+</p>
+
+<h3>Split labels (two values)</h3>
+<p>
+You can split a label into two parts using the <strong>⇄</strong> button. This is useful when you need two values in the same band (for example, two functions or two categories). ENT preserves the separator and renders both parts.
+</p>
+
+<h3>Formatting within labels</h3>
+<p>
+ENT allows you to edit the text formatting of labels:
+</p>
+<ul>
+  <li><strong>Bold</strong>: <code>**text**</code></li>
+  <li><em>Italic</em>: <code>*text*</code></li>
+  <li>Text in <sub>subscript</sub>: <code>_i_</code></li>
+  <li>Text in <sup>superscript</sup>: <code>¨n¨</code></li>
+</ul>
+
+</section>
+<section id="nodos-extra">
+<h2>6. Extra nodes and elision</h2>
+
+<h3>Adding an "extra" child node</h3>
+<p>
+When a node has already been divided, a <strong>+</strong> button will appear at the bottom, allowing you to insert a new child with free text (for example, for elided constituents).
+</p>
+
+<p>
+When creating an extra node, ENT will ask you for the text and then the position: <em>At the beginning</em>, <em>At the end</em>, or <em>Between "X" and "Y"</em>. This way you can decide exactly where it is inserted among the node's children.
+</p>
+
+
+</section>
+<section id="ejercitacion">
+<h2>7. Exercise mode</h2>
+
+<p>
+Exercise mode allows you to analyze a sentence while having a <strong>reference model</strong> in the background. You work with a "blank" tree and then compare it with the solution.</p>
+<p>When entering exercise mode, you will be asked to load a .ent file from your computer or from an example bank.
+</p>
+
+<h3>How to start an exercise from the Example Bank</h3>
+<ol>
+  <li>Open <span class="ui-element">☁️ Example bank</span> from the files panel or with the corresponding button in exercise mode.</li>
+  <li>Paste the URL of the Google Drive folder containing the .ent files </li>
+  <li>Select a <code>.ent</code> file from the bank.</li>
+  <li>Choose <strong>📚 Load as exercise</strong>. ENT creates an empty tree for the student and saves the file's tree as the model.</li>
+</ol>
+
+<h3>Comparison with the model</h3>
+<p>
+When you finish analyzing the exercise, use <strong>Compare</strong>. ENT will display two panels: <strong>Your analysis</strong>, on the left, and <strong>Model analysis</strong>, on the right. Differences are marked visually: correctly identified constituents and labels appear in green; incorrect ones in red.
+</p>
+<p> At the top of the comparison view you can see the number of correct answers and the achievement percentage in relation to the model</p>
+
+<p>
+From that view you can return to editing (<strong>← Back to editing</strong>) or start another exercise (<strong>New exercise</strong>).
+</p>
+</section>
+<section id="banco-nube">
+<h2>8. Example bank (Google Drive)</h2>
+<p>Allows instructors to create a library of exercises accessible from the cloud.</p>
+
+<p>
+If you don't have your own folder, ENT offers a link to the <strong>ENT example bank</strong>, a test folder with sample exercises that you can use to familiarize yourself with the system.
+</p>
+
+<div class="note-block">
+  <p><strong>Minimum requirements</strong></p>
+  <ul>
+    <li>Bank files must be saved as <code>.ent</code>.</li>
+    <li>The Drive folder must be shared as <strong>"Anyone with the link"</strong> (read permission).</li>
+    <li>In ENT, simply paste the link (or ID) of the folder and connect.</li>
+  </ul>
+
+  <p><strong>How it is organized and what is shown</strong></p>
+  <ul>
+    <li>ENT lists the <code>.ent</code> files that are in the <strong>root</strong> of the folder.</li>
+    <li>It also checks the <strong>direct subfolders</strong> (one level) and lists their <code>.ent</code> files.</li>
+    <li>If a subfolder is not accessible or doesn't contain <code>.ent</code> files, it simply doesn't appear in the bank.</li>
+  </ul>
+
+</div>
+</section>
+<section id="atajos">
+<h2>9. Keyboard Shortcuts</h2>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Windows / Linux</th>
+<th>macOS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Undo</strong></td>
+<td><span class="key-tip">Ctrl</span>+<span class="key-tip">Z</span></td>
+<td><span class="key-tip">⌘</span>+<span class="key-tip">Z</span></td>
+</tr>
+<tr>
+<td><strong>Redo</strong></td>
+<td><span class="key-tip">Ctrl</span>+<span class="key-tip">Y</span> or <span class="key-tip">Ctrl</span>+<span class="key-tip">⇧</span>+<span class="key-tip">Z</span></td>
+<td><span class="key-tip">⌘</span>+<span class="key-tip">⇧</span>+<span class="key-tip">Z</span></td>
+</tr>
+<tr>
+<td><strong>Save .ent</strong></td>
+<td><span class="key-tip">Ctrl</span>+<span class="key-tip">S</span></td>
+<td><span class="key-tip">⌘</span>+<span class="key-tip">S</span></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+<section id="exportacion">
+<h2>10. Exporting results</h2>
+
+<p>
+ENT exports the analysis as a PNG image with a <strong>transparent background</strong> so you can insert it into documents, slides, or articles.
+</p>
+
+<ul>
+  <li><strong>Export diagram</strong>: exports the diagram as it appears (with boxes).</li>
+  <li><strong>Export tree diagram</strong>: exports a "cleaner" style (technical mode), hiding editing controls and reducing non-essential visual elements.</li>
+</ul>
+
+<p>
+During export, ENT automatically hides interactive buttons so they don't appear in the final image.
+</p>
+</section>
+<footer>
+<p>Developed by Carlos González Vergara (<a href="mailto:cgonzalv@uc.cl">cgonzalv@uc.cl</a>)</p>
+<p>Departamento de Ciencias del Lenguaje • Facultad de Letras • Pontificia Universidad Católica de Chile</p>
+<p>2026 - Creative Commons BY-NC-ND 4.0</p>
+</footer>
+</div>
+</body>
+</html>

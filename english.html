@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ENT - Asistente para el análisis sintáctico</title>
+    <title>ENT - Syntactic Analysis Assistant</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* ===========================================
-           VARIABLES Y RESET
+           VARIABLES AND RESET
            =========================================== */
         :root {
             --btn-primary-bg: #374151;
@@ -38,7 +38,7 @@
         }
 
         /* ===========================================
-           LAYOUT PRINCIPAL
+           MAIN LAYOUT
            =========================================== */
         .container { 
             position: relative;
@@ -61,7 +61,7 @@
         }
 
         /* ===========================================
-        SELECTOR DE IDIOMA
+        LANGUAGE SELECTOR
         =========================================== */
         .language-selector {
             position: absolute;
@@ -127,7 +127,7 @@
         }
 
         /* ===========================================
-           BOTONES
+           BUTTONS
            =========================================== */
         .btn {
             padding: 10px 20px;
@@ -256,7 +256,7 @@
         }
 
         /* ===========================================
-           ÁRBOL SINTÁCTICO
+           SYNTAX TREE
            =========================================== */
         .tree-container { 
             background: white; 
@@ -316,13 +316,13 @@
             transform: translateX(-50%); 
         }
 
-        /* Modo técnico (arbóreo) */
+        /* Technical mode (tree) */
         .technical-mode .child-branch::before, 
         .technical-mode .child-branch::after { display: none !important; }
         .technical-mode .child-branch { padding-top: 60px; }
 
         /* ===========================================
-           NODOS
+           NODES
            =========================================== */
         .node-container { 
             display: flex; 
@@ -367,7 +367,7 @@
         }
 
         /* ===========================================
-           ETIQUETAS (LABELS)
+           LABELS
            =========================================== */
         .label-input { 
             width: 95px; 
@@ -455,7 +455,7 @@
         }
 
         /* ===========================================
-           SELECTOR DE ETIQUETAS GTG (RAE)
+           LABEL SELECTOR DROPDOWN
            =========================================== */
         .label-with-dropdown {
             position: relative;
@@ -593,7 +593,7 @@
         }
 
         /* ===========================================
-           BOTONES DE ACCIÓN EN NODOS
+           NODE ACTION BUTTONS
            =========================================== */
         .clear-text-btn { 
             position: absolute; 
@@ -694,7 +694,7 @@
         }
 
         
-        /* --- Botón ↩ (revertir división) sin empujar el nodo --- */
+        /* --- Revert division button --- */
         .node-box-row{
             position: relative;
             display: inline-flex;
@@ -711,7 +711,7 @@
         }
 
 /* ===========================================
-           ACCIONES INFERIORES E INSTRUCCIONES
+           BOTTOM ACTIONS AND INSTRUCTIONS
            =========================================== */
         .bottom-actions { 
             display: flex; 
@@ -726,7 +726,7 @@
         }
 
         /* ===========================================
-           PANEL DE INSTRUCCIONES (ESTILO TARJETAS)
+           INSTRUCTIONS PANEL (CARD STYLE)
            =========================================== */
         .instructions-panel {
             margin-top: 32px;
@@ -861,7 +861,7 @@
             border: 1px solid #e8e6e1;
         }
 
-        /* --- Estilo de Tecla Física --- */
+        /* --- Physical Key Style --- */
         .key {
             display: inline-block;
             background: linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%);
@@ -876,7 +876,7 @@
             margin: 0 2px;
         }
 
-        /* --- Limpieza de Listas de Atajos --- */
+        /* --- Shortcut List Cleanup --- */
         .shortcut-list li::before {
             content: none !important;
         }
@@ -888,7 +888,7 @@
         }
 
         /* ===========================================
-           MODO EJERCITACIÓN
+           EXERCISE MODE
            =========================================== */
         .exercise-banner {
             background: #ffffff;
@@ -918,9 +918,9 @@
 
         .exercise-banner {
             display: flex;
-            flex-direction: column; /* Apila el título arriba y los botones abajo */
+            flex-direction: column; /* Stack title on top and buttons below */
             align-items: center;    /* Centra todo horizontalmente */
-            text-align: center;     /* Asegura que el texto interno esté centrado */
+            text-align: center;     /* Ensure internal text is centered */
             background: #ffffff;
             border: 1px solid #e5e7eb;
             border-top: 4px solid #8b5cf6;
@@ -932,7 +932,7 @@
         }
 
         /* ===========================================
-           COMPARACIÓN DE RESULTADOS
+           COMPARISON RESULTS
            =========================================== */
         .comparison-container {
             display: grid;
@@ -962,7 +962,7 @@
 
         .comparison-tree { overflow-x: auto; }
 
-        /* Resaltado de diferencias */
+        /* Difference highlighting */
         .node-correct .node-box {
             border-color: #10b981 !important;
             background-color: #ecfdf5 !important;
@@ -982,7 +982,7 @@
             color: #991b1b !important;
         }
 
-        /* Resumen de resultados */
+        /* Results summary */
         .results-summary {
             background: white;
             border-radius: 8px;
@@ -1014,7 +1014,7 @@
         .stat-dot.partial { background-color: #f59e0b; }
 
         /* ===========================================
-           MODAL SELECTOR DE POSICIÓN
+           POSITION PICKER MODAL
            =========================================== */
         .pos-overlay {
             position: fixed;
@@ -1072,7 +1072,7 @@
         }
 
         /* ===========================================
-           MODAL DE ARCHIVOS
+           FILES MODAL
            =========================================== */
         .files-modal {
             width: min(600px, calc(100vw - 32px));
@@ -1161,7 +1161,7 @@
             justify-content: center;
         }
 
-        /* Banco de ejemplos */
+        /* Example bank */
         .drive-connect-row {
             display: flex;
             gap: 10px;
@@ -1313,7 +1313,7 @@
             flex: 1;
         }
 
-        /* Opciones de carga */
+        /* Load options */
         .drive-load-options {
             padding: 16px;
             background: #f9fafb;
@@ -1353,7 +1353,7 @@
         }
 
         /* ===========================================
-           PIE DE PÁGINA
+           FOOTER
            =========================================== */
         .footer {
             margin-top: 40px;
@@ -1377,7 +1377,7 @@
         .footer img:hover { opacity: 1; }
 
         /* ===========================================
-           RESPONSIVE - TABLETS Y MÓVILES
+           RESPONSIVE - TABLETS AND MOBILE
            =========================================== */
         @media (max-width: 768px) {
             .container { padding: 12px 16px 24px; }
@@ -1474,175 +1474,129 @@
         const { useState, useRef, useEffect, useCallback } = React;
 
         // ===========================================
-        // CATÁLOGO DE ETIQUETAS GTG (RAE)
-        // Basado en el Glosario de términos gramaticales
+        // LABEL CATALOG (English terminology)
+        // Based on standard introductory syntax textbooks
         // ===========================================
         const GTG_LABELS = {
-            // FUNCIONES SINTÁCTICAS (etiqueta superior)
-            oracionesFunciones: {
-                title: 'Oraciones y cláusulas',
+            // SYNTACTIC FUNCTIONS (top label)
+            clausesFunctions: {
+                title: 'Clauses',
                 items: [
-                    { abbr: 'TXT', full: 'texto' },
-                    { abbr: 'O', full: 'oración' },
-                    { abbr: 'CL', full: 'cláusula' },
-                    { abbr: 'CLM', full: 'cláusula matriz' },
-                    { abbr: 'CLS', full: 'cláusula subordinada' },
-                    { abbr: 'CLS SUS', full: 'cláusula subordinada sustantiva' },
-                    { abbr: 'CLS ADJ', full: 'cláusula subordinada adjetiva' },
-                    { abbr: 'CLS ADV', full: 'cláusula subordinada adverbial' },
-                    { abbr: 'COORD', full: 'coordinación' },
+                    { abbr: 'S', full: 'sentence' },
+                    { abbr: 'CL', full: 'clause' },
+                    { abbr: 'MC', full: 'main clause' },
+                    { abbr: 'SC', full: 'subordinate clause' },
+                    { abbr: 'RC', full: 'relative clause' },
+                    { abbr: 'COMP CL', full: 'complement clause' },
+                    { abbr: 'ADV CL', full: 'adverbial clause' },
+                    { abbr: 'COORD', full: 'coordination' },
                 ]
             },
-            funciones: {
-                title: 'Funciones sintácticas',
+            functions: {
+                title: 'Grammatical functions',
                 items: [
-                    { abbr: 'SUJ', full: 'sujeto' },
-                    { abbr: 'SUJ DES', full: 'sujeto desinencial' },
-                    { abbr: 'SUJ TAC', full: 'sujeto tácito' },
-                    { abbr: 'SUJ IND', full: 'sujeto indeterminado' },
-                    { abbr: 'SUN IMP', full: 'sujeto impersonal' },
-                    { abbr: 'CD', full: 'complemento directo' },
-                    { abbr: 'CI', full: 'complemento indirecto' },
-                    { abbr: 'C REG', full: 'complemento de régimen' },
-                    { abbr: 'CC', full: 'complemento circunstancial' },
-                    { abbr: 'CC T', full: 'c. circunstancial de tiempo' },
-                    { abbr: 'CC LOC', full: 'c. circunstancial de lugar' },
-                    { abbr: 'CC MOD', full: 'c. circunstancial de modo' },
-                    { abbr: 'CC CAUS', full: 'c. circunstancial de causa' },
-                    { abbr: 'CC FIN', full: 'c. circunstancial de finalidad' },
-                    { abbr: 'CC INST', full: 'c. circunstancial de instrumento' },
-                    { abbr: 'CC CANT', full: 'c. circunstancial de cantidad' },
-                    { abbr: 'CC COMP', full: 'c. circunstancial de compañía' },
-                    { abbr: 'C AG', full: 'complemento agente' },
-                    { abbr: 'ATR', full: 'atributo' },
-                    { abbr: 'C PVO', full: 'complemento predicativo' },
-                    { abbr: 'TER', full: 'término' },
-                    { abbr: 'CN', full: 'complemento del nombre' },
-                    { abbr: 'C ADJ', full: 'complemento del adjetivo' },
-                    { abbr: 'C ADV', full: 'complemento del adverbio' },
-                    { abbr: 'CPRO', full: 'complemento del pronombre' },
-                    { abbr: 'APOS', full: 'aposición' },
-                    { abbr: 'VOC', full: 'vocativo' },
+                    { abbr: 'SUBJ', full: 'subject' },
+                    { abbr: 'DO', full: 'direct object' },
+                    { abbr: 'IO', full: 'indirect object' },
+                    { abbr: 'OBL', full: 'oblique' },
+                    { abbr: 'PRED', full: 'predicate' },
+                    { abbr: 'COMP', full: 'complement' },
+                    { abbr: 'ADJUNCT', full: 'adjunct' },
+                    { abbr: 'SPEC', full: 'specifier' },
+                    { abbr: 'MOD', full: 'modifier' },
+                    { abbr: 'APP', full: 'appositive' },
+                    { abbr: 'VOC', full: 'vocative' },
                 ]
             },
-            funcionesInternas: {
-                title: 'Funciones internas',
+            internalFunctions: {
+                title: 'Phrase-internal functions',
                 items: [
-                    { abbr: 'NUC', full: 'núcleo' },
-                    { abbr: 'MOD', full: 'modificador' },
-                    { abbr: 'DET', full: 'determinante' },
-                    { abbr: 'ADY', full: 'adyacente' },
-                    { abbr: 'ENL', full: 'enlace' },
-                    { abbr: 'NX', full: 'nexo' },
+                    { abbr: 'HEAD', full: 'head' },
+                    { abbr: 'DET', full: 'determiner' },
+                    { abbr: 'MOD', full: 'modifier' },
+                    { abbr: 'COMP', full: 'complement' },
+                    { abbr: 'CONJ', full: 'conjunction' },
                 ]
             },
-            // CATEGORÍAS / CLASES DE PALABRAS (etiqueta inferior)
-            sintagmas: {
-                title: 'Sintagmas / Grupos',
+            // CATEGORIES / WORD CLASSES (bottom label)
+            phrases: {
+                title: 'Phrases',
                 items: [
-                    { abbr: 'FN', full: 'frase nominal' },
-                    { abbr: 'FV', full: 'frase verbal' },
-                    { abbr: 'FPrep', full: 'frase preposicional' },
-                    { abbr: 'FAdj', full: 'frase adjetival' },
-                    { abbr: 'FAdv', full: 'frase adverbial' },                    
-                    { abbr: 'FInf', full: 'frase de infinitivo' },
-                    { abbr: 'FGer', full: 'frase de gerundio' },
-                    { abbr: 'FPart', full: 'frase participio' },
-                    { abbr: 'FPro', full: 'frase pronominal' },
+                    { abbr: 'NP', full: 'noun phrase' },
+                    { abbr: 'VP', full: 'verb phrase' },
+                    { abbr: 'PP', full: 'prepositional phrase' },
+                    { abbr: 'AP', full: 'adjective phrase' },
+                    { abbr: 'AdvP', full: 'adverb phrase' },
+                    { abbr: 'DP', full: 'determiner phrase' },
+                    { abbr: 'CP', full: 'complementizer phrase' },
+                    { abbr: 'IP', full: 'inflection phrase' },
                 ]
             },
-            palabras: {
-                title: 'Clases de palabras',
+            wordClasses: {
+                title: 'Word classes',
                 items: [
-                    { abbr: 'v', full: 'verbo' },
-                    { abbr: 'perif verb', full: 'perífrasis verbal' },
-                    { abbr: 'sust', full: 'sustantivo común' },
-                    { abbr: 'np', full: 'nombre propio' },
-                    { abbr: 'prep', full: 'preposición' },
-                    { abbr: 'adj cal', full: 'adjetivo calificativo' },
-                    { abbr: 'adj rel', full: 'adjetivo relacional' },
-                    { abbr: 'det', full: 'determinante' },
-                    { abbr: 'pron', full: 'pronombre' },                  
-                    { abbr: 'adv', full: 'adverbio' },
-                    { abbr: 'adv t', full: 'adverbio de tiempo' },
-                    { abbr: 'adv loc', full: 'adverbio de lugar' },
-                    { abbr: 'adv mod', full: 'adverbio de modo' },
-                    { abbr: 'adv cant', full: 'adverbio de cantidad' },
-                    { abbr: 'adv af', full: 'adverbio de afirmación' },
-                    { abbr: 'adv neg', full: 'adverbio de negación' },
-                    { abbr: 'adv dud', full: 'adverbio de duda' },
-                    { abbr: 'conj', full: 'conjunción' },
-                    { abbr: 'conj cop', full: 'conjunción copulativa' },
-                    { abbr: 'conj disy', full: 'conjunción disyuntiva' },
-                    { abbr: 'conj adv', full: 'conjunción adverbial' },
-                    { abbr: 'interj', full: 'interjección' },
-                    { abbr: 'clit', full: 'clítico' },
-                    { abbr: 'clit acus', full: 'clítico acusativo' },
-                    { abbr: 'clit dat', full: 'clítico dativo' },
-                    { abbr: 'clit refl', full: 'clítico reflexivo' },
-                    { abbr: 'loc verb', full: 'locución verbal' },
-                    { abbr: 'loc nom', full: 'locución nominal' },
-                    { abbr: 'loc prep', full: 'locución preposicional' },
-                    { abbr: 'loc adj', full: 'locución adjetival' },
-                    { abbr: 'loc adv', full: 'locución adverbial' },
-                    { abbr: 'loc conj', full: 'locución conjuntiva' },
-                    { abbr: 'inf', full: 'infinitivo' },
-                    { abbr: 'ger', full: 'gerundio' },
-                    { abbr: 'part', full: 'participio' },
+                    { abbr: 'N', full: 'noun' },
+                    { abbr: 'V', full: 'verb' },
+                    { abbr: 'Adj', full: 'adjective' },
+                    { abbr: 'Adv', full: 'adverb' },
+                    { abbr: 'P', full: 'preposition' },
+                    { abbr: 'Det', full: 'determiner' },
+                    { abbr: 'Pron', full: 'pronoun' },
+                    { abbr: 'Conj', full: 'conjunction' },
+                    { abbr: 'Comp', full: 'complementizer' },
+                    { abbr: 'Aux', full: 'auxiliary' },
+                    { abbr: 'Mod', full: 'modal' },
+                    { abbr: 'Neg', full: 'negation' },
+                    { abbr: 'Interj', full: 'interjection' },
                 ]
             },
-            determinantes: {
-                title: 'Tipos de determinantes',
+            determiners: {
+                title: 'Determiner types',
                 items: [
-                    { abbr: 'art det', full: 'artículo determinado' },
-                    { abbr: 'art ind', full: 'artículo indeterminado' },
-                    { abbr: 'dem', full: 'demostrativo' },
-                    { abbr: 'pos', full: 'posesivo' },
-                    { abbr: 'cuant', full: 'cuantificador' },
-                    { abbr: 'num', full: 'numeral' },
-                    { abbr: 'indef', full: 'indefinido' },
-                    { abbr: 'interr', full: 'interrogativo' },
-                    { abbr: 'excl', full: 'exclamativo' },
-                    { abbr: 'rel', full: 'relativo' },
+                    { abbr: 'Art', full: 'article' },
+                    { abbr: 'Dem', full: 'demonstrative' },
+                    { abbr: 'Poss', full: 'possessive' },
+                    { abbr: 'Quant', full: 'quantifier' },
+                    { abbr: 'Num', full: 'numeral' },
+                    { abbr: 'Indef', full: 'indefinite' },
+                    { abbr: 'Interr', full: 'interrogative' },
+                    { abbr: 'Rel', full: 'relative' },
                 ]
             },
-            pronombres: {
-                title: 'Tipos de pronombres',
+            pronouns: {
+                title: 'Pronoun types',
                 items: [
-                    { abbr: 'pron pers', full: 'pronombre personal' },
-                    { abbr: 'pron dem', full: 'pronombre demostrativo' },
-                    { abbr: 'pron pos', full: 'pronombre posesivo' },
-                    { abbr: 'pron indef', full: 'pronombre indefinido' },
-                    { abbr: 'pron interr', full: 'pronombre interrogativo' },
-                    { abbr: 'pron rel', full: 'pronombre relativo' },
-                    { abbr: 'pron excl', full: 'pronombre exclamativo' },
+                    { abbr: 'Pers', full: 'personal pronoun' },
+                    { abbr: 'Refl', full: 'reflexive pronoun' },
+                    { abbr: 'Dem', full: 'demonstrative pronoun' },
+                    { abbr: 'Poss', full: 'possessive pronoun' },
+                    { abbr: 'Indef', full: 'indefinite pronoun' },
+                    { abbr: 'Interr', full: 'interrogative pronoun' },
+                    { abbr: 'Rel', full: 'relative pronoun' },
                 ]
             },
-            oracionesCat: {
-                title: 'Oraciones y cláusulas',
+            clausesCat: {
+                title: 'Clause types',
                 items: [
-                    { abbr: 'TXT', full: 'texto' },
-                    { abbr: 'O', full: 'oración' },
-                    { abbr: 'CL', full: 'cláusula' },
-                    { abbr: 'CLM', full: 'cláusula matriz' },
-                    { abbr: 'CLS', full: 'cláusula subordinada' },
-                    { abbr: 'CLS SUS', full: 'cláusula subordinada sustantiva' },
-                    { abbr: 'CLS ADJ', full: 'cláusula subordinada adjetiva' },
-                    { abbr: 'CLS ADV', full: 'cláusula subordinada adverbial' },
-                    { abbr: 'COORD', full: 'coordinación' },
+                    { abbr: 'S', full: 'sentence' },
+                    { abbr: 'CL', full: 'clause' },
+                    { abbr: 'MC', full: 'main clause' },
+                    { abbr: 'SC', full: 'subordinate clause' },
+                    { abbr: 'RC', full: 'relative clause' },
+                    { abbr: 'COORD', full: 'coordination' },
                 ]
             }
         };
 
-        // Secciones para etiqueta superior (funciones)
-        const FUNC_SECTIONS = ['oracionesFunciones', 'funciones', 'funcionesInternas'];
+        // Sections for top label (functions)
+        const FUNC_SECTIONS = ['clausesFunctions', 'functions', 'internalFunctions'];
         
-        // Secciones para etiqueta inferior (categorías)
-        const CAT_SECTIONS = ['sintagmas', 'palabras', 'determinantes', 'pronombres', 'oracionesCat'];
+        // Sections for bottom label (categories)
+        const CAT_SECTIONS = ['phrases', 'wordClasses', 'determiners', 'pronouns', 'clausesCat'];
 
         const SyntaxTreeBuilder = () => {
             // ===========================================
-            // ESTADO
+            // STATE
             // ===========================================
             const [sentence, setSentence] = useState('');
             const [tree, setTree] = useState(null);
@@ -1650,21 +1604,21 @@
             const [selectedCuts, setSelectedCuts] = useState([]);
             const [posPicker, setPosPicker] = useState(null);
 
-            // Modo ejercicio
+            // Exercise mode
             const [exerciseMode, setExerciseMode] = useState(false);
             const [modelTree, setModelTree] = useState(null);
             const [showComparison, setShowComparison] = useState(false);
             const [comparisonResults, setComparisonResults] = useState(null);
 
-            // Historial Undo/Redo
+            // Undo/Redo history
             const [history, setHistory] = useState([]);
             const [historyIndex, setHistoryIndex] = useState(-1);
             const isUndoRedo = useRef(false);
 
-            // Panel de instrucciones
+            // Instructions panel
             const [instructionsCollapsed, setInstructionsCollapsed] = useState(true);
 
-            // Modal de archivos
+            // Files modal
             const [showFilesModal, setShowFilesModal] = useState(false);
             const [filesActiveTab, setFilesActiveTab] = useState('local');
             const [driveUrl, setDriveUrl] = useState(() => localStorage.getItem('ent_drive_url') || '');
@@ -1673,27 +1627,39 @@
             const [selectedDriveFile, setSelectedDriveFile] = useState(null);
             const [collapsedFolders, setCollapsedFolders] = useState({});
 
-            // Referencias
+            // References
             const fileInputRef = useRef(null);
             const exerciseInputRef = useRef(null);
 
             // ===========================================
-            // UTILIDADES
+            // UTILITIES
             // ===========================================
             const getFileName = (extension) => {
                 const words = sentence.trim().split(/\s+/).slice(0, 5).join('_');
-                // Usar .ent como extensión por defecto para JSON
+                // Use .ent as default extension for JSON
                 const ext = extension === 'json' ? 'ent' : extension;
                 return `${words}.${ext}`;
             };
 
             const normalizeSentence = (text) => {
                 return text.trim()
-                    .replace(/\bdel\b/gi, 'de el')
-                    .replace(/\bal\b/gi, 'a el')
-                    .replace(/\bconmigo\b/gi, 'con migo')
-                    .replace(/\bcontigo\b/gi, 'con tigo')
-                    .replace(/\bconsigo\b/gi, 'con sigo');
+                    // Normalize curly apostrophes to straight
+                    .replace(/['']/g, "'")
+                    // Irregular negative contractions (must come first)
+                    .replace(/\bwon't\b/gi, 'will not')
+                    .replace(/\bcan't\b/gi, 'cannot')
+                    .replace(/\bshan't\b/gi, 'shall not')
+                    .replace(/\bain't\b/gi, 'am not')
+                    // Regular negative contractions: don't, doesn't, didn't, isn't, aren't, etc.
+                    .replace(/n't\b/gi, ' not')
+                    // Verb contractions with pronouns
+                    .replace(/\b(I|you|we|they|he|she|it|who|what|that|there|here)'ll\b/gi, '$1 will')
+                    .replace(/\b(I|you|we|they|he|she|it|who|what|that|there|here)'d\b/gi, '$1 would')
+                    .replace(/\b(I|you|we|they|he|she|it|who|what|that|there|here)'ve\b/gi, '$1 have')
+                    .replace(/\b(you|we|they|who|what|that|there|here)'re\b/gi, '$1 are')
+                    .replace(/\b(he|she|it|who|what|that|there|here)'s\b/gi, '$1 is')
+                    .replace(/\bI'm\b/gi, 'I am')
+                    .replace(/\blet's\b/gi, 'let us');
             };
 
             const createEmptyTree = (text) => ({
@@ -1745,15 +1711,15 @@
 
             const buildPosLabel = (i, siblings) => {
                 const n = siblings.length;
-                if (i === 1) return 'Al inicio';
-                if (i === n + 1) return 'Al final';
+                if (i === 1) return 'At the beginning';
+                if (i === n + 1) return 'At the end';
                 const left = shorten(siblings[i - 2]);
                 const right = shorten(siblings[i - 1]);
-                return `Entre "${left}" y "${right}"`;
+                return `Between "${left}" and "${right}"`;
             };
 
             // ===========================================
-            // FORMATO DE TEXTO EN ETIQUETAS
+            // TEXT FORMATTING IN LABELS
             // ===========================================
             const formatLabelText = (text) => {
                 if (!text) return null;
@@ -1802,7 +1768,7 @@
                 return parts.length > 0 ? parts : text;
             };
 
-            // Función para aplicar formato HTML en exportación (DOM)
+            // Function to apply HTML formatting in export (DOM)
             const applyFormatToSpan = (span, text) => {
                 if (!text) {
                     span.textContent = '';
@@ -1850,7 +1816,7 @@
             };
 
             // ===========================================
-            // HISTORIAL UNDO/REDO
+            // UNDO/REDO HISTORY
             // ===========================================
             useEffect(() => {
                 if (tree && !isUndoRedo.current) {
@@ -1885,7 +1851,7 @@
             }, [canRedo, history, historyIndex]);
 
             // ===========================================
-            // GUARDAR (definido aquí para usar en atajos)
+            // SAVE (defined here for keyboard shortcuts)
             // ===========================================
             const handleSaveJSON = useCallback(() => {
                 if (!tree) return;
@@ -1916,12 +1882,12 @@
                 return null;
             };
 
-            const fetchDriveFolder = async (folderId, folderName = 'Raíz') => {
+            const fetchDriveFolder = async (folderId, folderName = 'Root') => {
                 const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents&key=${GOOGLE_API_KEY}&fields=files(id,name,mimeType)&orderBy=name`;
                 const response = await fetch(url);
                 if (!response.ok) {
                     const error = await response.json();
-                    throw new Error(error.error?.message || 'Error al acceder a la carpeta');
+                    throw new Error(error.error?.message || 'Error accessing folder');
                 }
                 const data = await response.json();
                 return { folderId, folderName, files: data.files || [] };
@@ -1929,18 +1895,18 @@
 
             const organizeFiles = async (rootFolderId) => {
                 const result = [];
-                const rootData = await fetchDriveFolder(rootFolderId, 'Raíz');
+                const rootData = await fetchDriveFolder(rootFolderId, 'Root');
                 
-                // Separar archivos .ent y subcarpetas
+                // Separate .ent files and subfolders
                 const entFiles = rootData.files.filter(f => f.name.endsWith('.ent'));
                 const folders = rootData.files.filter(f => f.mimeType === 'application/vnd.google-apps.folder');
                 
-                // Agregar archivos de la raíz
+                // Add root files
                 if (entFiles.length > 0) {
                     result.push({ folderName: null, files: entFiles });
                 }
                 
-                // Procesar subcarpetas
+                // Process subfolders
                 for (const folder of folders) {
                     try {
                         const folderData = await fetchDriveFolder(folder.id, folder.name);
@@ -1949,7 +1915,7 @@
                             result.push({ folderName: folder.name, folderId: folder.id, files: folderEntFiles });
                         }
                     } catch (e) {
-                        console.warn(`No se pudo acceder a la carpeta ${folder.name}:`, e);
+                        console.warn(`Could not access folder ${folder.name}:`, e);
                     }
                 }
                 
@@ -1959,33 +1925,33 @@
             const handleConnectDrive = async () => {
                 const folderId = extractFolderId(driveUrl.trim());
                 if (!folderId) {
-                    setDriveStatus({ type: 'error', message: 'URL no válida. Ingresa una URL de carpeta de Google Drive.' });
+                    setDriveStatus({ type: 'error', message: 'Invalid URL. Please enter a Google Drive folder URL.' });
                     return;
                 }
 
-                // Guardar la URL en localStorage
+                // Save URL to localStorage
                 localStorage.setItem('ent_drive_url', driveUrl.trim());
                 
-                setDriveStatus({ type: 'loading', message: 'Conectando con Google Drive...' });
+                setDriveStatus({ type: 'loading', message: 'Connecting to Google Drive...' });
                 setDriveFiles([]);
                 setSelectedDriveFile(null);
 
                 try {
                     const files = await organizeFiles(folderId);
                     if (files.length === 0 || files.every(f => f.files.length === 0)) {
-                        setDriveStatus({ type: 'error', message: 'No se encontraron archivos .ent en esta carpeta.' });
+                        setDriveStatus({ type: 'error', message: 'No .ent files found in this folder.' });
                         return;
                     }
                     setDriveFiles(files);
-                    setDriveStatus({ type: 'success', message: `Se encontraron ${files.reduce((sum, f) => sum + f.files.length, 0)} archivos .ent` });
+                    setDriveStatus({ type: 'success', message: `Found ${files.reduce((sum, f) => sum + f.files.length, 0)} .ent files` });
                 } catch (error) {
-                    console.error('Error al conectar con Google Drive:', error);
+                    console.error('Error connecting to Google Drive:', error);
                     if (error.message.includes('API key')) {
-                        setDriveStatus({ type: 'error', message: 'Error de API Key. Verifica la configuración.' });
+                        setDriveStatus({ type: 'error', message: 'API Key error. Check configuration.' });
                     } else if (error.message.includes('not found') || error.message.includes('404')) {
-                        setDriveStatus({ type: 'error', message: 'Carpeta no encontrada. Verifica que la URL sea correcta.' });
+                        setDriveStatus({ type: 'error', message: 'Folder not found. Check the URL.' });
                     } else if (error.message.includes('permission') || error.message.includes('403')) {
-                        setDriveStatus({ type: 'error', message: 'Sin permisos. La carpeta debe ser pública (compartida con "Cualquier persona con el enlace").' });
+                        setDriveStatus({ type: 'error', message: 'No permissions. The folder must be public (shared with "Anyone with the link").' });
                     } else {
                         setDriveStatus({ type: 'error', message: `Error: ${error.message}` });
                     }
@@ -1996,7 +1962,7 @@
                 const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${GOOGLE_API_KEY}`;
                 const response = await fetch(url);
                 if (!response.ok) {
-                    throw new Error('No se pudo descargar el archivo');
+                    throw new Error('Could not download file');
                 }
                 return await response.json();
             };
@@ -2004,18 +1970,18 @@
             const handleLoadFromDrive = async (asExercise = false) => {
                 if (!selectedDriveFile) return;
 
-                setDriveStatus({ type: 'loading', message: 'Cargando archivo...' });
+                setDriveStatus({ type: 'loading', message: 'Loading file...' });
 
                 try {
                     const data = await fetchDriveFile(selectedDriveFile.id);
                     
                     if (!data.tree || !data.sentence) {
-                        setDriveStatus({ type: 'error', message: 'El archivo no tiene el formato esperado.' });
+                        setDriveStatus({ type: 'error', message: 'File does not have the expected format.' });
                         return;
                     }
 
                     if (asExercise) {
-                        // Cargar como ejercicio
+                        // Load as exercise
                         const originalSentence = data.sentence || '';
                         setSentence(originalSentence);
                         setModelTree(data.tree);
@@ -2029,7 +1995,7 @@
                         setHistory([JSON.stringify(newTree)]);
                         setHistoryIndex(0);
                     } else {
-                        // Cargar como referencia (para ver/editar)
+                        // Load as reference (view/edit)
                         setSentence(data.sentence || '');
                         setTree(data.tree);
                         setExerciseMode(false);
@@ -2042,8 +2008,8 @@
                     setShowFilesModal(false);
                     setSelectedDriveFile(null);
                 } catch (error) {
-                    console.error('Error al cargar archivo:', error);
-                    setDriveStatus({ type: 'error', message: `Error al cargar: ${error.message}` });
+                    console.error('Error loading file:', error);
+                    setDriveStatus({ type: 'error', message: `Error loading: ${error.message}` });
                 }
             };
 
@@ -2055,7 +2021,7 @@
             };
 
             // ===========================================
-            // ATAJOS DE TECLADO
+            // KEYBOARD SHORTCUTS
             // ===========================================
             useEffect(() => {
                 const handleKeyDown = (e) => {
@@ -2083,7 +2049,7 @@
             }, [handleUndo, handleRedo, handleSaveJSON]);
 
             // ===========================================
-            // ACCIONES PRINCIPALES
+            // MAIN ACTIONS
             // ===========================================
             const startAnalysis = () => {
                 if (sentence.trim()) {
@@ -2094,7 +2060,7 @@
                     setExerciseMode(false);
                     setModelTree(null);
                     setShowComparison(false);
-                    // Reiniciar historial
+                    // Reset history
                     setHistory([JSON.stringify(newTree)]);
                     setHistoryIndex(0);
                 }
@@ -2106,7 +2072,7 @@
                 const segments = [];
                 let start = 0;
                 
-                // Asegurar que los cortes estén ordenados numéricamente
+                // Ensure cuts are sorted numerically
                 const sortedCuts = [...selectedCuts].sort((a, b) => a - b);
                 
                 [...sortedCuts, words.length - 1].forEach(cut => {
@@ -2141,7 +2107,7 @@
                     const node = findNodeById(prev, nodeId);
                     if (!node || node.children) return prev;
                     
-                    // Crear un hijo con el mismo texto del nodo padre
+                    // Create a child with the same text as the parent node
                     const childNode = {
                         id: `${nodeId}-child-${Date.now()}`,
                         text: node.text,
@@ -2160,7 +2126,7 @@
             };
 
             const addChildNode = (parentId) => {
-                const txt = window.prompt('Texto del nodo extra:');
+                const txt = window.prompt('Text for extra node:');
                 if (txt === null) return;
 
                 const parent = findNodeById(tree, parentId);
@@ -2196,7 +2162,7 @@
             };
 
             // ===========================================
-            // CARGAR ARCHIVOS
+            // LOAD FILES
             // ===========================================
             const handleLoadJSON = (event) => {
                 const file = event.target.files[0];
@@ -2206,7 +2172,7 @@
                     try {
                         const imported = JSON.parse(e.target.result);
                         if (!imported.tree || !imported.sentence) {
-                            alert('Error: El archivo no tiene el formato esperado.\n\nEl archivo debe contener las propiedades "sentence" y "tree".');
+                            alert('Error: File does not have the expected format.\n\nThe file must contain "sentence" and "tree" properties.');
                             return;
                         }
                         setSentence(imported.sentence || '');
@@ -2214,15 +2180,15 @@
                         setExerciseMode(false);
                         setModelTree(null);
                         setShowComparison(false);
-                        // Reiniciar historial con el árbol cargado
+                        // Reset history with loaded tree
                         setHistory([JSON.stringify(imported.tree)]);
                         setHistoryIndex(0);
                     } catch (error) {
-                        alert('Error al leer el archivo.\n\nEl archivo no tiene un formato válido (.ent o .json) o está corrupto.\n\nDetalle: ' + error.message);
+                        alert('Error reading file.\n\nThe file is not valid (.ent or .json) or is corrupted.\n\nDetail: ' + error.message);
                     }
                 };
                 reader.onerror = () => {
-                    alert('Error al leer el archivo. Por favor, inténtelo de nuevo.');
+                    alert('Error reading file. Please try again.');
                 };
                 reader.readAsText(file);
                 event.target.value = '';
@@ -2236,7 +2202,7 @@
                     try {
                         const imported = JSON.parse(e.target.result);
                         if (!imported.tree || !imported.sentence) {
-                            alert('Error: El archivo no tiene el formato esperado.\n\nEl archivo de ejercicio debe contener las propiedades "sentence" y "tree".');
+                            alert('Error: File does not have the expected format.\n\nThe exercise file must contain "sentence" and "tree" properties.');
                             return;
                         }
                         const originalSentence = imported.sentence || '';
@@ -2249,22 +2215,22 @@
                         setExerciseMode(true);
                         setShowComparison(false);
                         setComparisonResults(null);
-                        // Reiniciar historial
+                        // Reset history
                         setHistory([JSON.stringify(newTree)]);
                         setHistoryIndex(0);
                     } catch (error) {
-                        alert('Error al leer el archivo de ejercicio.\n\nEl archivo no es válido o está corrupto.\n\nDetalle: ' + error.message);
+                        alert('Error reading exercise file.\n\nThe file is not valid or is corrupted.\n\nDetail: ' + error.message);
                     }
                 };
                 reader.onerror = () => {
-                    alert('Error al leer el archivo. Por favor, inténtelo de nuevo.');
+                    alert('Error reading file. Please try again.');
                 };
                 reader.readAsText(file);
                 event.target.value = '';
             };
 
             // ===========================================
-            // MODO EJERCITACIÓN
+            // EXERCISE MODE
             // ===========================================
             const compareTrees = (studentTree, modelTree) => {
                 const results = {
@@ -2283,7 +2249,7 @@
 
                 const normalizeText = (text) => (text || '').trim().toLowerCase();
                 
-                // Extrae las partes normalizadas de una etiqueta
+                // Extract normalized parts from a label
                 const getLabelParts = (label) => {
                     if (!label) return [];
                     return label.split('/')
@@ -2291,13 +2257,13 @@
                         .filter(p => p);
                 };
                 
-                // Normaliza una etiqueta completa (para comparación de igualdad total)
+                // Normalize complete label (for full equality comparison)
                 const normalizeLabel = (label) => {
                     const parts = getLabelParts(label);
                     return parts.sort().join('•');
                 };
                 
-                // Compara dos etiquetas y retorna cuántas partes del modelo fueron acertadas
+                // Compare two labels and return how many model parts matched
                 const compareLabelParts = (studentLabel, modelLabel) => {
                     const studentParts = getLabelParts(studentLabel);
                     const modelParts = getLabelParts(modelLabel);
@@ -2312,7 +2278,7 @@
                         if (studentSet.has(part)) correct++;
                     }
                     
-                    // allMatch es true si todas las partes coinciden (mismo contenido, sin importar orden)
+                    // allMatch is true if all parts match (same content, regardless of order)
                     const allMatch = correct === modelParts.length && studentParts.length === modelParts.length;
                     
                     return { total: modelParts.length, correct, allMatch };
@@ -2320,40 +2286,40 @@
                 
                 const getChildCount = (node) => (node?.children?.length) || 0;
 
-                // Verifica si los hijos del estudiante coinciden con los del modelo
-                // Para nodos normales: verificar texto exacto en la misma posición
-                // Para nodos extra (isInserted): solo verificar que las etiquetas coincidan (ignorar texto y posición)
+                // Check if student children match model children
+                // For normal nodes: check exact text at same position
+                // For extra nodes (isInserted): only check label match (ignore text and position)
                 const childrenMatch = (studentNode, modelNode) => {
                     const studentChildren = studentNode?.children || [];
                     const modelChildren = modelNode?.children || [];
                     
-                    // Separar nodos normales y nodos extra
+                    // Separate normal and extra nodes
                     const studentNormal = studentChildren.filter(c => !c.isInserted);
                     const studentExtra = studentChildren.filter(c => c.isInserted);
                     const modelNormal = modelChildren.filter(c => !c.isInserted);
                     const modelExtra = modelChildren.filter(c => c.isInserted);
                     
-                    // Verificar que la cantidad de nodos normales coincida
+                    // Check that number of normal nodes matches
                     if (studentNormal.length !== modelNormal.length) return false;
                     
-                    // Verificar que la cantidad de nodos extra coincida
+                    // Check that number of extra nodes matches
                     if (studentExtra.length !== modelExtra.length) return false;
                     
-                    // Verificar que cada nodo normal tenga el mismo texto en la misma posición
+                    // Check that each normal node has same text at same position
                     for (let i = 0; i < modelNormal.length; i++) {
                         if (normalizeText(studentNormal[i]?.text) !== normalizeText(modelNormal[i]?.text)) {
                             return false;
                         }
                     }
                     
-                    // Para nodos extra: verificar que cada nodo extra del estudiante 
-                    // tenga etiquetas que coincidan con algún nodo extra del modelo
+                    // For extra nodes: check that each student extra node 
+                    // has labels matching some model extra node
                     const usedModelExtras = new Set();
                     for (const studentExtraNode of studentExtra) {
                         const studentLabelTop = normalizeLabel(studentExtraNode.labelTop);
                         const studentLabelBottom = normalizeLabel(studentExtraNode.labelBottom);
                         
-                        // Buscar un nodo extra del modelo con las mismas etiquetas que aún no haya sido usado
+                        // Find model extra node with same labels not yet used
                         let foundMatch = false;
                         for (let j = 0; j < modelExtra.length; j++) {
                             if (usedModelExtras.has(j)) continue;
@@ -2374,7 +2340,7 @@
                     return true;
                 };
 
-                // Cuenta todos los elementos del modelo (para el puntaje total)
+                // Count all model elements (for total score)
                 const countModelElements = (modelNode) => {
                     const children = modelNode.children || [];
                     children.forEach((child) => {
@@ -2390,37 +2356,34 @@
                 const compareNodes = (student, model, path = 'root') => {
                     if (!model) return;
                     
-                    // 1. PUNTAJE IDEAL: Siempre se suma basándose exclusivamente en el modelo
+                    // 1. IDEAL SCORE: Always add based exclusively on model
                     results.totalNodes++;
                     const modelTopParts = getLabelParts(model.labelTop);
                     const modelBottomParts = getLabelParts(model.labelBottom);
-                    // Para nodos extra, solo contamos el nodo (las etiquetas se evalúan como parte de la identificación)
-                    if (!model.isInserted) {
-                        results.totalLabelTopParts += modelTopParts.length;
-                        results.totalLabelBottomParts += modelBottomParts.length;
-                    }
+                    results.totalLabelTopParts += modelTopParts.length;
+                    results.totalLabelBottomParts += modelBottomParts.length;
 
-                    // 2. Verificar si el estudiante tiene este nodo y si está correctamente identificado
+                    // 2. Check if student has this node and if correctly identified
                     const hasStudent = !!student;
                     const isExtraNode = model.isInserted;
                     
-                    // Para nodos normales: verificar que el texto coincida
-                    // Para nodos extra (isInserted): verificar que las etiquetas coincidan (ignorar texto)
+                    // For normal nodes: check text match
+                    // For extra nodes (isInserted): check label match (ignore text)
                     let nodeIdentifiedCorrectly;
                     if (isExtraNode) {
-                        // Nodo extra: identificado correctamente si las etiquetas coinciden
+                        // Extra node: correctly identified if labels match
                         nodeIdentifiedCorrectly = hasStudent && 
                             normalizeLabel(student.labelTop) === normalizeLabel(model.labelTop) &&
                             normalizeLabel(student.labelBottom) === normalizeLabel(model.labelBottom);
                     } else {
-                        // Nodo normal: identificado correctamente si el texto coincide
+                        // Normal node: correctly identified if text matches
                         nodeIdentifiedCorrectly = hasStudent && normalizeText(student.text) === normalizeText(model.text);
                     }
                     
-                    // 3. Verificar si la división es correcta (hijos coinciden exactamente)
+                    // 3. Check if division is correct (children match exactly)
                     const divisionCorrect = nodeIdentifiedCorrectly && childrenMatch(student, model);
                     
-                    // 4. Comparar etiquetas por partes
+                    // 4. Compare labels by parts
                     const topComparison = hasStudent 
                         ? compareLabelParts(student.labelTop, model.labelTop)
                         : { total: modelTopParts.length, correct: 0, allMatch: modelTopParts.length === 0 };
@@ -2430,31 +2393,31 @@
 
                     const comparison = {
                         path,
-                        // El nodo está correctamente identificado
+                        // Node is correctly identified
                         nodeCorrect: nodeIdentifiedCorrectly,
-                        // La división es correcta (hijos coinciden)
+                        // Division is correct (children match)
                         divisionCorrect,
-                        // Comparación completa de etiquetas (todas las partes coinciden)
+                        // Complete label comparison (all parts match)
                         labelTopMatch: topComparison.allMatch,
                         labelBottomMatch: bottomComparison.allMatch,
-                        // Información detallada de partes para visualización
+                        // Detailed part information for visualization
                         labelTopComparison: topComparison,
                         labelBottomComparison: bottomComparison,
                         studentNode: hasStudent ? student : null,
                         modelNode: model,
                         isExtraNode,
-                        // Flag que indica si debemos mostrar mensaje de error y truncar
-                        // (nodo identificado correctamente pero mal dividido)
+                        // Flag indicating if we should show error message and truncate
+                        // (node correctly identified but incorrectly divided)
                         shouldTruncate: nodeIdentifiedCorrectly && !divisionCorrect && (getChildCount(model) > 0 || getChildCount(student) > 0)
                     };
 
-                    // 5. ACIERTOS
-                    // El nodo cuenta como acierto si está correctamente identificado
+                    // 5. CORRECT ANSWERS
+                    // Node counts as correct if correctly identified
                     if (nodeIdentifiedCorrectly) {
                         results.correctNodes++;
                     }
-                    // Las etiquetas se evalúan por partes
-                    // Para nodos extra, las etiquetas ya se contaron como parte de nodeIdentifiedCorrectly
+                    // Labels are evaluated by parts
+                    // For extra nodes, labels already counted as part of nodeIdentifiedCorrectly
                     if (!isExtraNode && hasStudent) {
                         results.correctLabelTopParts += topComparison.correct;
                         results.correctLabelBottomParts += bottomComparison.correct;
@@ -2462,30 +2425,30 @@
 
                     results.nodeComparisons.set(path, comparison);
 
-                    // 6. RECURSIÓN: Solo continuar si la división es correcta
+                    // 6. RECURSION: Only continue if division is correct
                     if (divisionCorrect) {
                         const modelChildren = model.children || [];
                         const studentChildren = student?.children || [];
                         
-                        // Separar nodos normales y extra
+                        // Separate normal and extra nodes
                         const modelNormal = modelChildren.filter(c => !c.isInserted);
                         const modelExtra = modelChildren.filter(c => c.isInserted);
                         const studentNormal = studentChildren.filter(c => !c.isInserted);
                         const studentExtra = studentChildren.filter(c => c.isInserted);
                         
-                        // Emparejar nodos normales por posición
+                        // Match normal nodes by position
                         modelNormal.forEach((modelChild, mi) => {
                             const studentChild = studentNormal[mi] || null;
                             compareNodes(studentChild, modelChild, `${path}-n${mi}`);
                         });
                         
-                        // Emparejar nodos extra por etiquetas
+                        // Match extra nodes by labels
                         const usedStudentExtras = new Set();
                         modelExtra.forEach((modelChild, mi) => {
                             const modelLabelTop = normalizeLabel(modelChild.labelTop);
                             const modelLabelBottom = normalizeLabel(modelChild.labelBottom);
                             
-                            // Buscar un nodo extra del estudiante con las mismas etiquetas
+                            // Find student extra node with same labels
                             let matchedStudent = null;
                             for (let si = 0; si < studentExtra.length; si++) {
                                 if (usedStudentExtras.has(si)) continue;
@@ -2503,8 +2466,8 @@
                             compareNodes(matchedStudent, modelChild, `${path}-e${mi}`);
                         });
                     } else {
-                        // Si hay error de división (o nodo no identificado), contar elementos restantes 
-                        // del modelo para puntaje total, pero NO sumar aciertos
+                        // If division error (or node not identified), count remaining elements 
+                        // from model for total score, but do NOT add correct
                         countModelElements(model);
                     }
                 };
@@ -2533,7 +2496,7 @@
                 setComparisonResults(null);
                 setTree(null);
                 setSentence('');
-                // Reiniciar historial
+                // Reset history
                 setHistory([]);
                 setHistoryIndex(-1);
             };
@@ -2547,13 +2510,13 @@
                 setSentence('');
                 setDivisionMode(null);
                 setSelectedCuts([]);
-                // Reiniciar historial
+                // Reset history
                 setHistory([]);
                 setHistoryIndex(-1);
             };
 
             // ===========================================
-            // EXPORTACIÓN
+            // EXPORT
             // ===========================================
             const handleExport = async (isTechnical = false) => {
                 const treeWrapper = document.querySelector('.tree-wrapper');
@@ -2569,7 +2532,7 @@
 
                 if (isTechnical) treeWrapper.classList.add('technical-mode');
 
-                // Ocultar botones de edición
+                // Hide edit buttons
                 const undoBtns = treeWrapper.querySelectorAll('.btn-danger-soft');
                 const clearBtns = treeWrapper.querySelectorAll('.clear-text-btn');
                 const addBtns = treeWrapper.querySelectorAll('.add-node-btn');
@@ -2591,13 +2554,13 @@
                     treeWrapperPos: treeWrapper.style.position
                 };
 
-                // Función auxiliar para obtener valor de etiqueta (de input o display)
+                // Helper function to get label value (from input or display)
                 const getLabelValue = (element) => {
                     if (!element) return '';
                     if (element.tagName === 'INPUT') {
                         return element.value.trim();
                     } else {
-                        // Para label-display, usar data-raw-value si existe para preservar marcadores de formato
+                        // For label-display, use data-raw-value if exists to preserve format markers
                         const rawValue = element.getAttribute('data-raw-value');
                         if (rawValue !== null) {
                             return rawValue.trim();
@@ -2609,21 +2572,21 @@
                 const nodeContainers = treeWrapper.querySelectorAll('.node-container');
                 
                 nodeContainers.forEach(container => {
-                    // Buscar tanto inputs como displays (incluyendo los que están dentro de label-with-dropdown)
+                    // Search both inputs and displays (including those inside label-with-dropdown)
                     const topElements = container.querySelectorAll(':scope > .label-wrap > .label-input.label-top, :scope > .label-wrap > .label-display.label-top, :scope > .label-wrap > .label-with-dropdown > .label-input.label-top, :scope > .label-wrap > .label-with-dropdown > .label-display.label-top');
                     const bottomElements = container.querySelectorAll(':scope > .label-wrap > .label-input:not(.label-top), :scope > .label-wrap > .label-display:not(.label-top), :scope > .label-wrap > .label-with-dropdown > .label-input:not(.label-top), :scope > .label-wrap > .label-with-dropdown > .label-display:not(.label-top)');
                     
-                    // El node-box está dentro de un div flex que es hijo directo del container
-                    // IMPORTANTE: Solo buscar en los hijos directos, NO en descendientes
+                    // The node-box is inside a flex div that is direct child of container
+                    // IMPORTANT: Only search direct children, NOT descendants
                     let nodeBox = null;
                     const directChildren = container.children;
                     for (let child of directChildren) {
-                        // Si es un div que NO tiene children-container y NO es connector-v
+                        // If div that does NOT have children-container and is NOT connector-v
                         if (child.tagName === 'DIV' && 
                             !child.classList.contains('connector-v') && 
                             !child.classList.contains('label-wrap') &&
                             !child.querySelector(':scope > .children-container')) {
-                            // Buscar node-box como hijo directo de este div
+                            // Search node-box as direct child of this div
                             const box = child.querySelector(':scope > .node-box');
                             if (box) {
                                 nodeBox = box;
@@ -2642,12 +2605,12 @@
                     const slashSeparators = container.querySelectorAll(':scope > .label-wrap > .slash-separator');
                     slashSeparators.forEach(s => s.style.display = 'none');
                     
-                    // Ocultar label-wraps completos
+                    // Hide complete label-wraps
                     const labelWraps = container.querySelectorAll(':scope > .label-wrap');
 
                     if (isTechnical && hasChildren) {
-                        // En modo técnico con hijos, NO extraemos ni mostramos el texto del nodo
-                        // para evitar redundancia y desalineación en el diagrama arbóreo.
+                        // In technical mode with children, we do NOT extract or show node text
+                        // to avoid redundancy and misalignment in tree diagram.
                         if (nodeBox) nodeBox.style.display = 'none';
                         
                         let combinedText = '';
@@ -2664,7 +2627,7 @@
 
                         inputData.push({ type: 'merged', labelWraps, box: nodeBox, span: mergedSpan, textSpan: null, parent: container, slashSeparators });
                         
-                        // Insertar mergedSpan al principio del container
+                        // Insert mergedSpan at beginning of container
                         container.insertBefore(mergedSpan, container.firstChild);
                     } else {
                         const processLabels = (elements, isTop, combinedVal, labelWrap) => {
@@ -2726,7 +2689,7 @@
                             }
                         };
                         
-                        // Encontrar los label-wraps para top y bottom
+                        // Find label-wraps for top and bottom
                         const topLabelWrap = Array.from(labelWraps).find(lw => lw.querySelector('.label-top'));
                         const bottomLabelWrap = Array.from(labelWraps).find(lw => lw.querySelector(':not(.label-top)') && !lw.querySelector('.label-top'));
                         
@@ -2757,11 +2720,11 @@
                         return { x: r.left + r.width / 2 - rect.left, top: r.top - rect.top, bottom: r.bottom - rect.top };
                     };
                     
-                    // Función auxiliar para encontrar el node-box directo de un container
+                    // Helper function to find direct node-box of a container
                     const findDirectNodeBox = (container) => {
                         const directChildren = container.children;
                         for (let child of directChildren) {
-                            // Si es un div que NO tiene children-container, connector-v o label-wrap
+                            // If div that does NOT have children-container, connector-v or label-wrap
                             if (child.tagName === 'DIV' && 
                                 !child.classList.contains('connector-v') && 
                                 !child.classList.contains('label-wrap') &&
@@ -2792,7 +2755,7 @@
                         const branches = cont.querySelector(':scope > div > .children-container');
                         
                         if (pLabel && branches) {
-                            // Usar exp-merged (ya que nodeBox y textSpan están ocultos/nulos en modo técnico para padres)
+                            // Use exp-merged (since nodeBox and textSpan are hidden/null in technical mode for parents)
                             let connectionSource = pLabel;
                             if (textNode && textNode.textContent.trim()) {
                                 connectionSource = textNode;
@@ -2831,7 +2794,7 @@
                 link.href = canvas.toDataURL();
                 link.click();
 
-                // Restaurar estilos
+                // Restore styles
                 treeContainer.style.overflow = originalOverflow;
                 treeContainer.style.width = originalWidth;
                 treeContainer.style.maxWidth = originalMaxWidth;
@@ -2871,13 +2834,13 @@
             };
 
             // ===========================================
-            // RENDERIZADO DE ETIQUETAS CON DROPDOWN GTG
+            // LABEL RENDERING WITH DROPDOWN
             // ===========================================
             const [editingLabel, setEditingLabel] = useState(null);
             const [dropdownOpen, setDropdownOpen] = useState(null);
             const [dropdownSearch, setDropdownSearch] = useState('');
 
-            // Componente Dropdown para seleccionar etiquetas GTG
+            // Dropdown component to select labels
             const LabelDropdown = ({ isTop, onSelect, onClose }) => {
                 const sections = isTop ? FUNC_SECTIONS : CAT_SECTIONS;
                 const searchLower = dropdownSearch.toLowerCase();
@@ -2896,7 +2859,7 @@
                         <div className="dropdown-search">
                             <input
                                 type="text"
-                                placeholder="Buscar etiqueta..."
+                                placeholder="Search label..."
                                 value={dropdownSearch}
                                 onChange={(e) => setDropdownSearch(e.target.value)}
                                 autoFocus
@@ -2923,32 +2886,32 @@
                             </div>
                         ))}
                         {filteredSections.length === 0 && (
-                            <div className="dropdown-empty">Sin resultados</div>
+                            <div className="dropdown-empty">No results</div>
                         )}
                     </div>
                 );
             };
 
-            // Cerrar dropdown al hacer clic fuera
+            // Close dropdown on click outside
             const dropdownRef = useRef(null);
             
             useEffect(() => {
                 const handleClickOutside = (e) => {
-                    // Si no hay dropdown abierto, no hacer nada
+                    // If no dropdown open, do nothing
                     if (!dropdownOpen) return;
                     
-                    // Buscar si el clic fue dentro de algún dropdown o botón trigger
+                    // Check if click was inside any dropdown or trigger button
                     const clickedDropdown = e.target.closest('.label-dropdown');
                     const clickedTrigger = e.target.closest('.dropdown-trigger');
                     
-                    // Si el clic fue fuera de dropdowns y triggers, cerrar
+                    // If click was outside dropdowns and triggers, close
                     if (!clickedDropdown && !clickedTrigger) {
                         setDropdownOpen(null);
                         setDropdownSearch('');
                     }
                 };
                 
-                // Usar setTimeout para que el listener se agregue después del render
+                // Use setTimeout so listener is added after render
                 const timeoutId = setTimeout(() => {
                     document.addEventListener('click', handleClickOutside);
                 }, 0);
@@ -2990,12 +2953,12 @@
                     const labelWrap = e.currentTarget.closest('.label-wrap');
                     const relatedTarget = e.relatedTarget;
                     
-                    // Si el foco va a otro elemento dentro del mismo label-wrap (incluido el dropdown), no cerrar
+                    // If focus goes to another element in same label-wrap (including dropdown), do not close
                     if (labelWrap && relatedTarget && labelWrap.contains(relatedTarget)) {
                         return;
                     }
                     
-                    // Si el foco va a un botón de dropdown o al dropdown mismo, no cerrar
+                    // If focus goes to dropdown button or dropdown itself, do not close
                     if (relatedTarget && (relatedTarget.closest('.dropdown-trigger') || relatedTarget.closest('.label-dropdown'))) {
                         return;
                     }
@@ -3027,7 +2990,7 @@
                     }
                     setDropdownOpen(null);
                     setDropdownSearch('');
-                    // Cerrar el modo edición para que la etiqueta se muestre en modo visualización
+                    // Close edit mode so label shows in display mode
                     setEditingLabel(null);
                 };
 
@@ -3035,7 +2998,7 @@
                     e.stopPropagation();
                     e.preventDefault();
                     const newId = dropdownId + suffix;
-                    // Si ya está abierto este mismo dropdown, cerrarlo; si no, abrirlo
+                    // If this same dropdown is open, close it; otherwise, open it
                     if (dropdownOpen === newId) {
                         setDropdownOpen(null);
                         setDropdownSearch('');
@@ -3045,7 +3008,7 @@
                     }
                 };
 
-                // Modo edición: mostrar inputs con botones de dropdown
+                // Edit mode: show inputs with dropdown buttons
                 if (isEditing) {
                     return (
                         <div className="label-wrap">
@@ -3072,7 +3035,7 @@
                                             className="dropdown-trigger"
                                             onMouseDown={(e) => e.preventDefault()}
                                             onClick={(e) => openDropdown(e, '-0')}
-                                            title="Seleccionar etiqueta del catálogo GTG (RAE)"
+                                            title="Select label from catalog"
                                         >
                                             ☰
                                         </button>
@@ -3105,7 +3068,7 @@
                                             className="dropdown-trigger"
                                             onMouseDown={(e) => e.preventDefault()}
                                             onClick={(e) => openDropdown(e, '-1')}
-                                            title="Seleccionar etiqueta del catálogo GTG (RAE)"
+                                            title="Select label from catalog"
                                         >
                                             ☰
                                         </button>
@@ -3136,7 +3099,7 @@
                                         className="dropdown-trigger"
                                         onMouseDown={(e) => e.preventDefault()}
                                         onClick={(e) => openDropdown(e)}
-                                        title="Seleccionar etiqueta del catálogo GTG (RAE)"
+                                        title="Select label from catalog"
                                     >
                                         ☰
                                     </button>
@@ -3152,9 +3115,9 @@
                             <button
                                 type="button"
                                 className="split-toggle-btn"
-                                title={isSplit ? 'Unir etiqueta' : 'Dividir etiqueta'}
+                                title={isSplit ? 'Merge label' : 'Split label'}
                                 onClick={toggleSplit}
-                                aria-label={isSplit ? 'Unir etiqueta' : 'Dividir etiqueta'}
+                                aria-label={isSplit ? 'Merge label' : 'Split label'}
                             >
                                 ⇄
                             </button>
@@ -3162,7 +3125,7 @@
                     );
                 }
 
-                // Modo visualización: mostrar texto formateado
+                // Display mode: show formatted text
                 const displayClass = `label-display ${isTop ? 'label-top' : ''} ${hasValue ? 'has-value' : ''}`;
 
                 return (
@@ -3200,9 +3163,9 @@
                         <button
                             type="button"
                             className="split-toggle-btn"
-                            title={isSplit ? 'Unir etiqueta' : 'Dividir etiqueta'}
+                            title={isSplit ? 'Merge label' : 'Split label'}
                             onClick={toggleSplit}
-                            aria-label={isSplit ? 'Unir etiqueta' : 'Dividir etiqueta'}
+                            aria-label={isSplit ? 'Merge label' : 'Split label'}
                         >
                             ⇄
                         </button>
@@ -3211,7 +3174,7 @@
             };
 
             // ===========================================
-            // RENDERIZADO DE NODOS
+            // NODE RENDERING
             // ===========================================
             const renderNode = (node) => {
                 const isDiv = divisionMode === node.id;
@@ -3220,9 +3183,9 @@
                 const words = node.text ? node.text.split(/\s+/) : [];
                 const canDivide = words.length > 1 && !node.isInserted && !node.isConsolidated;
                 const canConsolidate = words.length > 1 && !node.isInserted && !hasC;
-                // Nodos de una sola palabra pueden expandirse para agregar hijos
+                // Single-word nodes can be expanded to add children
                 const canExpand = words.length === 1 && !node.isInserted && !hasC;
-                // Mostrar botón de negritas en nodos terminales (sin hijos)
+                // Show bold button on terminal nodes (no children)
                 const isTerminal = !hasC;
 
                 return (
@@ -3254,8 +3217,8 @@
                                             ))}
                                         </div>
                                         <div style={{display:'flex', gap:'8px', justifyContent:'center'}}>
-                                            <button onClick={handleDivide} className="btn btn-primary" style={{padding:'5px 12px'}}>Dividir</button>
-                                            <button onClick={() => setDivisionMode(null)} className="btn btn-outline" style={{padding:'5px 12px'}}>Cancelar</button>
+                                            <button onClick={handleDivide} className="btn btn-primary" style={{padding:'5px 12px'}}>Divide</button>
+                                            <button onClick={() => setDivisionMode(null)} className="btn btn-outline" style={{padding:'5px 12px'}}>Cancel</button>
                                         </div>
                                     </div>
                                 ) : (
@@ -3268,7 +3231,7 @@
                                             {canConsolidate && (
                                                 <button
                                                     className="consolidate-btn"
-                                                    title={node.isConsolidated ? "Permitir división" : "Consolidar (no dividir)"}
+                                                    title={node.isConsolidated ? "Allow division" : "Consolidate (do not divide)"}
                                                     onClick={(e) => { e.stopPropagation(); toggleConsolidated(node.id); }}
                                                 >
                                                     {node.isConsolidated ? '÷' : '∪'}
@@ -3277,7 +3240,7 @@
                                             {canExpand && (
                                                 <button
                                                     className="consolidate-btn"
-                                                    title="Expandir (agregar constituyentes)"
+                                                    title="Expand (add constituents)"
                                                     onClick={(e) => { e.stopPropagation(); expandNode(node.id); }}
                                                 >
                                                     ÷
@@ -3286,7 +3249,7 @@
                                             {hasC && !node.isInserted && (
                                                 <button
                                                     className="add-node-btn"
-                                                    title="Agregar nodo hijo"
+                                                    title="Add child node"
                                                     onClick={(e) => { e.stopPropagation(); addChildNode(node.id); }}
                                                 >
                                                     +
@@ -3303,7 +3266,7 @@
                                             {isTerminal && (
                                                 <button
                                                     className={`nucleus-toggle-btn ${node.isNucleus ? 'is-nucleus' : ''}`}
-                                                    title={node.isNucleus ? "Quitar negritas (núcleo)" : "Marcar como núcleo (negritas)"}
+                                                    title={node.isNucleus ? "Remove bold (head)" : "Mark as head (bold)"}
                                                     onClick={(e) => { 
                                                         e.stopPropagation(); 
                                                         setTree(prev => updateNode(prev, node.id, { isNucleus: !node.isNucleus })); 
@@ -3321,8 +3284,8 @@
                                                     e.stopPropagation();
                                                     setTree(prev => updateNode(prev, node.id, { children: null }));
                                                 }}
-                                                title="Deshacer división"
-                                                aria-label="Deshacer división"
+                                                title="Undo division"
+                                                aria-label="Undo division"
                                             >
                                                 ↩
                                             </button>
@@ -3353,13 +3316,13 @@
             };
 
             // ===========================================
-            // RENDERIZADO ESTÁTICO (COMPARACIÓN)
+            // STATIC RENDERING (COMPARISON)
             // ===========================================
             const renderStaticNode = (node, comparisons, path = 'root', isModel = false) => {
                 const comparison = comparisons?.get(path);
 
-                // Para el árbol del estudiante, si no hay nodo, no renderizamos nada
-                // (ya no creamos nodos fantasma ∅)
+                // For student tree, if no node, render nothing
+                // (no longer creating ghost nodes ∅)
                 if (!node) return null;
 
                 const isEmpty = !node.text || node.text.trim() === '';
@@ -3367,8 +3330,8 @@
                 let nodeClass = 'node-container';
                 if (node.isNucleus) nodeClass += ' nucleus-node';
 
-                // Colorear el nodo según si fue IDENTIFICADO correctamente (no según división)
-                // Un nodo verde significa que el estudiante identificó correctamente este constituyente
+                // Color node based on whether it was IDENTIFIED correctly (not based on division)
+                // A green node means student correctly identified this constituent
                 if (!isModel && comparison) {
                     nodeClass += comparison.nodeCorrect ? ' node-correct' : ' node-incorrect';
                 }
@@ -3393,7 +3356,7 @@
                     if (!valueToShow || !valueToShow.trim()) return null;
                     const showAsEmpty = valueToShow.trim() === '∅';
                     
-                    // Formatear el valor para mostrar • en vez de / como separador
+                    // Format value to show • instead of / as separator
                     const displayValue = valueToShow.split('/').map(p => p.trim()).filter(p => p).join(' • ');
 
                     return (
@@ -3418,10 +3381,10 @@
                     );
                 };
 
-                // Determinar qué hijos renderizar
+                // Determine which children to render
                 let childrenToRender = [];
                 
-                // Si es el modelo, o si la división es correcta, mostrar los hijos
+                // If model, or if division is correct, show children
                 if (isModel || (comparison && comparison.divisionCorrect)) {
                     const children = node.children || [];
                     const normalizeLabel = (label) => {
@@ -3433,12 +3396,12 @@
                             .join('•');
                     };
                     
-                    // Contar índices separados para nodos normales y extra
+                    // Count separate indices for normal and extra nodes
                     let normalIndex = 0;
                     let extraIndex = 0;
                     
                     if (isModel) {
-                        // Para el modelo: recorrer en orden original, asignando paths según tipo
+                        // For model: traverse in original order, assigning paths by type
                         children.forEach((c) => {
                             if (c.isInserted) {
                                 childrenToRender.push({ 
@@ -3455,10 +3418,10 @@
                             }
                         });
                     } else {
-                        // Para el estudiante: recorrer en orden original, pero emparejar extras por etiquetas
+                        // For student: traverse in original order, but match extras by labels
                         const modelExtra = (comparison?.modelNode?.children || []).filter(c => c.isInserted);
                         
-                        // Crear un mapa de etiquetas del modelo a índice
+                        // Create map from model labels to index
                         const modelExtraByLabels = new Map();
                         modelExtra.forEach((mc, mi) => {
                             const key = normalizeLabel(mc.labelTop) + '|' + normalizeLabel(mc.labelBottom);
@@ -3471,11 +3434,11 @@
                         
                         children.forEach((c) => {
                             if (c.isInserted) {
-                                // Buscar el índice del modelo que corresponde a este nodo extra por etiquetas
+                                // Find model index corresponding to this extra node by labels
                                 const key = normalizeLabel(c.labelTop) + '|' + normalizeLabel(c.labelBottom);
                                 let modelIdx = modelExtraByLabels.get(key);
                                 
-                                // Si ya se usó ese índice, buscar otro con las mismas etiquetas
+                                // If that index already used, find another with same labels
                                 if (modelIdx !== undefined && usedModelExtraIndices.has(modelIdx)) {
                                     modelIdx = undefined;
                                     for (let mi = 0; mi < modelExtra.length; mi++) {
@@ -3505,7 +3468,7 @@
                         });
                     }
                 }
-                // Si hay error de división (shouldTruncate), no mostramos hijos, solo el mensaje
+                // If division error (shouldTruncate), do not show children, only message
 
                 return (
                     <div className={nodeClass} key={node.id || path}>
@@ -3523,7 +3486,7 @@
                                 <div className="node-box" style={{ cursor: 'default' }}>
                                     {node.text}
                                 </div>
-                                {/* Solo mostrar línea inferior si hay etiqueta inferior, hijos, o mensaje de error */}
+                                {/* Only show bottom line if there is bottom label, children, or error message */}
                                 {(shouldShowBottom || childrenToRender.length > 0 || (!isModel && comparison?.shouldTruncate)) && (
                                     <div className="connector-v" style={{ height: '12px' }} />
                                 )}
@@ -3536,7 +3499,7 @@
                             labelBottomClass
                         )}
 
-                        {/* Si hay error de división, mostrar mensaje y truncar */}
+                        {/* If division error, show message and truncate */}
                         {!isModel && comparison?.shouldTruncate ? (
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                                 <div className="connector-v" style={{ height: '24px' }} />
@@ -3552,11 +3515,11 @@
                                     maxWidth: '150px',
                                     boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
                                 }}>
-                                    Constituyente dividido incorrectamente
+                                    Constituent incorrectly divided
                                 </div>
                             </div>
                         ) : (
-                            /* Si la división es correcta (o es el modelo), mostramos los hijos */
+                            /* If division is correct (or is model), show children */
                             childrenToRender.length > 0 && (
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                                     <div className="connector-v" style={{ height: '24px' }} />
@@ -3576,7 +3539,7 @@
             };
 
             // ===========================================
-            // COMPONENTE FOOTER
+            // FOOTER COMPONENT
             // ===========================================
             const Footer = () => (
                 <footer className="footer">
@@ -3591,65 +3554,66 @@
             );
 
             // ===========================================
-            // VISTA DE COMPARACIÓN
+            // COMPARISON VIEW
             // ===========================================
             if (showComparison && comparisonResults) {
                 return (
                     <div className="container">
-                        {/* Selector de idioma */}
-                        <div className="language-selector">
-                            <img src="spain-solid.png" alt="Español" className="language-flag active" title="Español (actual)" />
-                            <a href="english.html">
-                                <img src="uk_grey.png" alt="English" className="language-flag inactive" title="Switch to English" />
-                            </a>
-                        </div>
                         <header className="header-logo-container">
-                            <img src="ent_logo.png" alt="ENT - Asistente para el análisis sintáctico" className="header-logo" />
+                            <img src="english_logo.png" alt="ENT - Syntactic Analysis Assistant" className="header-logo" />
                         </header>
+
+                        {/* Language selector */}
+                        <div className="language-selector">
+                            <a href="index.html">
+                                <img src="spain_grey.png" alt="Español" className="language-flag inactive" title="Cambiar a Español" />
+                            </a>
+                            <img src="uk_solid.png" alt="English" className="language-flag active" title="English (current)" />
+                        </div>
 
                         <div className="exercise-banner">
                             <div className="exercise-banner-text">
                                 
                                 <div>
-                                    <div className="exercise-badge">📚 <strong>Modo ejercitación</strong></div>
-                                    <p>Estás viendo los resultados. Puedes volver a editar o salir del modo ejercitación.</p>
+                                    <div className="exercise-badge">📚 <strong>Exercise mode</strong></div>
+                                    <p>You are viewing results. You can go back to edit or exit exercise mode.</p>
                                 </div>
                             </div>
-                            <button onClick={resetExercise} className="btn btn-outline">Salir del modo ejercitación</button>
+                            <button onClick={resetExercise} className="btn btn-outline">Exit exercise mode</button>
                         </div>
 
                         <div className="results-summary">
-                            <h3>Resultados</h3>
+                            <h3>Results</h3>
                             <div className="results-stats" style={{ marginBottom: '14px' }}>
                                 <div className="stat-item">
                                     <span className="stat-dot correct"></span>
-                                    <strong>Aciertos:</strong>&nbsp;
+                                    <strong>Correct:</strong>&nbsp;
                                     {comparisonResults.correctElements} / {comparisonResults.totalElements}
                                 </div>
                                 <div className="stat-item">
                                     <span className="stat-dot incorrect"></span>
-                                    <strong>Errores:</strong>&nbsp;
+                                    <strong>Errors:</strong>&nbsp;
                                     {comparisonResults.errorElements}
                                 </div>
                                 <div className="stat-item">
                                     <span className="stat-dot partial"></span>
-                                    <strong>Porcentaje de acierto:</strong>&nbsp;
+                                    <strong>Accuracy:</strong>&nbsp;
                                     {(comparisonResults.accuracy * 100).toFixed(0)}%
                                 </div>
                             </div>
                             <p style={{margin: 0, fontSize: '15px', color: '#374151', lineHeight: '1.6'}}>
                                 <ul>
-                                    <li>Los constituyentes en <span style={{color: '#10b981'}}>verde</span> tienen estructura correcta; 
-                                    los que están en <span style={{color: '#ef4444'}}>rojo</span> presentan diferencias estructurales. </li>
-                                    <li>Las etiquetas en <span style={{color: '#10b981'}}>verde</span> tienen información correcta;
-                                    las de <span style={{color: '#ef4444'}}>rojo</span> tienen información que difiere del modelo.  </li>
+                                    <li>Constituents in <span style={{color: '#10b981'}}>green</span> have correct structure; 
+                                    those in <span style={{color: '#ef4444'}}>red</span> have structural differences. </li>
+                                    <li>Labels in <span style={{color: '#10b981'}}>green</span> have correct information;
+                                    those in <span style={{color: '#ef4444'}}>red</span> differ from the model.  </li>
                                 </ul>
                             </p>
                         </div>
 
                         <div className="comparison-container">
                             <div className="comparison-panel student">
-                                <h3>✎ Tu análisis</h3>
+                                <h3>✎ Your analysis</h3>
                                 <div className="comparison-tree">
                                     <div className="tree-wrapper">
                                         {renderStaticNode(tree, comparisonResults.nodeComparisons, 'root', false)}
@@ -3657,7 +3621,7 @@
                                 </div>
                             </div>
                             <div className="comparison-panel model">
-                                <h3>✓ Análisis modelo</h3>
+                                <h3>✓ Model analysis</h3>
                                 <div className="comparison-tree">
                                     <div className="tree-wrapper">
                                         {renderStaticNode(modelTree, null, 'root', true)}
@@ -3667,8 +3631,8 @@
                         </div>
 
                         <div className="bottom-actions">
-                            <button onClick={() => setShowComparison(false)} className="btn btn-outline">← Volver a editar</button>
-                            <button onClick={newExercise} className="btn btn-primary">Nuevo ejercicio</button>
+                            <button onClick={() => setShowComparison(false)} className="btn btn-outline">← Back to edit</button>
+                            <button onClick={newExercise} className="btn btn-primary">New exercise</button>
                         </div>
 
                         <Footer />
@@ -3677,34 +3641,36 @@
             }
 
             // ===========================================
-            // VISTA PRINCIPAL
+            // MAIN VIEW
             // ===========================================
             return (
                 <div className="container">
-                    <div className="language-selector">
-                            <img src="spain-solid.png" alt="Español" className="language-flag active" title="Español (actual)" />
-                            <a href="english.html">
-                                <img src="uk_grey.png" alt="English" className="language-flag inactive" title="Switch to English" />
-                            </a>
-                        </div>
                     <header className="header-logo-container">
-                        <img src="ent_logo.png" alt="ENT - Asistente para el análisis sintáctico" className="header-logo" />
+                        <img src="english_logo.png" alt="ENT - Syntactic Analysis Assistant" className="header-logo" />
                     </header>
+
+                    {/* Language selector */}
+                        <div className="language-selector">
+                            <a href="index.html">
+                                <img src="spain_grey.png" alt="Español" className="language-flag inactive" title="Cambiar a Español" />
+                            </a>
+                            <img src="uk_solid.png" alt="English" className="language-flag active" title="English (current)" />
+                        </div>    
 
                     {exerciseMode && !modelTree && (
                         <div className="exercise-banner" style={{flexDirection: 'column', alignItems: 'center', padding: '40px'}}>
                             <div className="exercise-banner-text">
                                 
                                 <div>
-                                    <div className="exercise-badge">📚 <strong>Modo ejercitación</strong></div>
-                                    <p>Analiza la expresión y compara tu resultado con el modelo cuando termines</p>
+                                    <div className="exercise-badge">📚 <strong>Exercise mode</strong></div>
+                                    <p>Analyze the expression and compare your result with the model when done</p>
                                 </div>
                             </div>
-                            <p style={{marginBottom: '16px', color: '#6b7280'}}>Selecciona un ejercicio desde tu computador o desde el banco de ejemplos</p>
+                            <p style={{marginBottom: '16px', color: '#6b7280'}}>Select an exercise from your computer or from the example bank</p>
                             
                             <div style={{display: 'flex', gap: '12px', marginBottom: '16px'}}>
-                                <button onClick={() => exerciseInputRef.current.click()} className="btn btn-primary">📂 Cargar archivo local</button>
-                                <button onClick={() => { setShowFilesModal(true); setFilesActiveTab('cloud'); }} className="btn btn-primary">☁️ Banco de ejemplos</button>
+                                <button onClick={() => exerciseInputRef.current.click()} className="btn btn-primary">📂 Load local file</button>
+                                <button onClick={() => { setShowFilesModal(true); setFilesActiveTab('cloud'); }} className="btn btn-primary">☁️ Example bank</button>
                             </div>
                             
                             {driveFiles.length > 0 && (
@@ -3720,7 +3686,7 @@
                                                         <span className={`drive-folder-toggle ${collapsedFolders[folder.folderId] ? 'collapsed' : ''}`}>▼</span>
                                                         📁 {folder.folderName}
                                                         <span style={{marginLeft: 'auto', fontSize: '11px', color: '#9ca3af'}}>
-                                                            {folder.files.length} archivo{folder.files.length !== 1 ? 's' : ''}
+                                                            {folder.files.length} file{folder.files.length !== 1 ? 's' : ''}
                                                         </span>
                                                     </div>
                                                     <div className={`drive-folder-content ${collapsedFolders[folder.folderId] ? 'collapsed' : ''}`}>
@@ -3758,14 +3724,14 @@
                                                 className="btn btn-exercise"
                                                 onClick={() => handleLoadFromDrive(true)}
                                             >
-                                                📚 Iniciar ejercicio con "{selectedDriveFile.name}"
+                                                📚 Start exercise with "{selectedDriveFile.name}"
                                             </button>
                                         </div>
                                     )}
                                 </div>
                             )}
                             
-                            <button onClick={resetExercise} className="btn btn-outline">Salir del modo ejercitación</button>
+                            <button onClick={resetExercise} className="btn btn-outline">Exit exercise mode</button>
                         </div>
                     )}
 
@@ -3773,11 +3739,11 @@
                         <div className="exercise-banner">
                             <div className="exercise-banner-text">
                                 <div>
-                                    <div className="exercise-badge">📚 <strong>Modo ejercitación</strong></div>
-                                    <p>Analiza la expresión y compara tu resultado con el modelo cuando termines</p>
+                                    <div className="exercise-badge">📚 <strong>Exercise mode</strong></div>
+                                    <p>Analyze the expression and compare your result with the model when done</p>
                                 </div>
                             </div>
-                            <button onClick={resetExercise} className="btn btn-outline">Salir del modo ejercitación</button>
+                            <button onClick={resetExercise} className="btn btn-outline">Exit exercise mode</button>
                         </div>
                     )}
 
@@ -3789,15 +3755,15 @@
                                         type="text" 
                                         value={sentence} 
                                         onChange={(e) => setSentence(e.target.value)} 
-                                        placeholder="Escribe la expresión que quieres analizar" 
+                                        placeholder="Type the expression you want to analyze" 
                                         onKeyPress={(e) => e.key === 'Enter' && startAnalysis()} 
                                     />
-                                    <button onClick={startAnalysis} className="btn btn-primary">Analizar</button>
+                                    <button onClick={startAnalysis} className="btn btn-primary">Analyze</button>
                                     <button 
                                         onClick={handleUndo} 
                                         className="btn btn-outline btn-icon" 
                                         disabled={!canUndo}
-                                        title="Deshacer (Ctrl+Z)"
+                                        title="Undo (Ctrl+Z)"
                                     >
                                         ↶
                                     </button>
@@ -3805,20 +3771,20 @@
                                         onClick={handleRedo} 
                                         className="btn btn-outline btn-icon" 
                                         disabled={!canRedo}
-                                        title="Rehacer (Ctrl+Shift+Z)"
+                                        title="Redo (Ctrl+Shift+Z)"
                                     >
                                         ↷
                                     </button>
                                     <span className="btn-separator"></span>
-                                    <button onClick={() => setShowFilesModal(true)} className="btn btn-outline">📁 Archivos</button>
+                                    <button onClick={() => setShowFilesModal(true)} className="btn btn-outline">📁 Files</button>
                                     <input type="file" ref={fileInputRef} style={{display:'none'}} accept=".ent,.json,application/json,text/plain,*/*" onChange={handleLoadJSON} />
                                     <span className="btn-separator"></span>
-                                    <button onClick={() => setExerciseMode(true)} className="btn btn-exercise">📚 Modo ejercitación</button>
+                                    <button onClick={() => setExerciseMode(true)} className="btn btn-exercise">📚 Exercise mode</button>
                                     <span className="btn-separator"></span>
                                     <button 
-                                        onClick={() => window.open('manual.html', '_blank')} 
+                                        onClick={() => window.open('english_manual.html', '_blank')} 
                                         className="btn btn-outline"
-                                        title="Consultar manual detallado"
+                                        title="View detailed manual"
                                     >
                                         🗂 Manual
                                     </button>
@@ -3826,7 +3792,7 @@
                             ) : (
                                 modelTree && (
                                     <div style={{flex: 1, padding: '8px 16px', backgroundColor: '#f3f4f6', borderRadius: '6px', fontSize: '15px', color: '#374151'}}>
-                                        <strong>Expresión que debes analizar:</strong> {sentence}
+                                        <strong>Expression to analyze:</strong> {sentence}
                                     </div>
                                 )
                             )}
@@ -3840,7 +3806,7 @@
                                 <div className="tree-wrapper">{renderNode(tree)}</div>
                             ) : (
                                 <p style={{textAlign:'center', color:'#9ca3af', marginTop:'100px'}}>
-                                    Escribe una expresión o carga un archivo .ent para editarlo
+                                    Type an expression or load an .ent file to edit it
                                 </p>
                             )}
                         </div>
@@ -3850,14 +3816,14 @@
                         <div className="bottom-actions">
                             {exerciseMode ? (
                                 <>
-                                    <button onClick={newExercise} className="btn btn-outline">Cancelar ejercicio</button>
-                                    <button onClick={handleFinishExercise} className="btn btn-success">✓ Terminar análisis y comparar</button>
+                                    <button onClick={newExercise} className="btn btn-outline">Cancel exercise</button>
+                                    <button onClick={handleFinishExercise} className="btn btn-success">✓ Finish analysis and compare</button>
                                 </>
                             ) : (
                                 <>
-                                    <button onClick={() => { setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); }} className="btn btn-new-analysis">✦ Nuevo análisis</button>
-                                    <button onClick={() => handleExport(false)} className="btn btn-primary">Exportar diagrama</button>
-                                    <button onClick={() => handleExport(true)} className="btn btn-primary">Exportar diagrama arbóreo</button>
+                                    <button onClick={() => { setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); }} className="btn btn-new-analysis">✦ New analysis</button>
+                                    <button onClick={() => handleExport(false)} className="btn btn-primary">Export diagram</button>
+                                    <button onClick={() => handleExport(true)} className="btn btn-primary">Export tree diagram</button>
                                 </>
                             )}
                         </div>
@@ -3868,131 +3834,131 @@
                             className="instructions-header" 
                             onClick={() => setInstructionsCollapsed(!instructionsCollapsed)}
                         >
-                            <span>Guía rápida</span>
+                            <span>Quick guide</span>
                             <span className={`instructions-toggle ${instructionsCollapsed ? 'collapsed' : ''}`}>▼</span>
                         </div>
                         <div className={`instructions-content ${instructionsCollapsed ? 'collapsed' : ''}`}>
                             <div className="instructions-grid">
                                 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">✂</span> Constituyentes</h4>
+                                    <h4><span className="icon">✂</span> Constituents</h4>
                                     <ul>
-                                        <li>Haz clic en un <strong>recuadro celeste</strong> para dividir una estructura sintáctica en constituyentes.</li>
-                                        <li>Haz clic en las <strong>barras grises</strong> entre palabras para marcar fronteras entre constituyentes.</li>
-                                        <li>Haz clic en <code>↩</code> junto a un recuadro celeste para revertir la división.</li>
-                                        <li>Pasa el cursor por un nodo terminal (palabra) y pulsa <code>N</code> para marcarlo como <strong>núcleo</strong> (negritas).</li>
+                                        <li>Click on a <strong>light blue box</strong> to divide a syntactic structure into constituents.</li>
+                                        <li>Click on the <strong>gray bars</strong> between words to mark boundaries between constituents.</li>
+                                        <li>Click <code>↩</code> next to a light blue box to revert the division.</li>
+                                        <li>Hover over a terminal node (word) and click <code>N</code> to mark it as <strong>head</strong> (bold).</li>
                                     </ul>
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">☖</span> Etiquetas</h4>
+                                    <h4><span className="icon">☖</span> Labels</h4>
                                     <ul>
-                                        <li>En la etiqueta <strong>superior</strong> escribe la función sintáctica (Suj, CD, CI, N, Det, etc.).</li>
-                                        <li>En la etiqueta <strong>inferior</strong> escribe la categoría (sust, v, SN, SV, etc.).</li>
-                                        <li>Si lo prefieres, haz clic en <code>☰</code> para seleccionar etiquetas predefinidas.</li>
+                                        <li>In the <strong>top</strong> label, write the grammatical function (SUBJ, DO, IO, HEAD, DET, etc.).</li>
+                                        <li>In the <strong>bottom</strong> label, write the category (N, V, NP, VP, etc.).</li>
+                                        <li>If you prefer, click <code>☰</code> to select predefined labels.</li>
                                     </ul>
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">⇄</span> Dividir etiquetas</h4>
+                                    <h4><span className="icon">⇄</span> Split labels</h4>
                                     <ul>
-                                        <li>Pasa el cursor por la etiqueta y pulsa <code>⇄</code> para dividir o unir.</li>
-                                        <li>Útil para análisis con múltiples funciones o categorías.</li>
+                                        <li>Hover over the label and click <code>⇄</code> to split or merge.</li>
+                                        <li>Useful for analyses with multiple functions or categories.</li>
                                     </ul>
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">＋</span> Agregar constituyentes extra</h4>
+                                    <h4><span className="icon">＋</span> Add extra constituents</h4>
                                     <ul>
-                                        <li>Pasa el cursor por el nodo bajo el cual quieres crear un constituyente extra y haz clic en <code>+</code>.</li>
-                                        <li>Escribe el texto y elige la posición donde insertarlo.</li>
-                                        <li>Útil para añadir constituyentes elididos.</li>
+                                        <li>Hover over the node under which you want to create an extra constituent and click <code>+</code>.</li>
+                                        <li>Type the text and choose the position to insert it.</li>
+                                        <li>Useful for adding elided constituents.</li>
                                     </ul>
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">Aa</span> Formato de texto</h4>
+                                    <h4><span className="icon">Aa</span> Text formatting</h4>
                                     <ul>
-                                        <li><code>*texto*</code> para <em>cursivas</em></li>
-                                        <li><code>**texto**</code> para <strong>negritas</strong></li>
-                                        <li><code>_texto_</code> para <sub>subíndice</sub></li>
-                                        <li><code>¨texto¨</code> para <sup>superíndice</sup></li>
+                                        <li><code>*text*</code> for <em>italics</em></li>
+                                        <li><code>**text**</code> for <strong>bold</strong></li>
+                                        <li><code>_text_</code> for <sub>subscript</sub></li>
+                                        <li><code>¨text¨</code> for <sup>superscript</sup></li>
                                     </ul>
                                 </div> 
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">⌘</span> Atajos de teclado</h4>
+                                    <h4><span className="icon">⌘</span> Keyboard shortcuts</h4>
                                             <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '40px', marginTop: '8px' }}>
                                             <ul className="shortcut-list">
                                                 <li style={{ marginBottom: '10px', opacity: 0.7, fontSize: '11px', fontWeight: 'bold', color: '#6b7280' }}>WINDOWS / LINUX</li>
-                                                <li><span className="key">Ctrl</span>+<span className="key">Z</span> Deshacer</li>
-                                                <li><span className="key">Ctrl</span>+<span className="key">Y</span> Rehacer</li>
-                                                <li><span className="key">Ctrl</span>+<span className="key">S</span> Guardar</li>
+                                                <li><span className="key">Ctrl</span>+<span className="key">Z</span> Undo</li>
+                                                <li><span className="key">Ctrl</span>+<span className="key">Y</span> Redo</li>
+                                                <li><span className="key">Ctrl</span>+<span className="key">S</span> Save</li>
                                             </ul>
 
                                             <ul className="shortcut-list">
                                                 <li style={{ marginBottom: '10px', opacity: 0.7, fontSize: '11px', fontWeight: 'bold', color: '#6b7280' }}>macOS</li>
-                                                <li><span className="key">⌘</span>+<span className="key">Z</span> Deshacer</li>
-                                                <li><span className="key">⌘</span>+<span className="key">⇧</span>+<span className="key">Z</span> Rehacer</li>
-                                                <li><span className="key">⌘</span>+<span className="key">S</span> Guardar</li>
+                                                <li><span className="key">⌘</span>+<span className="key">Z</span> Undo</li>
+                                                <li><span className="key">⌘</span>+<span className="key">⇧</span>+<span className="key">Z</span> Redo</li>
+                                                <li><span className="key">⌘</span>+<span className="key">S</span> Save</li>
                                             </ul>
                                         </div>
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">∪</span> Consolidar nodos</h4>
+                                    <h4><span className="icon">∪</span> Consolidate nodes</h4>
                                     <ul>
-                                        <li>Pasa el cursor por un nodo celeste y pulsa <code>∪</code> para consolidarlo.</li>
-                                        <li>Útil para perífrasis verbales o locuciones, que no deben dividirse sintácticamente.</li>
-                                        <li>Pulsa <code>÷</code> para volver a permitir la división.</li>
+                                        <li>Hover over a light blue node and click <code>∪</code> to consolidate it.</li>
+                                        <li>Useful for phrasal verbs or multi-word expressions that should not be syntactically divided.</li>
+                                        <li>Click <code>÷</code> to allow division again.</li>
                                     </ul>
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">÷</span> Expandir nodos</h4>
+                                    <h4><span className="icon">÷</span> Expand nodes</h4>
                                     <ul>
-                                        <li>Pasa el cursor por un nodo terminal y pulsa <code>÷</code> para expandirlo.</li>
-                                        <li>Se crea un hijo con el mismo texto. Usa <code>+</code> para agregar constituyentes extra.</li>
+                                        <li>Hover over a terminal node and click <code>÷</code> to expand it.</li>
+                                        <li>A child with the same text is created. Use <code>+</code> to add extra constituents.</li>
                                     </ul>
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">◰</span> Archivos</h4>
+                                    <h4><span className="icon">◰</span> Files</h4>
                                     <ul>
-                                        <li>Haz clic en <strong>📁 Archivos</strong> para abrir el gestor de archivos.</li>
-                                        <li>Pestaña <strong>Local</strong>: guarda o carga archivos <code>.ent</code> desde tu computador.</li>
-                                        <li>Pestaña <strong>Banco de ejemplos</strong>: conecta con Google Drive para acceder a ejemplos compartidos.</li>
-                                        <li>Atajo: <span className="key">Ctrl</span>/<span className="key">⌘</span>+<span className="key">S</span> guarda directamente.</li>
+                                        <li>Click <strong>📁 Files</strong> to open the file manager.</li>
+                                        <li><strong>Local</strong> tab: save or load <code>.ent</code> files from your computer.</li>
+                                        <li><strong>Example bank</strong> tab: connect to Google Drive to access shared examples.</li>
+                                        <li>Shortcut: <span className="key">Ctrl</span>/<span className="key">⌘</span>+<span className="key">S</span> saves directly.</li>
                                     </ul>
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">☷</span> Banco de ejemplos</h4>
+                                    <h4><span className="icon">☷</span> Example bank</h4>
                                     <ul>
-                                        <li>Para crear un banco de ejemplos, sube archivos <code>.ent</code> a una carpeta de Google Drive.</li>
-                                        <li>Haz clic derecho en la carpeta → <strong>Compartir</strong> → <strong>Cualquier persona con el enlace</strong> (como Lector).</li>
-                                        <li>Copia el enlace y compártelo con tus estudiantes.</li>
-                                        <li>Puedes organizar los ejemplos en subcarpetas (por tema, dificultad, etc.).</li>
+                                        <li>To create an example bank, upload <code>.ent</code> files to a Google Drive folder.</li>
+                                        <li>Right-click the folder → <strong>Share</strong> → <strong>Anyone with the link</strong> (as Viewer).</li>
+                                        <li>Copy the link and share it with your students.</li>
+                                        <li>You can organize examples in subfolders (by topic, difficulty, etc.).</li>
                                     </ul>
                                 </div>
 
                                 {!exerciseMode && (
                                 <div className="instruction-card">
-                                    <h4><span className="icon">✎</span> Modo ejercitación</h4>
+                                    <h4><span className="icon">✎</span> Exercise mode</h4>
                                     <ul>
-                                        <li>Haz clic en <strong>📚 Modo ejercitación</strong> para practicar.</li>
-                                        <li>Carga un ejercicio desde tu computador o desde un <strong>banco de ejemplos</strong> en Google Drive.</li>
-                                        <li>Analiza la expresión propuesta y compara tu resultado con el modelo.</li>
+                                        <li>Click <strong>📚 Exercise mode</strong> to practice.</li>
+                                        <li>Load an exercise from your computer or from an <strong>example bank</strong> on Google Drive.</li>
+                                        <li>Analyze the given expression and compare your result with the model.</li>
                                     </ul>
                                 </div>
                                 )}
 
                                 {exerciseMode && (
                                 <div className="instruction-card">
-                                    <h4 style={{color: '#5b21b6'}}><span className="icon" style={{backgroundColor: '#5b21b6'}}>✎</span> Ejercicio activo</h4>
+                                    <h4 style={{color: '#5b21b6'}}><span className="icon" style={{backgroundColor: '#5b21b6'}}>✎</span> Active exercise</h4>
                                     <ul>
-                                        <li>Completa el análisis de la expresión.</li>
-                                        <li>Usa <strong>Comparar</strong> para ver la solución.</li>
+                                        <li>Complete the analysis of the expression.</li>
+                                        <li>Use <strong>Compare</strong> to see the solution.</li>
                                     </ul>
                                 </div>
                                 )}
@@ -4005,7 +3971,7 @@
                         <div className="pos-overlay" onClick={() => setShowFilesModal(false)}>
                             <div className="files-modal" onClick={(e) => e.stopPropagation()}>
                                 <div className="files-modal-header">
-                                    <h4 className="files-modal-title">{exerciseMode ? '☁️ Banco de ejemplos' : '📁 Archivos'}</h4>
+                                    <h4 className="files-modal-title">{exerciseMode ? '☁️ Example bank' : '📁 Files'}</h4>
                                     {!exerciseMode && (
                                         <div className="files-tabs">
                                             <button 
@@ -4018,7 +3984,7 @@
                                                 className={`files-tab ${filesActiveTab === 'cloud' ? 'active' : ''}`}
                                                 onClick={() => setFilesActiveTab('cloud')}
                                             >
-                                                ☁️ Banco de ejemplos
+                                                ☁️ Example bank
                                             </button>
                                         </div>
                                     )}
@@ -4027,37 +3993,37 @@
                                 <div className="files-modal-body">
                                     {!exerciseMode && filesActiveTab === 'local' && (
                                         <div className="files-section">
-                                            <div className="files-section-title">Gestión de archivos locales</div>
+                                            <div className="files-section-title">Local file management</div>
                                             <div className="files-btn-row">
                                                 <button 
                                                     onClick={() => { fileInputRef.current.click(); setShowFilesModal(false); }} 
                                                     className="btn btn-outline"
                                                 >
-                                                    📂 Cargar .ent
+                                                    📂 Load .ent
                                                 </button>
                                                 <button 
                                                     onClick={() => { handleSaveJSON(); setShowFilesModal(false); }} 
                                                     className="btn btn-primary" 
                                                     disabled={!tree}
-                                                    title="Guardar (Ctrl+S)"
+                                                    title="Save (Ctrl+S)"
                                                 >
-                                                    💾 Guardar .ent
+                                                    💾 Save .ent
                                                 </button>
                                             </div>
                                             <p className="files-help-text">
-                                                Los archivos <code>.ent</code> guardan tu análisis completo (expresión, estructura y etiquetas).
+                                                <code>.ent</code> files save your complete analysis (expression, structure and labels).
                                             </p>
                                         </div>
                                     )}
 
                                     {(exerciseMode || filesActiveTab === 'cloud') && (
                                         <div className="files-section">
-                                            <div className="files-section-title">Conectar con Google Drive</div>
+                                            <div className="files-section-title">Connect to Google Drive</div>
                                             <div className="drive-connect-row">
                                                 <input 
                                                     type="text"
                                                     className="drive-url-input"
-                                                    placeholder="URL de carpeta de Google Drive..."
+                                                    placeholder="Google Drive folder URL..."
                                                     value={driveUrl}
                                                     onChange={(e) => setDriveUrl(e.target.value)}
                                                     onKeyPress={(e) => e.key === 'Enter' && handleConnectDrive()}
@@ -4067,13 +4033,13 @@
                                                     onClick={handleConnectDrive}
                                                     disabled={!driveUrl.trim()}
                                                 >
-                                                    Conectar
+                                                    Connect
                                                 </button>
                                             </div>
                                             <p className="files-help-text">
-                                                Pega la URL de una carpeta pública de Google Drive que contenga archivos <code>.ent</code>.<br/>
-                                                La carpeta debe estar compartida como "Cualquier persona con el enlace".<br/><br/>
-                                                ¿No tienes una carpeta o un enlace? Prueba con el <a 
+                                                Paste the URL of a public Google Drive folder containing <code>.ent</code> files.<br/>
+                                                The folder must be shared as "Anyone with the link".<br/><br/>
+                                                Don't have a folder or link? Try the <a 
                                                     href="#" 
                                                     onClick={(e) => {
                                                         e.preventDefault();
@@ -4081,7 +4047,7 @@
                                                         setTimeout(() => handleConnectDrive(), 100);
                                                     }}
                                                     style={{color: '#3b82f6', textDecoration: 'underline', cursor: 'pointer'}}
-                                                >banco de ejemplos de ENT</a>.
+                                                >ENT example bank</a>.
                                             </p>
 
                                             {driveStatus.type && (
@@ -4095,7 +4061,7 @@
 
                                             {driveFiles.length > 0 && (
                                                 <>
-                                                    <div className="files-section-title" style={{marginTop: '16px'}}>Archivos disponibles</div>
+                                                    <div className="files-section-title" style={{marginTop: '16px'}}>Available files</div>
                                                     <div className="drive-files-list">
                                                         {driveFiles.map((folder, idx) => (
                                                             folder.folderName ? (
@@ -4107,7 +4073,7 @@
                                                                         <span className={`drive-folder-toggle ${collapsedFolders[folder.folderId] ? 'collapsed' : ''}`}>▼</span>
                                                                         📁 {folder.folderName}
                                                                         <span style={{marginLeft: 'auto', fontSize: '11px', color: '#9ca3af'}}>
-                                                                            {folder.files.length} archivo{folder.files.length !== 1 ? 's' : ''}
+                                                                            {folder.files.length} file{folder.files.length !== 1 ? 's' : ''}
                                                                         </span>
                                                                     </div>
                                                                     <div className={`drive-folder-content ${collapsedFolders[folder.folderId] ? 'collapsed' : ''}`}>
@@ -4147,14 +4113,14 @@
                                                                     className="btn btn-outline"
                                                                     onClick={() => handleLoadFromDrive(false)}
                                                                 >
-                                                                    📖 Cargar como referencia
+                                                                    📖 Load as reference
                                                                 </button>
                                                             )}
                                                             <button 
                                                                 className="btn btn-exercise"
                                                                 onClick={() => handleLoadFromDrive(true)}
                                                             >
-                                                                📚 Cargar como ejercicio
+                                                                📚 Load as exercise
                                                             </button>
                                                         </div>
                                                     )}
@@ -4165,7 +4131,7 @@
                                 </div>
 
                                 <div className="files-modal-footer">
-                                    <button className="btn btn-outline" onClick={() => setShowFilesModal(false)}>Cerrar</button>
+                                    <button className="btn btn-outline" onClick={() => setShowFilesModal(false)}>Close</button>
                                 </div>
                             </div>
                         </div>
@@ -4174,8 +4140,8 @@
                     {posPicker && (
                         <div className="pos-overlay" onClick={() => setPosPicker(null)}>
                             <div className="pos-modal" onClick={(e) => e.stopPropagation()}>
-                                <h4 className="pos-title">¿Dónde quieres el nuevo constituyente?</h4>
-                                <p className="pos-sub">Elige la posición para insertarlo entre los constituyentes actuales.</p>
+                                <h4 className="pos-title">Where do you want the new constituent?</h4>
+                                <p className="pos-sub">Choose the position to insert it among the current constituents.</p>
                                 <div className="pos-row">
                                     <select
                                         className="pos-select"
@@ -4191,8 +4157,8 @@
                                     </select>
                                 </div>
                                 <div className="pos-actions">
-                                    <button className="btn btn-outline" onClick={() => setPosPicker(null)}>Cancelar</button>
-                                    <button className="btn btn-primary" onClick={confirmInsertAtPosition}>Insertar</button>
+                                    <button className="btn btn-outline" onClick={() => setPosPicker(null)}>Cancel</button>
+                                    <button className="btn btn-primary" onClick={confirmInsertAtPosition}>Insert</button>
                                 </div>
                             </div>
                         </div>
