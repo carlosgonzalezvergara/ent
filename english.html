@@ -3272,7 +3272,7 @@
                                                         setTree(prev => updateNode(prev, node.id, { isNucleus: !node.isNucleus })); 
                                                     }}
                                                 >
-                                                    N
+                                                    H
                                                 </button>
                                             )}
                                         </div>
@@ -3822,6 +3822,7 @@
                             ) : (
                                 <>
                                     <button onClick={() => { setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); }} className="btn btn-new-analysis">✦ New analysis</button>
+                                    <button onClick={handleSaveJSON} className="btn btn-outline" disabled={!tree} title="Save (Ctrl+S)">💾 Save .ent</button>
                                     <button onClick={() => handleExport(false)} className="btn btn-primary">Export diagram</button>
                                     <button onClick={() => handleExport(true)} className="btn btn-primary">Export tree diagram</button>
                                 </>
