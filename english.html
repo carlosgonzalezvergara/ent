@@ -1395,6 +1395,16 @@
                 min-width: 100%;
             }
             
+            .language-selector {
+                position: static;
+                justify-content: center;
+                margin-bottom: 12px;
+            }
+
+            .language-selector .language-flag {
+                height: 24px;
+            }
+
             .btn {
                 padding: 12px 16px;
                 justify-content: center;
@@ -3559,10 +3569,6 @@
             if (showComparison && comparisonResults) {
                 return (
                     <div className="container">
-                        <header className="header-logo-container">
-                            <img src="english_logo.png" alt="ENT - Syntactic Analysis Assistant" className="header-logo" />
-                        </header>
-
                         {/* Language selector */}
                         <div className="language-selector">
                             <a href="index.html">
@@ -3570,6 +3576,10 @@
                             </a>
                             <img src="uk_solid.png" alt="English" className="language-flag active" title="English (current)" />
                         </div>
+                        
+                        <header className="header-logo-container">
+                            <img src="english_logo.png" alt="ENT - Syntactic Analysis Assistant" className="header-logo" />
+                        </header>
 
                         <div className="exercise-banner">
                             <div className="exercise-banner-text">
@@ -3645,17 +3655,17 @@
             // ===========================================
             return (
                 <div className="container">
-                    <header className="header-logo-container">
-                        <img src="english_logo.png" alt="ENT - Syntactic Analysis Assistant" className="header-logo" />
-                    </header>
-
                     {/* Language selector */}
                         <div className="language-selector">
                             <a href="index.html">
                                 <img src="spain_grey.png" alt="Español" className="language-flag inactive" title="Cambiar a Español" />
                             </a>
                             <img src="uk_solid.png" alt="English" className="language-flag active" title="English (current)" />
-                        </div>    
+                        </div>  
+                    
+                    <header className="header-logo-container">
+                        <img src="english_logo.png" alt="ENT - Syntactic Analysis Assistant" className="header-logo" />
+                    </header>  
 
                     {exerciseMode && !modelTree && (
                         <div className="exercise-banner" style={{flexDirection: 'column', alignItems: 'center', padding: '40px'}}>
@@ -3759,6 +3769,7 @@
                                         onKeyPress={(e) => e.key === 'Enter' && startAnalysis()} 
                                     />
                                     <button onClick={startAnalysis} className="btn btn-primary">Analyze</button>
+                                    <span className="btn-separator"></span>
                                     <button 
                                         onClick={handleUndo} 
                                         className="btn btn-outline btn-icon" 

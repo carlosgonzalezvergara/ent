@@ -1400,6 +1400,16 @@
                 justify-content: center;
             }
             
+            .language-selector {
+                position: static;
+                justify-content: center;
+                margin-bottom: 12px;
+            }
+
+            .language-selector .language-flag {
+                height: 24px;
+            }
+
             .tree-display-container {
                 padding: 16px;
             }
@@ -3793,6 +3803,7 @@
                                         onKeyPress={(e) => e.key === 'Enter' && startAnalysis()} 
                                     />
                                     <button onClick={startAnalysis} className="btn btn-primary">Analizar</button>
+                                    <span className="btn-separator"></span>                                   
                                     <button 
                                         onClick={handleUndo} 
                                         className="btn btn-outline btn-icon" 
