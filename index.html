@@ -1387,12 +1387,21 @@
             .input-section { padding: 16px; }
             
             .input-row { 
-                flex-direction: column;
-                align-items: stretch;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
             }
-            
+
             .input-row input[type="text"] {
-                min-width: 100%;
+                grid-column: 1 / -1;
+            }
+
+            .input-row .btn-primary {
+                grid-column: 1 / -1;
+            }
+
+            .input-row > button:last-of-type {
+                grid-column: 1 / -1;
             }
             
             .btn {
@@ -3851,7 +3860,7 @@
                                 <div className="tree-wrapper">{renderNode(tree)}</div>
                             ) : (
                                 <p style={{textAlign:'center', color:'#9ca3af', marginTop:'100px'}}>
-                                    Escribe una expresión o carga un archivo .ent para editarlo
+                                    <strong>Escribe una expresión</strong> o carga un archivo .ent en <strong>Archivos</strong> para editarlo
                                 </p>
                             )}
                         </div>
@@ -3892,6 +3901,7 @@
                                         <li>Haz clic en un <strong>recuadro celeste</strong> para dividir una estructura sintáctica en constituyentes.</li>
                                         <li>Haz clic en las <strong>barras grises</strong> entre palabras para marcar fronteras entre constituyentes.</li>
                                         <li>Haz clic en <code>↩</code> junto a un recuadro celeste para revertir la división.</li>
+                                        <li>Haz clic en la <code>⨉</code> roja si quieres eliminar el texto de un nodo y mantener solo las etiquetas.</li>
                                         <li>Pasa el cursor por un nodo terminal (palabra) y pulsa <code>N</code> para marcarlo como <strong>núcleo</strong> (negritas).</li>
                                     </ul>
                                 </div>
