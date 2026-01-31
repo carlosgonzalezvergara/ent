@@ -1376,6 +1376,11 @@
         }
         .footer img:hover { opacity: 1; }
 
+        .analyze-undo-group {
+            display: contents;
+        }    
+    
+
         /* ===========================================
            RESPONSIVE - TABLETS Y MÓVILES
            =========================================== */
@@ -1393,10 +1398,6 @@
             }
 
             .input-row input[type="text"] {
-                grid-column: 1 / -1;
-            }
-
-            .input-row .btn-primary {
                 grid-column: 1 / -1;
             }
 
@@ -1455,6 +1456,13 @@
 
             .btn-separator {
                 display: none;
+            }
+
+            .analyze-undo-group {
+                display: grid;
+                grid-template-columns: 2fr 1fr 1fr;
+                gap: 8px;
+                grid-column: 1 / -1;
             }
         }
         
@@ -3811,24 +3819,25 @@
                                         placeholder="Escribe la expresión que quieres analizar" 
                                         onKeyPress={(e) => e.key === 'Enter' && startAnalysis()} 
                                     />
-                                    <button onClick={startAnalysis} className="btn btn-primary">Analizar</button>
-                                    <span className="btn-separator"></span>                                   
-                                    <button 
-                                        onClick={handleUndo} 
-                                        className="btn btn-outline btn-icon" 
-                                        disabled={!canUndo}
-                                        title="Deshacer (Ctrl+Z)"
-                                    >
-                                        ↶
-                                    </button>
-                                    <button 
-                                        onClick={handleRedo} 
-                                        className="btn btn-outline btn-icon" 
-                                        disabled={!canRedo}
-                                        title="Rehacer (Ctrl+Shift+Z)"
-                                    >
-                                        ↷
-                                    </button>
+                                    <div className="analyze-undo-group">
+                                        <button onClick={startAnalysis} className="btn btn-primary">Analizar</button>
+                                        <button 
+                                            onClick={handleUndo} 
+                                            className="btn btn-outline btn-icon" 
+                                            disabled={!canUndo}
+                                            title="Deshacer (Ctrl+Z)"
+                                        >
+                                            ↶
+                                        </button>
+                                        <button 
+                                            onClick={handleRedo} 
+                                            className="btn btn-outline btn-icon" 
+                                            disabled={!canRedo}
+                                            title="Rehacer (Ctrl+Shift+Z)"
+                                        >
+                                            ↷
+                                        </button>
+                                    </div>
                                     <span className="btn-separator"></span>
                                     <button onClick={() => setShowFilesModal(true)} className="btn btn-outline">📁 Archivos</button>
                                     <input type="file" ref={fileInputRef} style={{display:'none'}} accept=".ent,.json,application/json,text/plain,*/*" onChange={handleLoadJSON} />
