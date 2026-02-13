@@ -196,6 +196,16 @@
 <li><strong>Guardar:</strong> Accede a <span class="ui-element">📁 Archivos</span> y selecciona <span class="ui-element">💾 Guardar .ent</span>. El archivo se descargará en tu ordenador.</li>
 <li><strong>Cargar:</strong> Usa la opción <span class="ui-element">📂 Cargar .ent</span> para importar un análisis previamente guardado.</li>
 </ul><p>Al guardar, el nombre del archivo se genera automáticamente a partir de las primeras palabras de la oración.</p>
+
+<div class="note-block">
+  <p><strong>Autoguardado</strong></p>
+  <p>
+    Además del guardado manual en <code>.ent</code>, ENT realiza un <strong>autoguardado local</strong> de tu trabajo (modo principal y modo ejercitación).
+    Si cierras la pestaña o el navegador, al volver a abrir ENT te ofrecerá <strong>restaurar</strong> el último estado guardado automáticamente.
+    Este autoguardado se almacena en el navegador (no se sube a ninguna nube), por lo que puede perderse si borras los datos del sitio.
+  </p>
+</div>
+
 </section>
 <section id="proceso">
 <h2>3. Proceso de análisis</h2>
@@ -209,6 +219,17 @@
 <p>
 Desde ese punto, el trabajo consiste en ir dividiendo constituyentes, asignar etiquetas y, cuando sea necesario, introducir nodos extra o marcar núcleos.
 </p>
+
+<h3>Zoom</h3>
+<p>
+ENT incluye controles de zoom para acercar o alejar el diagrama sin modificar el análisis. Los botones aparecen en la esquina superior derecha del área del diagrama cuando hay un árbol cargado.
+</p>
+<ul>
+  <li>Usa los botones <code>[−]</code> y <code>[+]</code> para alejar/acercar.</li>
+  <li>Haz clic en el porcentaje para restablecer al 100%.</li>
+  <li>Rango de zoom: 40% a 200% en incrementos de 20%.</li>
+  <li>En el modo ejercitación, cada panel de comparación tiene su propio zoom.</li>
+</ul>
 
 <h3>Deshacer y rehacer</h3>
 <p>
@@ -381,6 +402,23 @@ Si no dispones de una carpeta propia, ENT ofrece un enlace al <strong>banco de e
 <td><span class="key-tip">Ctrl</span>+<span class="key-tip">S</span></td>
 <td><span class="key-tip">⌘</span>+<span class="key-tip">S</span></td>
 </tr>
+
+<tr>
+<td><strong>Zoom in</strong></td>
+<td><span class="key-tip">Ctrl</span>+<span class="key-tip">+</span></td>
+<td><span class="key-tip">⌘</span>+<span class="key-tip">+</span></td>
+</tr>
+<tr>
+<td><strong>Zoom out</strong></td>
+<td><span class="key-tip">Ctrl</span>+<span class="key-tip">−</span></td>
+<td><span class="key-tip">⌘</span>+<span class="key-tip">−</span></td>
+</tr>
+<tr>
+<td><strong>Restablecer zoom (100%)</strong></td>
+<td><span class="key-tip">Ctrl</span>+<span class="key-tip">0</span></td>
+<td><span class="key-tip">⌘</span>+<span class="key-tip">0</span></td>
+</tr>
+
 </tbody>
 </table>
 </section>

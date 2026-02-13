@@ -25,6 +25,7 @@
             --btn-exercise-bg-hover: #f5f3ff;
             --btn-success-bg: #047857;
             --btn-success-bg-hover: #065f46;
+            --ent-text-scale: 1;
         }
 
         * { box-sizing: border-box; }
@@ -264,8 +265,72 @@
             padding: 40px; 
             border: 1px solid #e5e7eb; 
             overflow-x: auto; 
-            min-height: 450px; 
+            min-height: 450px;
+            position: relative; 
         }
+        /* Autosave indicator (as in Kilmer) */
+        .autosave-indicator{
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            z-index: 40;
+            background: rgba(255,255,255,0.95);
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 13px;
+            color: #374151;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transform: translateY(-4px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            pointer-events: none;
+        }
+        .autosave-indicator.visible{
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .autosave-dot{
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #10b981;
+            display: inline-block;
+        }
+        .autosave-dot.saving{
+            background: #f59e0b;
+            animation: pulse 1s ease-in-out infinite;
+        }
+        @keyframes pulse{
+            0%,100%{ transform: scale(1); opacity: .7; }
+            
+        .autosave-text{ display:inline-flex; align-items:center; gap:0; }
+        .autosave-ellipsis{
+            display: inline-flex;
+            margin-left: 2px;
+            letter-spacing: 1px;
+        }
+        .autosave-ellipsis span{
+            display: inline-block;
+            width: 6px;
+            text-align: center;
+            opacity: 0.2;
+            transform: translateY(0);
+            animation: ellipsis 1s infinite;
+        }
+        .autosave-ellipsis span:nth-child(2){ animation-delay: 0.15s; }
+        .autosave-ellipsis span:nth-child(3){ animation-delay: 0.30s; }
+
+        @keyframes ellipsis{
+            0%, 60%, 100% { opacity: 0.2; transform: translateY(0); }
+            30% { opacity: 1; transform: translateY(-1px); }
+        }
+50%{ transform: scale(1.35); opacity: 1; }
+        }
+
 
         .tree-wrapper { 
             display: flex; 
@@ -374,8 +439,8 @@
             text-align: center; 
             border: 1px dashed #d1d5db; 
             border-radius: 4px; 
-            padding: 4px; 
-            font-size: 11px; 
+            padding: calc(4px * var(--ent-text-scale, 1)); 
+            font-size: calc(11px * var(--ent-text-scale, 1)); 
             background: transparent; 
             color: #4b5563; 
             font-family: Arial, sans-serif; 
@@ -395,8 +460,8 @@
             text-align: center;
             border: 1px dashed #d1d5db;
             border-radius: 4px;
-            padding: 4px;
-            font-size: 11px;
+            padding: calc(4px * var(--ent-text-scale, 1));
+            font-size: calc(11px * var(--ent-text-scale, 1));
             background: transparent;
             color: #4b5563;
             font-family: Arial, sans-serif;
@@ -1492,13 +1557,125 @@
                 padding: 16px;
             }
         }
+
+        /* ===========================================
+           CONTROLES DE ZOOM
+           =========================================== */
+        .zoom-controls-wrapper {
+            position: sticky;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 0;
+            z-index: 100;
+            pointer-events: none;
+        }
+        .zoom-controls {
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .zoom-controls.visible {
+            opacity: 0.6;
+            pointer-events: auto;
+        }
+        .zoom-controls.visible:hover {
+            opacity: 1;
+        }
+        .zoom-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            border-radius: 4px;
+            transition: background 0.15s;
+        }
+        .zoom-btn:hover:not(:disabled) {
+            background: rgba(0,0,0,0.08);
+        }
+        .zoom-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .zoom-indicator {
+            min-width: 44px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.15s, color 0.15s;
+            user-select: none;
+        }
+        .zoom-indicator:hover {
+            background: rgba(0,0,0,0.08);
+            color: #374151;
+        }
+
+        /* Contenedor de zoom */
+        .zoom-container {
+            transform-origin: top left;
+        }
+
+        /* Ajustes para tree-container con zoom */
+        .tree-container {
+            position: relative;
+            overflow: auto;
+            max-width: 100%;
+        }
+
+        /* Ajustes para comparison-panel con zoom */
+        .comparison-panel {
+            position: relative;
+        }
+        .comparison-panel .zoom-controls-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            height: 0;
+            z-index: 120;
+            pointer-events: none;
+        }
+        .comparison-panel .zoom-controls {
+            top: 2px;
+            right: 2px;
+        }
+        .comparison-tree {
+            overflow: auto;
+            min-height: 200px;
+            max-height: 500px;
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useRef, useEffect, useCallback } = React;
+        const { useState, useRef, useEffect, useCallback, useMemo } = React;
 
         // ===========================================
         // CATÁLOGO DE ETIQUETAS GTG (RAE)
@@ -1703,6 +1880,99 @@
             // Referencias
             const fileInputRef = useRef(null);
             const exerciseInputRef = useRef(null);
+            const treeContainerRef = useRef(null);
+            const zoomContainerRef = useRef(null);
+            const studentZoomContainerRef = useRef(null);
+            const modelZoomContainerRef = useRef(null);
+
+            // Estado de zoom (para las 3 vistas)
+            const [zoomLevel, setZoomLevel] = useState(100);
+            const [studentZoomLevel, setStudentZoomLevel] = useState(100);
+            const [modelZoomLevel, setModelZoomLevel] = useState(100);
+
+            // Auto-guardado
+            const [isSaving, setIsSaving] = useState(false);
+            const [lastSaved, setLastSaved] = useState(null);
+            const formatTimeAgo = (dateObj) => {
+                if (!dateObj) return '';
+                const diffMs = Date.now() - dateObj.getTime();
+                const diffSec = Math.max(0, Math.floor(diffMs / 1000));
+                if (diffSec < 10) return 'recién';
+                if (diffSec < 60) return 'hace unos segundos';
+                const diffMin = Math.floor(diffSec / 60);
+                if (diffMin < 60) return `hace ${diffMin} min`;
+                const diffHr = Math.floor(diffMin / 60);
+                if (diffHr < 24) return `hace ${diffHr} h`;
+                const diffDay = Math.floor(diffHr / 24);
+                return `hace ${diffDay} día${diffDay === 1 ? '' : 's'}`;
+            };
+
+
+
+            // Escala tipográfica extra (curva suave) para evitar amontonamiento en zoom mínimo
+            const textScale = useMemo(() => {
+                const z = zoomLevel / 100;
+                // Curva tipográfica solo para zooms < 100% (evita amontonamiento en mínimos sin "inflar" en máximos)
+                if (z >= 1) return 1;
+                // escala extra => tamaño efectivo ~= z^(1.24)
+                return Math.pow(z, 0.24);
+            }, [zoomLevel]);
+
+            const studentTextScale = useMemo(() => {
+                const z = studentZoomLevel / 100;
+                if (z >= 1) return 1;
+                return Math.pow(z, 0.24);
+            }, [studentZoomLevel]);
+
+            const modelTextScale = useMemo(() => {
+                const z = modelZoomLevel / 100;
+                if (z >= 1) return 1;
+                return Math.pow(z, 0.24);
+            }, [modelZoomLevel]);
+
+            // Constantes de zoom
+            const ZOOM_MIN = 40;
+            const ZOOM_MAX = 200;
+            const ZOOM_STEP = 20;
+
+            // Funciones de zoom para vista principal
+            const zoomIn = useCallback(() => {
+                setZoomLevel(prev => Math.min(prev + ZOOM_STEP, ZOOM_MAX));
+            }, []);
+
+            const zoomOut = useCallback(() => {
+                setZoomLevel(prev => Math.max(prev - ZOOM_STEP, ZOOM_MIN));
+            }, []);
+
+            const zoomReset = useCallback(() => {
+                setZoomLevel(100);
+            }, []);
+
+            // Funciones de zoom para panel estudiante (comparación)
+            const studentZoomIn = useCallback(() => {
+                setStudentZoomLevel(prev => Math.min(prev + ZOOM_STEP, ZOOM_MAX));
+            }, []);
+
+            const studentZoomOut = useCallback(() => {
+                setStudentZoomLevel(prev => Math.max(prev - ZOOM_STEP, ZOOM_MIN));
+            }, []);
+
+            const studentZoomReset = useCallback(() => {
+                setStudentZoomLevel(100);
+            }, []);
+
+            // Funciones de zoom para panel modelo (comparación)
+            const modelZoomIn = useCallback(() => {
+                setModelZoomLevel(prev => Math.min(prev + ZOOM_STEP, ZOOM_MAX));
+            }, []);
+
+            const modelZoomOut = useCallback(() => {
+                setModelZoomLevel(prev => Math.max(prev - ZOOM_STEP, ZOOM_MIN));
+            }, []);
+
+            const modelZoomReset = useCallback(() => {
+                setModelZoomLevel(100);
+            }, []);
 
             // ===========================================
             // UTILIDADES
@@ -1915,14 +2185,110 @@
             // GUARDAR (definido aquí para usar en atajos)
             // ===========================================
             const handleSaveJSON = useCallback(() => {
-                if (!tree) return;
-                const blob = new Blob([JSON.stringify({ sentence, tree }, null, 2)], { type: 'application/json' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                const words = sentence.trim().split(/\s+/).slice(0, 5).join('_');
-                a.download = `${words}.ent`;
-                a.click();
-            }, [tree, sentence]);
+    if (!tree) return;
+    const blob = new Blob([JSON.stringify({ sentence, tree }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const words = sentence.trim().split(/\s+/).slice(0, 5).join('_');
+    a.download = `${words}.ent`;
+    a.click();
+
+    // Limpiar auto-guardado después de un guardado manual
+    localStorage.removeItem('ent-autosave');
+    setLastSaved(null);
+}, [tree, sentence]);
+
+
+            // ===========================================
+            // AUTO-GUARDADO (localStorage)
+            // ===========================================
+            const debounce = (func, delay) => {
+                let timeout;
+                return (...args) => {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func(...args), delay);
+                };
+            };
+
+            const performAutoSave = useCallback(() => {
+                if (!tree || isUndoRedo.current) return;
+
+                setIsSaving(true);
+                const data = {
+                    sentence,
+                    tree,
+                    divisionMode,
+                    selectedCuts,
+                    exerciseMode,
+                    modelTree,
+                    timestamp: new Date().toISOString(),
+                    version: '1.0'
+                };
+
+                try {
+                    localStorage.setItem('ent-autosave', JSON.stringify(data));
+                    setLastSaved(new Date());
+                    setTimeout(() => setIsSaving(false), 500);
+                } catch (err) {
+                    console.error('Error auto-saving:', err);
+                    setIsSaving(false);
+                }
+            }, [sentence, tree, divisionMode, selectedCuts, exerciseMode, modelTree]);
+
+            const autoSaveDebounced = useRef(null);
+            if (!autoSaveDebounced.current) {
+                autoSaveDebounced.current = debounce((saveFn) => saveFn(), 3000);
+            }
+
+            // Auto-save: guardar cuando cambien los estados relevantes
+            useEffect(() => {
+                if (tree && !isUndoRedo.current) {
+                    autoSaveDebounced.current(performAutoSave);
+                }
+            }, [sentence, tree, divisionMode, selectedCuts, exerciseMode, modelTree, performAutoSave]);
+
+            // Restore from auto-save on mount
+            useEffect(() => {
+                const saved = localStorage.getItem('ent-autosave');
+                if (!saved) return;
+
+                try {
+                    const data = JSON.parse(saved);
+                    const savedDate = new Date(data.timestamp);
+                    const minutesAgo = Math.round((Date.now() - savedDate.getTime()) / 60000);
+
+                    const message = minutesAgo < 1
+                        ? 'Se encontró trabajo no guardado.\n\n¿Quieres continuar donde lo dejaste?'
+                        : `Se encontró trabajo no guardado de hace ${minutesAgo} minuto${minutesAgo === 1 ? '' : 's'}.\n\n¿Quieres continuar donde lo dejaste?`;
+
+                    const restore = confirm(message);
+
+                    if (restore) {
+                        isUndoRedo.current = true;
+
+                        setSentence(data.sentence || '');
+                        setTree(data.tree || null);
+                        setDivisionMode(data.divisionMode ?? null);
+                        setSelectedCuts(Array.isArray(data.selectedCuts) ? data.selectedCuts : []);
+                        setExerciseMode(!!data.exerciseMode);
+                        setModelTree(data.modelTree || null);
+                        setShowComparison(false);
+                        setComparisonResults(null);
+
+                        setHistory([]);
+                        setHistoryIndex(-1);
+
+                        setTimeout(() => { isUndoRedo.current = false; }, 0);
+                    } else {
+                        localStorage.removeItem('ent-autosave');
+                        setLastSaved(null);
+                    }
+                } catch (err) {
+                    console.error('Error restoring auto-save:', err);
+                    localStorage.removeItem('ent-autosave');
+                    setLastSaved(null);
+                }
+            }, []); // Solo al montar
 
             // ===========================================
             // GOOGLE DRIVE API
@@ -2055,6 +2421,9 @@
                         setComparisonResults(null);
                         setHistory([JSON.stringify(newTree)]);
                         setHistoryIndex(0);
+                        // Limpiar auto-guardado al cargar un archivo
+                        localStorage.removeItem('ent-autosave');
+                        setLastSaved(null);
                     } else {
                         // Cargar como referencia (para ver/editar)
                         setSentence(data.sentence || '');
@@ -2064,6 +2433,9 @@
                         setShowComparison(false);
                         setHistory([JSON.stringify(data.tree)]);
                         setHistoryIndex(0);
+                        // Limpiar auto-guardado al cargar un archivo
+                        localStorage.removeItem('ent-autosave');
+                        setLastSaved(null);
                     }
 
                     setShowFilesModal(false);
@@ -2090,6 +2462,16 @@
                     const modifier = isMac ? e.metaKey : e.ctrlKey;
                     const key = e.key.toLowerCase();
                     
+                    // Ignorar si estamos en un input/textarea
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                        // Solo permitir atajos de guardar en inputs
+                        if (modifier && key === 's') {
+                            e.preventDefault();
+                            handleSaveJSON();
+                        }
+                        return;
+                    }
+                    
                     if (modifier && key === 'z' && !e.shiftKey) {
                         e.preventDefault();
                         handleUndo();
@@ -2102,12 +2484,21 @@
                     } else if (modifier && key === 's') {
                         e.preventDefault();
                         handleSaveJSON();
+                    } else if (modifier && (key === '+' || key === '=')) {
+                        e.preventDefault();
+                        zoomIn();
+                    } else if (modifier && key === '-') {
+                        e.preventDefault();
+                        zoomOut();
+                    } else if (modifier && key === '0') {
+                        e.preventDefault();
+                        zoomReset();
                     }
                 };
                 
                 window.addEventListener('keydown', handleKeyDown);
                 return () => window.removeEventListener('keydown', handleKeyDown);
-            }, [handleUndo, handleRedo, handleSaveJSON]);
+            }, [handleUndo, handleRedo, handleSaveJSON, zoomIn, zoomOut, zoomReset]);
 
             // ===========================================
             // ACCIONES PRINCIPALES
@@ -2563,6 +2954,9 @@
                 // Reiniciar historial
                 setHistory([]);
                 setHistoryIndex(-1);
+                // Limpiar auto-guardado
+                localStorage.removeItem('ent-autosave');
+                setLastSaved(null);
             };
 
             const newExercise = () => {
@@ -2577,16 +2971,31 @@
                 // Reiniciar historial
                 setHistory([]);
                 setHistoryIndex(-1);
+                // Limpiar auto-guardado
+                localStorage.removeItem('ent-autosave');
+                setLastSaved(null);
             };
 
             // ===========================================
             // EXPORTACIÓN
             // ===========================================
             const handleExport = async (isTechnical = false) => {
-                const treeWrapper = document.querySelector('.tree-wrapper');
+                const treeWrapper = document.querySelector('.tree-container .tree-wrapper');
                 if (!treeWrapper) return;
 
                 const treeContainer = document.querySelector('.tree-container');
+                const zoomContainer = treeContainer.querySelector('.zoom-container');
+                
+                // Guardar zoom actual y resetear a 100% para exportación consistente
+                const savedZoom = zoomLevel;
+                setZoomLevel(100);
+                
+                // Esperar a que React re-renderice con zoom al 100%
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                await new Promise(resolve => setTimeout(resolve, 50));
+
+                try {
+
                 const originalOverflow = treeContainer.style.overflow;
                 const originalWidth = treeContainer.style.width;
                 const originalMaxWidth = treeContainer.style.maxWidth;
@@ -2596,16 +3005,18 @@
 
                 if (isTechnical) treeWrapper.classList.add('technical-mode');
 
-                // Ocultar botones de edición
+                // Ocultar botones de edición y controles de zoom
                 const undoBtns = treeWrapper.querySelectorAll('.btn-danger-soft');
                 const clearBtns = treeWrapper.querySelectorAll('.clear-text-btn');
                 const addBtns = treeWrapper.querySelectorAll('.add-node-btn');
                 const splitBtns = treeWrapper.querySelectorAll('.split-toggle-btn');
+                const zoomControls = treeContainer.querySelector('.zoom-controls');
 
                 undoBtns.forEach(b => b.style.visibility = 'hidden');
                 clearBtns.forEach(b => b.style.display = 'none');
                 addBtns.forEach(b => b.style.display = 'none');
                 splitBtns.forEach(b => b.style.display = 'none');
+                if (zoomControls) zoomControls.style.display = 'none';
 
                 let svg = null;
                 const connectors = treeWrapper.querySelectorAll('.connector-v, .v-line-stem');
@@ -2895,6 +3306,11 @@
                 clearBtns.forEach(b => b.style.display = '');
                 addBtns.forEach(b => b.style.display = '');
                 splitBtns.forEach(b => b.style.display = '');
+                if (zoomControls) zoomControls.style.display = '';
+                
+            } finally {
+                setZoomLevel(savedZoom);
+            }
             };
 
             // ===========================================
@@ -3111,7 +3527,11 @@
                                             />
                                         )}
                                     </div>
-                                    <span className="slash-separator" style={{ color: '#6b7280', fontWeight: 'bold', fontSize: '12px' }}>•</span>
+                                    <span className="slash-separator" style={{ color: '#6b7280', fontWeight: 'bold',
+                                    whiteSpace: 'normal',
+                                    wordBreak: 'normal',
+                                    overflowWrap: 'normal',
+                                    hyphens: 'manual', fontSize: '12px' }}>•</span>
                                     <div className="label-with-dropdown">
                                         <input
                                             type="text"
@@ -3204,7 +3624,9 @@
                                 >
                                     {parts[0]?.trim() ? formatLabelText(parts[0].trim()) : <span style={{color: '#9ca3af'}}>{isTop ? 'func.' : 'cat.'}</span>}
                                 </span>
-                                <span className="slash-separator" style={{ color: '#6b7280', fontWeight: 'bold', fontSize: '12px' }}>•</span>
+                                <span className="slash-separator" style={{ color: '#6b7280', fontWeight: 'bold',
+                                    whiteSpace: 'normal',
+                                    wordBreak: 'break-word', fontSize: '12px' }}>•</span>
                                 <span 
                                     className={displayClass}
                                     style={{ width: '80px', minWidth: '80px' }}
@@ -3429,8 +3851,8 @@
                             style={{
                                 width: '95px',
                                 textAlign: 'center',
-                                padding: '4px',
-                                fontSize: '11px',
+                                padding: 'calc(4px * var(--ent-text-scale, 1))',
+                                fontSize: 'calc(11px * var(--ent-text-scale, 1))',
                                 borderRadius: '4px',
                                 textTransform: isTop ? 'uppercase' : 'none',
                                 fontStyle: showAsEmpty ? 'italic' : 'normal',
@@ -3573,13 +3995,17 @@
                                     border: '2px solid #ef4444',
                                     borderRadius: '6px',
                                     color: '#b91c1c',
-                                    fontSize: '12px',
+                                    fontSize: 'calc(12px * var(--ent-text-scale, 1) * 0.85)',
+                                    lineHeight: 1.25,
                                     fontWeight: 'bold',
+                                    whiteSpace: 'normal',
+                                    wordBreak: 'break-word',
                                     textAlign: 'center',
                                     maxWidth: '150px',
+                                    minWidth: '150px',
                                     boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
                                 }}>
-                                    Constituyente dividido incorrectamente
+                                    Constituyente dividido incorrecta­mente
                                 </div>
                             </div>
                         ) : (
@@ -3678,16 +4104,84 @@
                             <div className="comparison-panel student">
                                 <h3>✎ Tu análisis</h3>
                                 <div className="comparison-tree">
-                                    <div className="tree-wrapper">
-                                        {renderStaticNode(tree, comparisonResults.nodeComparisons, 'root', false)}
+                                    {/* Controles de zoom para panel estudiante con wrapper sticky */}
+                                    <div className="zoom-controls-wrapper">
+                                        <div className={`zoom-controls visible`}>
+                                            <button 
+                                                className="zoom-btn" 
+                                                onClick={studentZoomOut} 
+                                                disabled={studentZoomLevel <= ZOOM_MIN}
+                                                title="Alejar"
+                                            >
+                                                −
+                                            </button>
+                                            <div 
+                                                className="zoom-indicator" 
+                                                onClick={studentZoomReset}
+                                                title="Restablecer zoom"
+                                            >
+                                                {studentZoomLevel}%
+                                            </div>
+                                            <button 
+                                                className="zoom-btn" 
+                                                onClick={studentZoomIn} 
+                                                disabled={studentZoomLevel >= ZOOM_MAX}
+                                                title="Acercar"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div 
+                                        className="zoom-container"
+                                        ref={studentZoomContainerRef}
+                                        style={{ zoom: studentZoomLevel / 100, '--ent-text-scale': studentTextScale }}
+                                    >
+                                        <div className="tree-wrapper">
+                                            {renderStaticNode(tree, comparisonResults.nodeComparisons, 'root', false)}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div className="comparison-panel model">
                                 <h3>✓ Análisis modelo</h3>
                                 <div className="comparison-tree">
-                                    <div className="tree-wrapper">
-                                        {renderStaticNode(modelTree, null, 'root', true)}
+                                    {/* Controles de zoom para panel modelo con wrapper sticky */}
+                                    <div className="zoom-controls-wrapper">
+                                        <div className={`zoom-controls visible`}>
+                                            <button 
+                                                className="zoom-btn" 
+                                                onClick={modelZoomOut} 
+                                                disabled={modelZoomLevel <= ZOOM_MIN}
+                                                title="Alejar"
+                                            >
+                                                −
+                                            </button>
+                                            <div 
+                                                className="zoom-indicator" 
+                                                onClick={modelZoomReset}
+                                                title="Restablecer zoom"
+                                            >
+                                                {modelZoomLevel}%
+                                            </div>
+                                            <button 
+                                                className="zoom-btn" 
+                                                onClick={modelZoomIn} 
+                                                disabled={modelZoomLevel >= ZOOM_MAX}
+                                                title="Acercar"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div 
+                                        className="zoom-container"
+                                        ref={modelZoomContainerRef}
+                                        style={{ zoom: modelZoomLevel / 100, '--ent-text-scale': modelTextScale }}
+                                    >
+                                        <div className="tree-wrapper">
+                                            {renderStaticNode(modelTree, null, 'root', true)}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -3864,9 +4358,58 @@
                     </div>
 
                     {!(exerciseMode && !modelTree) && (
-                        <div className="tree-container">
+                        <div className="tree-container" ref={treeContainerRef}>
+                            <div className={`autosave-indicator ${(isSaving || lastSaved) ? 'visible' : ''}`}>
+                                <span className={`autosave-dot ${isSaving ? 'saving' : ''}`}></span>
+                                <span className="autosave-text">
+                                    {isSaving ? (
+                                        <>
+                                            Autoguardando
+                                            <span className="autosave-ellipsis" aria-hidden="true">
+                                                <span>.</span><span>.</span><span>.</span>
+                                            </span>
+                                        </>
+                                    ) : (lastSaved ? `Guardado ${formatTimeAgo(lastSaved)}` : '')}
+                                </span>
+                            </div>
+
+                            {/* Controles de zoom con wrapper sticky */}
+                            <div className="zoom-controls-wrapper">
+                                <div className={`zoom-controls ${tree ? 'visible' : ''}`}>
+                                    <button 
+                                        className="zoom-btn" 
+                                        onClick={zoomOut} 
+                                        disabled={zoomLevel <= ZOOM_MIN}
+                                        title="Alejar (Ctrl/⌘ + −)"
+                                    >
+                                        −
+                                    </button>
+                                    <div 
+                                        className="zoom-indicator" 
+                                        onClick={zoomReset}
+                                        title="Restablecer zoom (Ctrl/⌘ + 0)"
+                                    >
+                                        {zoomLevel}%
+                                    </div>
+                                    <button 
+                                        className="zoom-btn" 
+                                        onClick={zoomIn} 
+                                        disabled={zoomLevel >= ZOOM_MAX}
+                                        title="Acercar (Ctrl/⌘ + +)"
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                            </div>
+                            
                             {tree ? (
-                                <div className="tree-wrapper">{renderNode(tree)}</div>
+                                <div 
+                                    className="zoom-container"
+                                    ref={zoomContainerRef}
+                                        style={{ zoom: zoomLevel / 100, '--ent-text-scale': textScale }}
+                                >
+                                    <div className="tree-wrapper">{renderNode(tree)}</div>
+                                </div>
                             ) : (
                                 <p style={{textAlign:'center', color:'#9ca3af', marginTop:'100px'}}>
                                     <strong>Escribe una expresión</strong> o carga un archivo .ent en <strong>Archivos</strong> para editarlo
@@ -3884,7 +4427,7 @@
                                 </>
                             ) : (
                                 <>
-                                    <button onClick={() => { setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); }} className="btn btn-new-analysis">✦ Nuevo análisis</button>
+                                    <button onClick={() => { setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); localStorage.removeItem('ent-autosave'); setLastSaved(null); }} className="btn btn-new-analysis">✦ Nuevo análisis</button>
                                     <button onClick={handleSaveJSON} className="btn btn-outline" disabled={!tree} title="Save (Ctrl+S)">💾 Guardar .ent</button>
                                     <button onClick={() => handleExport(false)} className="btn btn-primary">Exportar diagrama</button>
                                     <button onClick={() => handleExport(true)} className="btn btn-primary">Exportar diagrama arbóreo</button>
@@ -3955,19 +4498,39 @@
                                     <h4><span className="icon">⌘</span> Atajos de teclado</h4>
                                             <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '40px', marginTop: '8px' }}>
                                             <ul className="shortcut-list">
-                                                <li style={{ marginBottom: '10px', opacity: 0.7, fontSize: '11px', fontWeight: 'bold', color: '#6b7280' }}>WINDOWS / LINUX</li>
+                                                <li style={{ marginBottom: '10px', opacity: 0.7, fontSize: '11px', fontWeight: 'bold',
+                                    whiteSpace: 'normal',
+                                    wordBreak: 'break-word', color: '#6b7280' }}>WINDOWS / LINUX</li>
                                                 <li><span className="key">Ctrl</span>+<span className="key">Z</span> Deshacer</li>
                                                 <li><span className="key">Ctrl</span>+<span className="key">Y</span> Rehacer</li>
                                                 <li><span className="key">Ctrl</span>+<span className="key">S</span> Guardar</li>
+                                                <li><span className="key">Ctrl</span>+<span className="key">+</span> Acercar</li>
+                                                <li><span className="key">Ctrl</span>+<span className="key">−</span> Alejar</li>
+                                                <li><span className="key">Ctrl</span>+<span className="key">0</span> Restablecer zoom</li>
                                             </ul>
 
                                             <ul className="shortcut-list">
-                                                <li style={{ marginBottom: '10px', opacity: 0.7, fontSize: '11px', fontWeight: 'bold', color: '#6b7280' }}>macOS</li>
+                                                <li style={{ marginBottom: '10px', opacity: 0.7, fontSize: '11px', fontWeight: 'bold',
+                                    whiteSpace: 'normal',
+                                    wordBreak: 'break-word', color: '#6b7280' }}>macOS</li>
                                                 <li><span className="key">⌘</span>+<span className="key">Z</span> Deshacer</li>
                                                 <li><span className="key">⌘</span>+<span className="key">⇧</span>+<span className="key">Z</span> Rehacer</li>
                                                 <li><span className="key">⌘</span>+<span className="key">S</span> Guardar</li>
+                                                <li><span className="key">⌘</span>+<span className="key">+</span> Acercar</li>
+                                                <li><span className="key">⌘</span>+<span className="key">−</span> Alejar</li>
+                                                <li><span className="key">⌘</span>+<span className="key">0</span> Restablecer zoom</li>
                                             </ul>
                                         </div>
+                                </div>
+                                
+                                <div className="instruction-card">
+                                    <h4><span className="icon">⌕</span> Zoom</h4>
+                                    <ul>
+                                        <li>Usa los botones <code>[−]</code> y <code>[+]</code> en la esquina superior derecha para alejar/acercar.</li>
+                                        <li>Haz clic en el porcentaje para restablecer al 100%.</li>
+                                        <li>Rango de zoom: 40% a 200% en incrementos de 20%.</li>
+                                        <li>Los controles aparecen cuando hay un diagrama presente.</li>
+                                    </ul>
                                 </div>
 
                                 <div className="instruction-card">
@@ -3993,6 +4556,7 @@
                                         <li>Haz clic en <strong>📁 Archivos</strong> para abrir el gestor de archivos.</li>
                                         <li>Pestaña <strong>Local</strong>: guarda o carga archivos <code>.ent</code> desde tu computador.</li>
                                         <li>Pestaña <strong>Banco de ejemplos</strong>: conecta con Google Drive para acceder a ejemplos compartidos.</li>
+                                        <li><strong>Autoguardado</strong>: ENT guarda tu trabajo automáticamente (cada ~3 s). Si cierras la pestaña, al volver podrás restaurarlo.</li>
                                         <li>Atajo: <span className="key">Ctrl</span>/<span className="key">⌘</span>+<span className="key">S</span> guarda directamente.</li>
                                     </ul>
                                 </div>

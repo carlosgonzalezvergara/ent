@@ -1491,13 +1491,195 @@
                 padding: 16px;
             }
         }
+    
+
+        /* ===========================================
+           ZOOM CONTROLS
+           =========================================== */
+        .zoom-controls-wrapper {
+            position: sticky;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 0;
+            z-index: 100;
+            pointer-events: none;
+        }
+        .zoom-controls {
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        /* Slightly higher zoom controls in Exercise Mode comparison panels */
+        .comparison-tree .zoom-controls {
+            top: -40px;
+        }
+
+        .zoom-controls.visible {
+            opacity: 0.6;
+            pointer-events: auto;
+        }
+        .zoom-controls.visible:hover {
+            opacity: 1;
+        }
+        .zoom-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            border-radius: 4px;
+            transition: background 0.15s;
+        }
+        .zoom-btn:hover:not(:disabled) {
+            background: rgba(0,0,0,0.08);
+        }
+        .zoom-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .zoom-indicator {
+            min-width: 44px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.15s, color 0.15s;
+            user-select: none;
+        }
+        .zoom-indicator:hover {
+            background: rgba(0,0,0,0.08);
+            color: #374151;
+        }
+
+        /* Contenedor de zoom */
+        .zoom-container {
+            transform-origin: top left;
+            --ent-text-scale: 1;
+        }
+
+        /* Typography scaling curve at low zoom: text shrinks a bit faster than the rest */
+        .zoom-container .node-box {
+            font-size: calc(16px * var(--ent-text-scale));
+            line-height: calc(1.2 * var(--ent-text-scale));
+        }
+        .zoom-container .label-input,
+        .zoom-container .label-display {
+            font-size: calc(11px * var(--ent-text-scale));
+            line-height: calc(1.2 * var(--ent-text-scale));
+        }
+        .zoom-container .split-toggle-btn {
+            font-size: calc(11px * var(--ent-text-scale));
+            line-height: calc(14px * var(--ent-text-scale));
+        }
+        .zoom-container .dropdown-trigger {
+            font-size: calc(9px * var(--ent-text-scale));
+        }
+
+        /* Ajustes para tree-container con zoom */
+        .tree-container {
+            position: relative;
+            overflow: auto;
+            max-width: 100%;
+        }
+        /* Autosave indicator (as in Kilmer) */
+        .autosave-indicator{
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            z-index: 40;
+            background: rgba(255,255,255,0.95);
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 13px;
+            color: #374151;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transform: translateY(-4px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            pointer-events: none;
+        }
+        .autosave-indicator.visible{
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .autosave-dot{
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: #10b981;
+            display: inline-block;
+        }
+        .autosave-dot.saving{
+            background: #f59e0b;
+            animation: pulse 1s ease-in-out infinite;
+        }
+        @keyframes pulse{
+            0%,100%{ transform: scale(1); opacity: .7; }
+            50%{ transform: scale(1.35); opacity: 1; }
+        }
+
+
+        /* Ajustes para comparison-panel con zoom */
+        .comparison-panel {
+            position: relative;
+        }
+        /* Place zoom controls near the top edge of each comparison panel */
+        .comparison-panel .zoom-controls-wrapper {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            left: auto;
+            width: auto;
+            height: auto;
+            z-index: 200;
+            pointer-events: none; /* clicks only on the actual controls */
+        }
+        .comparison-panel .zoom-controls {
+            position: static; /* wrapper handles positioning */
+            top: auto;
+            right: auto;
+        }
+
+        .comparison-tree {
+            overflow: auto;
+            min-height: 200px;
+            max-height: 500px;
+        }
+
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useRef, useEffect, useCallback } = React;
+        const { useState, useRef, useEffect, useCallback, useMemo } = React;
 
         // ===========================================
         // LABEL CATALOG (English terminology)
@@ -1656,6 +1838,92 @@
             // References
             const fileInputRef = useRef(null);
             const exerciseInputRef = useRef(null);
+            const treeContainerRef = useRef(null);
+            const zoomContainerRef = useRef(null);
+            const studentZoomContainerRef = useRef(null);
+            const modelZoomContainerRef = useRef(null);
+
+            // Zoom state (for the 3 views)
+            const [zoomLevel, setZoomLevel] = useState(100);
+            // Typography scaling curve: at low zoom, shrink text a bit faster to avoid crowding
+            const textScale = useMemo(() => {
+                const z = zoomLevel / 100;
+                // extra factor => overall text scale ~= z^(1.30)
+                // (slightly less aggressive so the minimum zoom doesn't get too tiny)
+                return Math.pow(z, 0.24);
+            }, [zoomLevel]);
+
+            const [studentZoomLevel, setStudentZoomLevel] = useState(100);
+            const studentTextScale = useMemo(() => {
+                const z = studentZoomLevel / 100;
+                return Math.pow(z, 0.24);
+            }, [studentZoomLevel]);
+
+            
+            // Auto-save (localStorage)
+            const [isSaving, setIsSaving] = useState(false);
+            const [lastSaved, setLastSaved] = useState(null);
+            const formatTimeAgo = (dateObj) => {
+                if (!dateObj) return '';
+                const diffMs = Date.now() - dateObj.getTime();
+                const diffSec = Math.max(0, Math.floor(diffMs / 1000));
+                if (diffSec < 10) return 'just now';
+                if (diffSec < 60) return `${diffSec}s ago`;
+                const diffMin = Math.floor(diffSec / 60);
+                if (diffMin < 60) return `${diffMin} min ago`;
+                const diffHr = Math.floor(diffMin / 60);
+                return `${diffHr} h ago`;
+            };
+const [modelZoomLevel, setModelZoomLevel] = useState(100);
+            const modelTextScale = useMemo(() => {
+                const z = modelZoomLevel / 100;
+                return Math.pow(z, 0.24);
+            }, [modelZoomLevel]);
+
+
+            // Zoom constants
+            const ZOOM_MIN = 40;
+            const ZOOM_MAX = 200;
+            const ZOOM_STEP = 20;
+
+            // Zoom handlers (main view)
+            const zoomIn = useCallback(() => {
+                setZoomLevel(prev => Math.min(prev + ZOOM_STEP, ZOOM_MAX));
+            }, []);
+
+            const zoomOut = useCallback(() => {
+                setZoomLevel(prev => Math.max(prev - ZOOM_STEP, ZOOM_MIN));
+            }, []);
+
+            const zoomReset = useCallback(() => {
+                setZoomLevel(100);
+            }, []);
+
+            // Zoom handlers (student panel)
+            const studentZoomIn = useCallback(() => {
+                setStudentZoomLevel(prev => Math.min(prev + ZOOM_STEP, ZOOM_MAX));
+            }, []);
+
+            const studentZoomOut = useCallback(() => {
+                setStudentZoomLevel(prev => Math.max(prev - ZOOM_STEP, ZOOM_MIN));
+            }, []);
+
+            const studentZoomReset = useCallback(() => {
+                setStudentZoomLevel(100);
+            }, []);
+
+            // Zoom handlers (model panel)
+            const modelZoomIn = useCallback(() => {
+                setModelZoomLevel(prev => Math.min(prev + ZOOM_STEP, ZOOM_MAX));
+            }, []);
+
+            const modelZoomOut = useCallback(() => {
+                setModelZoomLevel(prev => Math.max(prev - ZOOM_STEP, ZOOM_MIN));
+            }, []);
+
+            const modelZoomReset = useCallback(() => {
+                setModelZoomLevel(100);
+            }, []);
 
             // ===========================================
             // UTILITIES
@@ -1881,6 +2149,9 @@
             // ===========================================
             const handleSaveJSON = useCallback(() => {
                 if (!tree) return;
+                // Manual save clears autosave
+                localStorage.removeItem('ent-autosave');
+                setLastSaved(null);
                 const blob = new Blob([JSON.stringify({ sentence, tree }, null, 2)], { type: 'application/json' });
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
@@ -1889,7 +2160,107 @@
                 a.click();
             }, [tree, sentence]);
 
+            
             // ===========================================
+            // AUTO-SAVE (localStorage)
+            // ===========================================
+            const debounce = (func, delay) => {
+                let timeout;
+                return (...args) => {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func(...args), delay);
+                };
+            };
+
+            const performAutoSave = useCallback(() => {
+                if (!tree || isUndoRedo.current) return;
+
+                setIsSaving(true);
+                const data = {
+                    sentence,
+                    tree,
+                    divisionMode,
+                    selectedCuts,
+                    exerciseMode,
+                    modelTree,
+                    timestamp: new Date().toISOString(),
+                    version: '1.0'
+                };
+
+                try {
+                    localStorage.setItem('ent-autosave', JSON.stringify(data));
+                    setLastSaved(new Date());
+                } catch (e) {
+                    // If storage is full or blocked, fail silently.
+                    console.warn('Auto-save failed:', e);
+                } finally {
+                    setIsSaving(false);
+                }
+            }, [tree, sentence, divisionMode, selectedCuts, exerciseMode, modelTree]);
+
+            const autoSaveDebounced = useRef(null);
+
+            useEffect(() => {
+                autoSaveDebounced.current = debounce(performAutoSave, 3000);
+                return () => {
+                    if (autoSaveDebounced.current?.cancel) autoSaveDebounced.current.cancel();
+                };
+            }, [performAutoSave]);
+
+            // Trigger autosave on relevant changes (main + exercise mode)
+            useEffect(() => {
+                if (!tree || isUndoRedo.current) return;
+                if (autoSaveDebounced.current) autoSaveDebounced.current();
+            }, [tree, sentence, divisionMode, selectedCuts, exerciseMode, modelTree]);
+
+            // Restore from auto-save on mount
+            useEffect(() => {
+                const saved = localStorage.getItem('ent-autosave');
+                if (!saved) return;
+
+                try {
+                    const data = JSON.parse(saved);
+                    const savedDate = new Date(data.timestamp);
+                    const minutesAgo = Math.round((Date.now() - savedDate.getTime()) / 60000);
+
+                    const message = minutesAgo < 1
+                        ? 'Unsaved work was found.\n\nDo you want to continue where you left off?'
+                        : `Unsaved work from ${minutesAgo} minute${minutesAgo === 1 ? '' : 's'} ago was found.\n\nDo you want to continue where you left off?`;
+
+                    const restore = confirm(message);
+
+                    if (restore) {
+                        isUndoRedo.current = true;
+
+                        setSentence(data.sentence || '');
+                        setTree(data.tree || null);
+                        setDivisionMode(data.divisionMode ?? null);
+                        setSelectedCuts(Array.isArray(data.selectedCuts) ? data.selectedCuts : []);
+                        setExerciseMode(!!data.exerciseMode);
+                        setModelTree(data.modelTree || null);
+                        setShowComparison(false);
+                        setComparisonResults(null);
+
+                        setHistory([]);
+                        setHistoryIndex(-1);
+
+                        setTimeout(() => { isUndoRedo.current = false; }, 0);
+                    } else {
+                        localStorage.removeItem('ent-autosave');
+                        setLastSaved(null);
+                    }
+                } catch (err) {
+                    console.error('Error restoring auto-save:', err);
+                    localStorage.removeItem('ent-autosave');
+                    setLastSaved(null);
+                }
+            }, []); // Only on mount
+
+            const clearAutosave = useCallback(() => {
+                localStorage.removeItem('ent-autosave');
+                setLastSaved(null);
+            }, []);
+// ===========================================
             // GOOGLE DRIVE API
             // ===========================================
             const GOOGLE_API_KEY = 'AIzaSyB1XWEgGpX-SWi6GlzqXcOOk7pFc6jLCsU';
@@ -2020,7 +2391,9 @@
                         setComparisonResults(null);
                         setHistory([JSON.stringify(newTree)]);
                         setHistoryIndex(0);
-                    } else {
+                        clearAutosave();
+                    }
+                    else {
                         // Load as reference (view/edit)
                         setSentence(data.sentence || '');
                         setTree(data.tree);
@@ -2029,6 +2402,7 @@
                         setShowComparison(false);
                         setHistory([JSON.stringify(data.tree)]);
                         setHistoryIndex(0);
+                        clearAutosave();
                     }
 
                     setShowFilesModal(false);
@@ -2528,7 +2902,9 @@
             };
 
             const newExercise = () => {
-                setExerciseMode(true);
+                
+                clearAutosave();
+setExerciseMode(true);
                 setModelTree(null);
                 setShowComparison(false);
                 setComparisonResults(null);
@@ -2545,10 +2921,22 @@
             // EXPORT
             // ===========================================
             const handleExport = async (isTechnical = false) => {
-                const treeWrapper = document.querySelector('.tree-wrapper');
+                const treeWrapper = document.querySelector('.tree-container .tree-wrapper');
                 if (!treeWrapper) return;
 
                 const treeContainer = document.querySelector('.tree-container');
+                const zoomContainer = treeContainer.querySelector('.zoom-container');
+
+                // Save current zoom and reset to 100% for consistent export
+                const savedZoom = zoomLevel;
+                setZoomLevel(100);
+
+
+                try {
+
+                // Wait for React to re-render at 100% zoom
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                await new Promise(resolve => setTimeout(resolve, 50));
                 const originalOverflow = treeContainer.style.overflow;
                 const originalWidth = treeContainer.style.width;
                 const originalMaxWidth = treeContainer.style.maxWidth;
@@ -2563,11 +2951,14 @@
                 const clearBtns = treeWrapper.querySelectorAll('.clear-text-btn');
                 const addBtns = treeWrapper.querySelectorAll('.add-node-btn');
                 const splitBtns = treeWrapper.querySelectorAll('.split-toggle-btn');
+                const zoomControls = treeContainer.querySelector('.zoom-controls');
 
                 undoBtns.forEach(b => b.style.visibility = 'hidden');
                 clearBtns.forEach(b => b.style.display = 'none');
                 addBtns.forEach(b => b.style.display = 'none');
                 splitBtns.forEach(b => b.style.display = 'none');
+
+                if (zoomControls) zoomControls.style.display = 'none';
 
                 let svg = null;
                 const connectors = treeWrapper.querySelectorAll('.connector-v, .v-line-stem');
@@ -2825,6 +3216,9 @@
                 treeContainer.style.width = originalWidth;
                 treeContainer.style.maxWidth = originalMaxWidth;
 
+
+                if (zoomControls) zoomControls.style.display = '';
+
                 if (isTechnical) treeWrapper.classList.remove('technical-mode');
                 if (svg) svg.remove();
                 treeWrapper.style.position = originalInlineStyles.treeWrapperPos;
@@ -2857,6 +3251,11 @@
                 clearBtns.forEach(b => b.style.display = '');
                 addBtns.forEach(b => b.style.display = '');
                 splitBtns.forEach(b => b.style.display = '');
+                }
+                finally {
+                    // Restore original zoom level after export
+                    setZoomLevel(savedZoom);
+                }
             };
 
             // ===========================================
@@ -3391,8 +3790,9 @@
                             style={{
                                 width: '95px',
                                 textAlign: 'center',
-                                padding: '4px',
-                                fontSize: '11px',
+                                fontSize: 'calc(11px * var(--ent-text-scale, 1))',
+                                lineHeight: '1.1',
+                                padding: 'calc(4px * var(--ent-text-scale, 1))',
                                 borderRadius: '4px',
                                 textTransform: isTop ? 'uppercase' : 'none',
                                 fontStyle: showAsEmpty ? 'italic' : 'normal',
@@ -3535,11 +3935,14 @@
                                     border: '2px solid #ef4444',
                                     borderRadius: '6px',
                                     color: '#b91c1c',
-                                    fontSize: '12px',
                                     fontWeight: 'bold',
                                     textAlign: 'center',
                                     maxWidth: '150px',
-                                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                                    fontSize: `calc(12px * var(--ent-text-scale, 1) * 0.85)`,
+                                    lineHeight: 1.25,
+                                    whiteSpace: 'normal',
+                                    wordBreak: 'break-word'
                                 }}>
                                     Constituent incorrectly divided
                                 </div>
@@ -3641,16 +4044,86 @@
                             <div className="comparison-panel student">
                                 <h3>✎ Your analysis</h3>
                                 <div className="comparison-tree">
-                                    <div className="tree-wrapper">
-                                        {renderStaticNode(tree, comparisonResults.nodeComparisons, 'root', false)}
+                                    {/* Zoom controls for student panel (sticky wrapper) */}
+                                    <div className="zoom-controls-wrapper">
+                                        <div className={`zoom-controls visible`}>
+                                            <button
+                                                className="zoom-btn"
+                                                onClick={studentZoomOut}
+                                                disabled={studentZoomLevel <= ZOOM_MIN}
+                                                title="Zoom out"
+                                            >
+                                                −
+                                            </button>
+                                            <div
+                                                className="zoom-indicator"
+                                                onClick={studentZoomReset}
+                                                title="Reset zoom"
+                                            >
+                                                {studentZoomLevel}%
+                                            </div>
+                                            <button
+                                                className="zoom-btn"
+                                                onClick={studentZoomIn}
+                                                disabled={studentZoomLevel >= ZOOM_MAX}
+                                                title="Zoom in"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        className="zoom-container"
+                                        ref={studentZoomContainerRef}
+                                        style={{ zoom: studentZoomLevel / 100, '--ent-text-scale': studentTextScale }}
+                                    >
+                                        <div className="tree-wrapper">
+                                            {renderStaticNode(tree, comparisonResults.nodeComparisons, 'root', false)}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div className="comparison-panel model">
                                 <h3>✓ Model analysis</h3>
                                 <div className="comparison-tree">
-                                    <div className="tree-wrapper">
-                                        {renderStaticNode(modelTree, null, 'root', true)}
+                                    {/* Zoom controls for model panel (sticky wrapper) */}
+                                    <div className="zoom-controls-wrapper">
+                                        <div className={`zoom-controls visible`}>
+                                            <button
+                                                className="zoom-btn"
+                                                onClick={modelZoomOut}
+                                                disabled={modelZoomLevel <= ZOOM_MIN}
+                                                title="Zoom out"
+                                            >
+                                                −
+                                            </button>
+                                            <div
+                                                className="zoom-indicator"
+                                                onClick={modelZoomReset}
+                                                title="Reset zoom"
+                                            >
+                                                {modelZoomLevel}%
+                                            </div>
+                                            <button
+                                                className="zoom-btn"
+                                                onClick={modelZoomIn}
+                                                disabled={modelZoomLevel >= ZOOM_MAX}
+                                                title="Zoom in"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        className="zoom-container"
+                                        ref={modelZoomContainerRef}
+                                        style={{ zoom: modelZoomLevel / 100, '--ent-text-scale': modelTextScale }}
+                                    >
+                                        <div className="tree-wrapper">
+                                            {renderStaticNode(modelTree, null, 'root', true)}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -3829,9 +4302,50 @@
                     </div>
 
                     {!(exerciseMode && !modelTree) && (
-                        <div className="tree-container">
+                        <div className="tree-container" ref={treeContainerRef}>
+                        <div className={`autosave-indicator ${(isSaving || lastSaved) ? 'visible' : ''}`}>
+                            <span className={`autosave-dot ${isSaving ? 'saving' : ''}`}></span>
+                            <span>
+                                {isSaving ? 'Saving…' : (lastSaved ? `Saved ${formatTimeAgo(lastSaved)}` : '')}
+                            </span>
+                        </div>
+
+                            {/* Zoom controls (sticky wrapper) */}
+                            <div className="zoom-controls-wrapper">
+                                <div className={`zoom-controls ${tree ? 'visible' : ''}`}>
+                                    <button
+                                        className="zoom-btn"
+                                        onClick={zoomOut}
+                                        disabled={zoomLevel <= ZOOM_MIN}
+                                        title="Zoom out"
+                                    >
+                                        −
+                                    </button>
+                                    <div
+                                        className="zoom-indicator"
+                                        onClick={zoomReset}
+                                        title="Reset zoom"
+                                    >
+                                        {zoomLevel}%
+                                    </div>
+                                    <button
+                                        className="zoom-btn"
+                                        onClick={zoomIn}
+                                        disabled={zoomLevel >= ZOOM_MAX}
+                                        title="Zoom in"
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                            </div>
+
                             {tree ? (
-                                <div className="tree-wrapper">{renderNode(tree)}</div>
+                                <div className="zoom-container"
+                                    ref={zoomContainerRef}
+                                    style={{ zoom: zoomLevel / 100, '--ent-text-scale': textScale }}
+                                >
+                                    <div className="tree-wrapper">{renderNode(tree)}</div>
+                                </div>
                             ) : (
                                 <p style={{textAlign:'center', color:'#9ca3af', marginTop:'100px'}}>
                                     <strong>Type a sentence</strong> or load an .ent file in <strong>Files</strong> to edit it
@@ -3849,7 +4363,7 @@
                                 </>
                             ) : (
                                 <>
-                                    <button onClick={() => { setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); }} className="btn btn-new-analysis">✦ New analysis</button>
+                                    <button onClick={() => { clearAutosave(); setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); }} className="btn btn-new-analysis">✦ New analysis</button>
                                     <button onClick={handleSaveJSON} className="btn btn-outline" disabled={!tree} title="Save (Ctrl+S)">💾 Save .ent</button>
                                     <button onClick={() => handleExport(false)} className="btn btn-primary">Export diagram</button>
                                     <button onClick={() => handleExport(true)} className="btn btn-primary">Export tree diagram</button>
@@ -3918,21 +4432,61 @@
 
                                 <div className="instruction-card">
                                     <h4><span className="icon">⌘</span> Keyboard shortcuts</h4>
-                                            <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '40px', marginTop: '8px' }}>
-                                            <ul className="shortcut-list">
-                                                <li style={{ marginBottom: '10px', opacity: 0.7, fontSize: '11px', fontWeight: 'bold', color: '#6b7280' }}>WINDOWS / LINUX</li>
-                                                <li><span className="key">Ctrl</span>+<span className="key">Z</span> Undo</li>
-                                                <li><span className="key">Ctrl</span>+<span className="key">Y</span> Redo</li>
-                                                <li><span className="key">Ctrl</span>+<span className="key">S</span> Save</li>
-                                            </ul>
+                                        <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '40px', marginTop: '8px' }}>
+                                        <ul className="shortcut-list">
+                                            <li
+                                            style={{
+                                            marginBottom: '10px',
+                                            opacity: 0.7,
+                                            fontSize: '11px',
+                                            fontWeight: 'bold',
+                                            whiteSpace: 'normal',
+                                            wordBreak: 'break-word',
+                                            color: '#6b7280'
+                                            }}
+                                            >
+                                            WINDOWS / LINUX
+                                            </li>
+                                            <li><span className="key">Ctrl</span>+<span className="key">Z</span> Undo</li>
+                                            <li><span className="key">Ctrl</span>+<span className="key">Y</span> Redo</li>
+                                            <li><span className="key">Ctrl</span>+<span className="key">S</span> Save</li>
+                                            <li><span className="key">Ctrl</span>+<span className="key">+</span> Zoom in</li>
+                                            <li><span className="key">Ctrl</span>+<span className="key">−</span> Zoom out</li>
+                                            <li><span className="key">Ctrl</span>+<span className="key">0</span> Reset zoom</li>
+                                        </ul>
 
-                                            <ul className="shortcut-list">
-                                                <li style={{ marginBottom: '10px', opacity: 0.7, fontSize: '11px', fontWeight: 'bold', color: '#6b7280' }}>macOS</li>
-                                                <li><span className="key">⌘</span>+<span className="key">Z</span> Undo</li>
-                                                <li><span className="key">⌘</span>+<span className="key">⇧</span>+<span className="key">Z</span> Redo</li>
-                                                <li><span className="key">⌘</span>+<span className="key">S</span> Save</li>
-                                            </ul>
+                                        <ul className="shortcut-list">
+                                            <li
+                                            style={{
+                                            marginBottom: '10px',
+                                            opacity: 0.7,
+                                            fontSize: '11px',
+                                            fontWeight: 'bold',
+                                            whiteSpace: 'normal',
+                                            wordBreak: 'break-word',
+                                            color: '#6b7280'
+                                            }}
+                                            >
+                                            macOS
+                                            </li>
+                                            <li><span className="key">⌘</span>+<span className="key">Z</span> Undo</li>
+                                            <li><span className="key">⌘</span>+<span className="key">⇧</span>+<span className="key">Z</span> Redo</li>
+                                            <li><span className="key">⌘</span>+<span className="key">S</span> Save</li>
+                                            <li><span className="key">⌘</span>+<span className="key">+</span> Zoom in</li>
+                                            <li><span className="key">⌘</span>+<span className="key">−</span> Zoom out</li>
+                                            <li><span className="key">⌘</span>+<span className="key">0</span> Reset zoom</li>
+                                        </ul>
                                         </div>
+                                </div>
+
+                                <div className="instruction-card">
+                                    <h4><span className="icon">⌕</span> Zoom</h4>
+                                    <ul>
+                                        <li>Use the <code>[−]</code> and <code>[+]</code> buttons in the top-right corner to zoom out/in.</li>
+                                        <li>Click the percentage to reset to 100%.</li>
+                                        <li>Zoom range: 40% to 200% in 20% increments.</li>
+                                        <li>The controls appear when a diagram is present.</li>
+                                    </ul>
                                 </div>
 
                                 <div className="instruction-card">
@@ -3959,7 +4513,9 @@
                                         <li><strong>Local</strong> tab: save or load <code>.ent</code> files from your computer.</li>
                                         <li><strong>Example bank</strong> tab: connect to Google Drive to access shared examples.</li>
                                         <li>Shortcut: <span className="key">Ctrl</span>/<span className="key">⌘</span>+<span className="key">S</span> saves directly.</li>
-                                    </ul>
+                                    
+                                <li><strong>Auto-save:</strong> your work is saved locally every ~3 seconds. When you reopen the page, ENT will offer to restore it.</li>
+</ul>
                                 </div>
 
                                 <div className="instruction-card">
