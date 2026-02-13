@@ -2035,7 +2035,7 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
                     .replace(/['']/g, "'")
                     // Irregular negative contractions (must come first)
                     .replace(/\bwon't\b/gi, 'will not')
-                    .replace(/\bcan't\b/gi, 'cannot')
+                    .replace(/\bcan't\b/gi, 'can not')
                     .replace(/\bshan't\b/gi, 'shall not')
                     .replace(/\bain't\b/gi, 'am not')
                     // Regular negative contractions: don't, doesn't, didn't, isn't, aren't, etc.
@@ -2045,7 +2045,7 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
                     .replace(/\b(I|you|we|they|he|she|it|who|what|that|there|here)'ve\b/gi, '$1 have')
                     .replace(/\b(you|we|they|who|what|that|there|here)'re\b/gi, '$1 are')
                     .replace(/\bI'm\b/gi, 'I am')
-                    .replace(/\blet's\b/gi, 'let us');
+                    .replace(/\bwanna\b/gi, 'want to');
                     // Note: 's and 'd are ambiguous and handled interactively
             };
 
