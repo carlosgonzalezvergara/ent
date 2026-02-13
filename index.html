@@ -306,7 +306,9 @@
         }
         @keyframes pulse{
             0%,100%{ transform: scale(1); opacity: .7; }
-            
+            50%{ transform: scale(1.35); opacity: 1; }
+        }
+        
         .autosave-text{ display:inline-flex; align-items:center; gap:0; }
         .autosave-ellipsis{
             display: inline-flex;
@@ -327,8 +329,6 @@
         @keyframes ellipsis{
             0%, 60%, 100% { opacity: 0.2; transform: translateY(0); }
             30% { opacity: 1; transform: translateY(-1px); }
-        }
-50%{ transform: scale(1.35); opacity: 1; }
         }
 
 
@@ -1137,6 +1137,106 @@
         }
 
         /* ===========================================
+           MODAL DE CLÍTICOS
+           =========================================== */
+        .clitic-modal {
+            width: min(560px, calc(100vw - 32px));
+            max-height: calc(100vh - 64px);
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,.18);
+            padding: 22px 22px 16px;
+            overflow-y: auto;
+        }
+
+        .clitic-title {
+            font-weight: 700;
+            color: #111827;
+            margin: 0 0 4px;
+            font-size: 16px;
+        }
+
+        .clitic-sub {
+            margin: 0 0 16px;
+            color: #6b7280;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .clitic-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .clitic-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            transition: background 0.15s ease, border-color 0.15s ease;
+        }
+
+        .clitic-item.unchecked {
+            opacity: 0.5;
+        }
+
+        .clitic-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            cursor: pointer;
+            accent-color: #374151;
+        }
+
+        .clitic-original {
+            font-weight: 600;
+            color: #111827;
+            font-size: 14px;
+            min-width: 90px;
+            flex-shrink: 0;
+        }
+
+        .clitic-arrow {
+            color: #9ca3af;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .clitic-input {
+            flex: 1;
+            padding: 7px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #111827;
+            background: #fff;
+            min-width: 120px;
+        }
+
+        .clitic-input:focus {
+            outline: none;
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 2px rgba(59,130,246,.15);
+        }
+
+        .clitic-item.unchecked .clitic-input {
+            background: #f3f4f6;
+            color: #9ca3af;
+        }
+
+        .clitic-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* ===========================================
            MODAL DE ARCHIVOS
            =========================================== */
         .files-modal {
@@ -1556,6 +1656,14 @@
             .results-summary {
                 padding: 16px;
             }
+
+            .clitic-item {
+                flex-wrap: wrap;
+            }
+
+            .clitic-original {
+                min-width: auto;
+            }
         }
 
         /* ===========================================
@@ -1877,6 +1985,10 @@
             const [selectedDriveFile, setSelectedDriveFile] = useState(null);
             const [collapsedFolders, setCollapsedFolders] = useState({});
 
+            // Detección de clíticos
+            const [cliticCandidates, setCliticCandidates] = useState([]);
+            const [showCliticModal, setShowCliticModal] = useState(false);
+
             // Referencias
             const fileInputRef = useRef(null);
             const exerciseInputRef = useRef(null);
@@ -1982,6 +2094,93 @@
                 // Usar .ent como extensión por defecto para JSON
                 const ext = extension === 'json' ? 'ent' : extension;
                 return `${words}.${ext}`;
+            };
+
+            // ===========================================
+            // DETECCIÓN DE CLÍTICOS
+            // ===========================================
+            const CLITIC_LIST = ['nos', 'les', 'los', 'las', 'me', 'te', 'se', 'le', 'lo', 'la', 'os'];
+            const SHORT_IMPERATIVE_STEMS = new Set([
+                'di', 'da', 've', 'haz', 'pon', 'sal', 'ten', 'ven', 'id', 'sé', 'se', 'oíd', 'ved', 'oye', 'oid'
+            ]);
+            const CLITIC_EXCLUSIONS = new Set([
+                'modelo', 'modelos', 'consuelo', 'consuelos', 'anzuelo', 'anzuelos',
+                'pañuelo', 'pañuelos', 'abuelo', 'abuelos', 'abuelo', 'abuelos',
+                'cielo', 'cielos', 'hielo', 'hielos', 'vuelo', 'vuelos',
+                'suelo', 'suelos', 'duelo', 'duelos', 'pelo', 'pelos',
+                'aquellos', 'aquellas', 'ellos', 'ellas',
+                'estilo', 'estilos', 'siglo', 'siglos', 'título', 'títulos',
+                'ejemplo', 'ejemplos', 'ángeles', 'tales',
+            ]);
+
+            const stripAccents = (str) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+            const extractClitics = (word) => {
+                let remaining = word.toLowerCase();
+                const clitics = [];
+                const MAX_CLITICS = 3;
+
+                for (let i = 0; i < MAX_CLITICS; i++) {
+                    let matched = false;
+                    for (const cl of CLITIC_LIST) {
+                        if (remaining.endsWith(cl) && remaining.length > cl.length) {
+                            clitics.unshift(cl);
+                            remaining = remaining.slice(0, -cl.length);
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if (!matched) break;
+                }
+
+                if (clitics.length > 0 && remaining.length >= 2) {
+                    // Preservar la grafía original de la raíz
+                    const originalStem = word.slice(0, remaining.length);
+                    return { stem: remaining, clitics, suggestion: originalStem + ' ' + clitics.join(' ') };
+                }
+                return null;
+            };
+
+            const detectCliticCandidates = (text) => {
+                const words = text.trim().split(/\s+/);
+                const candidates = [];
+                const PUNCT_RE = /^([¡¿"'«(]*)(.+?)([!?.,;:…"'»)"']*)$/;
+
+                for (let i = 0; i < words.length; i++) {
+                    const word = words[i];
+                    // Separar puntuación envolvente
+                    const match = word.match(PUNCT_RE);
+                    if (!match) continue;
+                    const [, puncBefore, core, puncAfter] = match;
+
+                    if (CLITIC_EXCLUSIONS.has(core.toLowerCase())) continue;
+
+                    const result = extractClitics(core);
+                    if (!result) continue;
+
+                    const stem = result.stem;
+                    const stemClean = stripAccents(stem);
+
+                    const shouldFlag =
+                        stemClean.endsWith('r') ||                      // infinitivo: hacerlo, decirle
+                        stemClean.endsWith('ndo') ||                    // gerundio: haciéndolo
+                        stemClean.endsWith('d') ||                      // imperativo vosotros: hacedlo
+                        /[áéíóú]/.test(core) ||                         // con tilde: dígame, póngalo
+                        SHORT_IMPERATIVE_STEMS.has(stemClean);          // imperativos cortos: dime, ponlo
+
+                    if (shouldFlag) {
+                        // Reincorporar puntuación: antes en la raíz, después en el último clítico
+                        const suggestion = puncBefore + result.suggestion + puncAfter;
+                        candidates.push({
+                            index: i,
+                            original: word,
+                            suggestion,
+                            checked: true
+                        });
+                    }
+                }
+
+                return candidates;
             };
 
             const normalizeSentence = (text) => {
@@ -2503,9 +2702,11 @@
             // ===========================================
             // ACCIONES PRINCIPALES
             // ===========================================
-            const startAnalysis = () => {
-                if (sentence.trim()) {
-                    const newTree = createEmptyTree(sentence);
+            const startAnalysis = (overrideSentence) => {
+                const text = overrideSentence !== undefined ? overrideSentence : sentence;
+                if (text.trim()) {
+                    if (overrideSentence !== undefined) setSentence(overrideSentence);
+                    const newTree = createEmptyTree(text);
                     setTree(newTree);
                     setDivisionMode(null);
                     setSelectedCuts([]);
@@ -2516,6 +2717,38 @@
                     setHistory([JSON.stringify(newTree)]);
                     setHistoryIndex(0);
                 }
+            };
+
+            const handleStartAnalysis = () => {
+                if (!sentence.trim()) return;
+                const candidates = detectCliticCandidates(sentence);
+                if (candidates.length > 0) {
+                    setCliticCandidates(candidates);
+                    setShowCliticModal(true);
+                } else {
+                    startAnalysis();
+                }
+            };
+
+            const confirmCliticSeparation = () => {
+                const words = sentence.trim().split(/\s+/);
+                const checked = cliticCandidates.filter(c => c.checked);
+                // Aplicar en orden inverso para preservar los índices
+                checked.sort((a, b) => b.index - a.index);
+                for (const c of checked) {
+                    const separated = c.suggestion.trim().split(/\s+/);
+                    words.splice(c.index, 1, ...separated);
+                }
+                const newSentence = words.join(' ');
+                setShowCliticModal(false);
+                setCliticCandidates([]);
+                startAnalysis(newSentence);
+            };
+
+            const skipCliticSeparation = () => {
+                setShowCliticModal(false);
+                setCliticCandidates([]);
+                startAnalysis();
             };
 
             const handleDivide = () => {
@@ -4311,10 +4544,10 @@
                                         value={sentence} 
                                         onChange={(e) => setSentence(e.target.value)} 
                                         placeholder="Escribe la expresión que quieres analizar" 
-                                        onKeyPress={(e) => e.key === 'Enter' && startAnalysis()} 
+                                        onKeyPress={(e) => e.key === 'Enter' && handleStartAnalysis()} 
                                     />
                                     <div className="analyze-undo-group">
-                                        <button onClick={startAnalysis} className="btn btn-primary">Analizar</button>
+                                        <button onClick={handleStartAnalysis} className="btn btn-primary">Analizar</button>
                                         <button 
                                             onClick={handleUndo} 
                                             className="btn btn-outline btn-icon" 
@@ -4761,6 +4994,50 @@
 
                                 <div className="files-modal-footer">
                                     <button className="btn btn-outline" onClick={() => setShowFilesModal(false)}>Cerrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {showCliticModal && (
+                        <div className="pos-overlay" onClick={skipCliticSeparation}>
+                            <div className="clitic-modal" onClick={(e) => e.stopPropagation()}>
+                                <h4 className="clitic-title">Posibles clíticos detectados</h4>
+                                <p className="clitic-sub">
+                                    Se han detectado palabras que podrían contener pronombres clíticos adjuntos.
+                                    Marca las que quieras separar y ajusta la separación si es necesario.
+                                </p>
+                                <div className="clitic-list">
+                                    {cliticCandidates.map((c, idx) => (
+                                        <div key={idx} className={`clitic-item ${!c.checked ? 'unchecked' : ''}`}>
+                                            <input
+                                                type="checkbox"
+                                                checked={c.checked}
+                                                onChange={() => {
+                                                    setCliticCandidates(prev => prev.map((item, j) =>
+                                                        j === idx ? { ...item, checked: !item.checked } : item
+                                                    ));
+                                                }}
+                                            />
+                                            <span className="clitic-original">{c.original}</span>
+                                            <span className="clitic-arrow">→</span>
+                                            <input
+                                                type="text"
+                                                className="clitic-input"
+                                                value={c.suggestion}
+                                                disabled={!c.checked}
+                                                onChange={(e) => {
+                                                    setCliticCandidates(prev => prev.map((item, j) =>
+                                                        j === idx ? { ...item, suggestion: e.target.value } : item
+                                                    ));
+                                                }}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="clitic-actions">
+                                    <button className="btn btn-outline" onClick={skipCliticSeparation}>Omitir</button>
+                                    <button className="btn btn-primary" onClick={confirmCliticSeparation}>Aplicar y analizar</button>
                                 </div>
                             </div>
                         </div>

@@ -237,9 +237,17 @@ From that point, the work consists of dividing constituents, assigning labels, a
 ENT has a history system that allows you to <strong>undo</strong> and <strong>redo</strong> actions. In the toolbar, next to the "Analyze" button, you'll find the <strong>↶</strong> (undo) and <strong>↷</strong> (redo) buttons. This allows you to easily correct errors or experiment with different analyses without fear of losing your work. You can also use keyboard shortcuts (see section 9).
 </p>
 
-<h3>Normalization</h3>
+<h3>Normalization and contraction handling</h3>
 <p>
-When starting the analysis, ENT applies light normalization of certain contractions and amalgams (for example, <em>del</em>/<em>al</em> or <em>conmigo</em> in Spanish), to allow precise syntactic division and separate labeling of their components.
+When starting the analysis, ENT processes the input text to separate contracted forms into their component words, making syntactic division more precise.
+</p>
+
+<p>
+<strong>Automatic expansion.</strong> Unambiguous contractions are expanded automatically: <em>won't</em> → <em>will not</em>, <em>can't</em> → <em>cannot</em>, <em>don't</em> → <em>do not</em> (and all other <em>n't</em> forms), <em>I'm</em> → <em>I am</em>, <em>'ll</em> → <em>will</em>, <em>'ve</em> → <em>have</em>, <em>'re</em> → <em>are</em>, and <em>let's</em> → <em>let us</em>.
+</p>
+
+<p>
+<strong>Ambiguous contractions.</strong> The forms <em>'s</em> and <em>'d</em> are ambiguous: <em>'s</em> can represent <em>is</em>, <em>has</em>, or a possessive marker, while <em>'d</em> can represent <em>would</em> or <em>had</em>. When ENT detects these forms, it displays a dialog listing each ambiguous word with a dropdown menu so the user can select the correct interpretation before the analysis begins (e.g., <em>he's</em> → <em>he is</em> / <em>he has</em> / possessive).
 </p>
 
 </section>
@@ -440,10 +448,5 @@ During export, ENT automatically hides interactive buttons so they don't appear 
 </p>
 </section>
 <footer>
-<p>Developed by Carlos González Vergara (<a href="mailto:cgonzalv@uc.cl">cgonzalv@uc.cl</a>)</p>
-<p>Departamento de Ciencias del Lenguaje • Facultad de Letras • Pontificia Universidad Católica de Chile</p>
-<p>2026 - Creative Commons BY-NC-ND 4.0</p>
-</footer>
-</div>
-</body>
-</html>
+<p>Developed by Carlos González Vergara (<a href="/cdn-cgi/l/email-protection#0f6c686061756e63794f7a6c216c63"><span class="__cf_email__" data-cfemail="2c4f4b4342564d405a6c594f024f40">[email&#160;protected]</span></a>)</p>
+<p>Departamento de Ciencias del Lenguaje • Facultad de Letras �

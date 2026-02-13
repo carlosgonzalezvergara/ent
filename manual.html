@@ -236,9 +236,17 @@ ENT incluye controles de zoom para acercar o alejar el diagrama sin modificar el
 ENT cuenta con un sistema de historial que permite <strong>deshacer</strong> y <strong>rehacer</strong> acciones. En la barra de herramientas, junto al botón "Analizar", encontrarás los botones <strong>↶</strong> (deshacer) y <strong>↷</strong> (rehacer). Esto te permite corregir errores fácilmente o experimentar con diferentes análisis sin temor a perder tu trabajo. También puedes usar los atajos de teclado (ver sección 9).
 </p>
 
-<h3>Normalización</h3>
+<h3>Normalización y separación de palabras gramaticales</h3>
 <p>
-Al iniciar el análisis, ENT aplica una normalización ligera de ciertas contracciones y amalgamas (por ejemplo, <em>del</em>/<em>al</em> o <em>conmigo</em>), para permitir una división sintáctica precisa y etiquetar por separado sus componentes.
+Al iniciar el análisis, ENT procesa el texto ingresado en dos etapas para facilitar la división sintáctica:
+</p>
+
+<p>
+<strong>Separación automática de contracciones.</strong> Ciertas palabras ortográficas que fusionan dos palabras gramaticales se separan automáticamente: <em>del</em> → <em>de el</em>, <em>al</em> → <em>a el</em>, <em>conmigo</em> → <em>con migo</em>, <em>contigo</em> → <em>con tigo</em> y <em>consigo</em> → <em>con sigo</em>.
+</p>
+
+<p>
+<strong>Detección de clíticos.</strong> ENT detecta también palabras que podrían contener pronombres clíticos adjuntos, como ocurre con los infinitivos (<em>hacerlo</em>), gerundios (<em>diciéndoselo</em>) e imperativos (<em>dime</em>, <em>pónganselo</em>). Cuando se detectan candidatos, el programa muestra un diálogo con cada palabra identificada, una casilla de verificación y un campo editable con la separación sugerida (por ejemplo, <em>hacerlo</em> → <em>hacer lo</em>). El usuario puede aceptar, corregir o descartar cada sugerencia antes de iniciar el análisis.
 </p>
 
 </section>
@@ -440,6 +448,5 @@ Durante la exportación, ENT oculta automáticamente los botones interactivos pa
 </p>
 </section>
 <footer>
-<p>Desarrollado por Carlos González Vergara (<a href="mailto:cgonzalv@uc.cl">cgonzalv@uc.cl</a>)</p>
-<p>Departamento de Ciencias del Lenguaje • Facultad de Letras • Pontificia Universidad Católica de Chile</p>
-<p>2026 - Licencia Creative Commons BY-NC-ND 4.0</p>
+<p>Desarrollado por Carlos González Vergara (<a href="/cdn-cgi/l/email-protection#7b181c1415011a170d3b0e18551817"><span class="__cf_email__" data-cfemail="7013171f1e0a111c063005135e131c">[email&#160;protected]</span></a>)</p>
+<p>Departamento de Ciencias del Lenguaje

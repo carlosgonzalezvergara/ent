@@ -1072,6 +1072,88 @@
         }
 
         /* ===========================================
+           CONTRACTION DISAMBIGUATION MODAL
+           =========================================== */
+        .contraction-modal {
+            width: min(560px, calc(100vw - 32px));
+            max-height: calc(100vh - 64px);
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,.18);
+            padding: 22px 22px 16px;
+            overflow-y: auto;
+        }
+
+        .contraction-title {
+            font-weight: 700;
+            color: #111827;
+            margin: 0 0 4px;
+            font-size: 16px;
+        }
+
+        .contraction-sub {
+            margin: 0 0 16px;
+            color: #6b7280;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .contraction-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .contraction-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+
+        .contraction-original {
+            font-weight: 600;
+            color: #111827;
+            font-size: 14px;
+            min-width: 80px;
+            flex-shrink: 0;
+        }
+
+        .contraction-arrow {
+            color: #9ca3af;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .contraction-select {
+            flex: 1;
+            padding: 7px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #111827;
+            background: #fff;
+            min-width: 140px;
+        }
+
+        .contraction-select:focus {
+            outline: none;
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 2px rgba(59,130,246,.15);
+        }
+
+        .contraction-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* ===========================================
            FILES MODAL
            =========================================== */
         .files-modal {
@@ -1490,6 +1572,14 @@
             .results-summary {
                 padding: 16px;
             }
+
+            .contraction-item {
+                flex-wrap: wrap;
+            }
+
+            .contraction-original {
+                min-width: auto;
+            }
         }
     
 
@@ -1835,6 +1925,10 @@
             const [selectedDriveFile, setSelectedDriveFile] = useState(null);
             const [collapsedFolders, setCollapsedFolders] = useState({});
 
+            // Contraction disambiguation
+            const [contractionCandidates, setContractionCandidates] = useState([]);
+            const [showContractionModal, setShowContractionModal] = useState(false);
+
             // References
             const fileInputRef = useRef(null);
             const exerciseInputRef = useRef(null);
@@ -1946,14 +2040,72 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
                     .replace(/\bain't\b/gi, 'am not')
                     // Regular negative contractions: don't, doesn't, didn't, isn't, aren't, etc.
                     .replace(/n't\b/gi, ' not')
-                    // Verb contractions with pronouns
+                    // Unambiguous verb contractions
                     .replace(/\b(I|you|we|they|he|she|it|who|what|that|there|here)'ll\b/gi, '$1 will')
-                    .replace(/\b(I|you|we|they|he|she|it|who|what|that|there|here)'d\b/gi, '$1 would')
                     .replace(/\b(I|you|we|they|he|she|it|who|what|that|there|here)'ve\b/gi, '$1 have')
                     .replace(/\b(you|we|they|who|what|that|there|here)'re\b/gi, '$1 are')
-                    .replace(/\b(he|she|it|who|what|that|there|here)'s\b/gi, '$1 is')
                     .replace(/\bI'm\b/gi, 'I am')
                     .replace(/\blet's\b/gi, 'let us');
+                    // Note: 's and 'd are ambiguous and handled interactively
+            };
+
+            // ===========================================
+            // CONTRACTION DISAMBIGUATION
+            // ===========================================
+            const CONTRACTION_PUNCT_RE = /^([("'¿¡]*)(.+?)([!?.,;:…"')"']*)$/;
+
+            const detectAmbiguousContractions = (text) => {
+                const normalized = text.replace(/['']/g, "'");
+                const words = normalized.trim().split(/\s+/);
+                const candidates = [];
+
+                for (let i = 0; i < words.length; i++) {
+                    const word = words[i];
+                    const match = word.match(CONTRACTION_PUNCT_RE);
+                    if (!match) continue;
+                    const [, puncBefore, core, puncAfter] = match;
+                    const lower = core.toLowerCase();
+
+                    // Skip let's (always "let us", handled automatically)
+                    if (lower === "let's") continue;
+
+                    if (/'s$/i.test(core)) {
+                        const base = core.slice(0, -2);
+                        candidates.push({
+                            index: i,
+                            original: word,
+                            core,
+                            base,
+                            puncBefore,
+                            puncAfter,
+                            type: 's',
+                            expansion: 'is',
+                            options: [
+                                { value: 'is', label: `${base} is` },
+                                { value: 'has', label: `${base} has` },
+                                { value: 'possessive', label: `${core} (possessive — no change)` }
+                            ]
+                        });
+                    } else if (/'d$/i.test(core)) {
+                        const base = core.slice(0, -2);
+                        candidates.push({
+                            index: i,
+                            original: word,
+                            core,
+                            base,
+                            puncBefore,
+                            puncAfter,
+                            type: 'd',
+                            expansion: 'would',
+                            options: [
+                                { value: 'would', label: `${base} would` },
+                                { value: 'had', label: `${base} had` }
+                            ]
+                        });
+                    }
+                }
+
+                return candidates;
             };
 
             const createEmptyTree = (text) => ({
@@ -2451,9 +2603,11 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
             // ===========================================
             // MAIN ACTIONS
             // ===========================================
-            const startAnalysis = () => {
-                if (sentence.trim()) {
-                    const newTree = createEmptyTree(sentence);
+            const startAnalysis = (overrideSentence) => {
+                const text = overrideSentence !== undefined ? overrideSentence : sentence;
+                if (text.trim()) {
+                    if (overrideSentence !== undefined) setSentence(overrideSentence);
+                    const newTree = createEmptyTree(text);
                     setTree(newTree);
                     setDivisionMode(null);
                     setSelectedCuts([]);
@@ -2464,6 +2618,43 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
                     setHistory([JSON.stringify(newTree)]);
                     setHistoryIndex(0);
                 }
+            };
+
+            const handleStartAnalysis = () => {
+                if (!sentence.trim()) return;
+                const candidates = detectAmbiguousContractions(sentence);
+                if (candidates.length > 0) {
+                    setContractionCandidates(candidates);
+                    setShowContractionModal(true);
+                } else {
+                    startAnalysis();
+                }
+            };
+
+            const confirmContractionExpansion = () => {
+                const normalized = sentence.replace(/['']/g, "'");
+                const words = normalized.trim().split(/\s+/);
+                // Apply in reverse order to preserve indices
+                const sorted = [...contractionCandidates].sort((a, b) => b.index - a.index);
+                for (const c of sorted) {
+                    if (c.expansion === 'possessive') {
+                        // Keep as-is (with straight apostrophe)
+                        words[c.index] = c.puncBefore + c.core + c.puncAfter;
+                    } else {
+                        const expanded = c.base + ' ' + c.expansion;
+                        words[c.index] = c.puncBefore + expanded + c.puncAfter;
+                    }
+                }
+                const newSentence = words.join(' ');
+                setShowContractionModal(false);
+                setContractionCandidates([]);
+                startAnalysis(newSentence);
+            };
+
+            const skipContractionExpansion = () => {
+                setShowContractionModal(false);
+                setContractionCandidates([]);
+                startAnalysis();
             };
 
             const handleDivide = () => {
@@ -4255,10 +4446,10 @@ setExerciseMode(true);
                                         value={sentence} 
                                         onChange={(e) => setSentence(e.target.value)} 
                                         placeholder="Type the expression you want to analyze" 
-                                        onKeyPress={(e) => e.key === 'Enter' && startAnalysis()} 
+                                        onKeyPress={(e) => e.key === 'Enter' && handleStartAnalysis()} 
                                     />
                                     <div className="analyze-undo-group">
-                                        <button onClick={startAnalysis} className="btn btn-primary">Analyze</button>
+                                        <button onClick={handleStartAnalysis} className="btn btn-primary">Analyze</button>
                                         <button 
                                             onClick={handleUndo} 
                                             className="btn btn-outline btn-icon" 
@@ -4718,6 +4909,43 @@ setExerciseMode(true);
 
                                 <div className="files-modal-footer">
                                     <button className="btn btn-outline" onClick={() => setShowFilesModal(false)}>Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {showContractionModal && (
+                        <div className="pos-overlay" onClick={skipContractionExpansion}>
+                            <div className="contraction-modal" onClick={(e) => e.stopPropagation()}>
+                                <h4 className="contraction-title">Ambiguous contractions detected</h4>
+                                <p className="contraction-sub">
+                                    The following words contain contractions that can be interpreted in more than one way.
+                                    Please select the correct expansion for each.
+                                </p>
+                                <div className="contraction-list">
+                                    {contractionCandidates.map((c, idx) => (
+                                        <div key={idx} className="contraction-item">
+                                            <span className="contraction-original">{c.original}</span>
+                                            <span className="contraction-arrow">→</span>
+                                            <select
+                                                className="contraction-select"
+                                                value={c.expansion}
+                                                onChange={(e) => {
+                                                    setContractionCandidates(prev => prev.map((item, j) =>
+                                                        j === idx ? { ...item, expansion: e.target.value } : item
+                                                    ));
+                                                }}
+                                            >
+                                                {c.options.map(opt => (
+                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="contraction-actions">
+                                    <button className="btn btn-outline" onClick={skipContractionExpansion}>Skip</button>
+                                    <button className="btn btn-primary" onClick={confirmContractionExpansion}>Apply and analyze</button>
                                 </div>
                             </div>
                         </div>
