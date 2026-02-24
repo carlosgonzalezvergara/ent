@@ -388,8 +388,6 @@
             color: #334155; 
         }
 
-        .label-input.label-top { text-transform: uppercase; }
-
         .label-display {
             min-width: 95px;
             text-align: center;
@@ -408,10 +406,6 @@
             background-color: #f1f5f9;
             border: 1px solid #cbd5e1;
             color: #334155;
-        }
-
-        .label-display.label-top {
-            text-transform: uppercase;
         }
 
         .label-display:hover {
@@ -3067,6 +3061,10 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
 
                 results.totalElements = results.totalNodes + results.totalLabelTopParts + results.totalLabelBottomParts;
                 results.correctElements = results.correctNodes + results.correctLabelTopParts + results.correctLabelBottomParts;
+                if (results.totalElements > 0) {
+                    results.totalElements -= 1;
+                    results.correctElements -= 1;
+                    }
                 results.errorElements = results.totalElements - results.correctElements;
                 results.accuracy = results.totalElements ? (results.correctElements / results.totalElements) : 1;
 
@@ -3545,7 +3543,7 @@ setExerciseMode(true);
                 const hasValue = value.trim() !== '';
                 const isEditing = editingLabel === `${node.id}-${field}`;
                 const dropdownId = `${node.id}-${field}`;
-                const baseClass = `label-input ${isTop ? 'label-top' : ''} ${hasValue ? (isTop ? 'has-value-top' : 'has-value-bottom') : ''}`;
+                const baseClass = `label-input ${hasValue ? (isTop ? 'has-value-top' : 'has-value-bottom') : ''}`;
 
                 const setValue = (newVal) => setTree(prev => updateNode(prev, node.id, { [field]: newVal }));
 
@@ -4555,7 +4553,7 @@ setExerciseMode(true);
                             ) : (
                                 <>
                                     <button onClick={() => { clearAutosave(); setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); }} className="btn btn-new-analysis">✦ New analysis</button>
-                                    <button onClick={handleSaveJSON} className="btn btn-outline" disabled={!tree} title="Save (Ctrl+S)">💾 Save .ent</button>
+                                    <button onClick={handleSaveJSON} className="btn btn-primary" disabled={!tree} title="Save (Ctrl+S)">💾 Save .ent</button>
                                     <button onClick={() => handleExport(false)} className="btn btn-primary">Export diagram</button>
                                     <button onClick={() => handleExport(true)} className="btn btn-primary">Export tree diagram</button>
                                 </>
@@ -4774,7 +4772,7 @@ setExerciseMode(true);
                                             <div className="files-btn-row">
                                                 <button 
                                                     onClick={() => { fileInputRef.current.click(); setShowFilesModal(false); }} 
-                                                    className="btn btn-outline"
+                                                    className="btn btn-primary"
                                                 >
                                                     📂 Load .ent
                                                 </button>
