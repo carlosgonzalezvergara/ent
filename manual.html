@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-
 <html lang="es">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Manual de Referencia Técnica - ENT</title>
-<style>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Manual de Referencia Técnica - ENT</title>
+    <style>
         :root {
             --primary-dark: #1f2937;
             --accent-blue: #2563eb;
@@ -142,14 +141,42 @@
             box-shadow: 0 1px 0 rgba(0,0,0,0.1);
         }
 
+        /* Estilos del Footer actualizados */
         footer {
             margin-top: 100px;
             padding-top: 40px;
             border-top: 1px solid var(--border);
             font-family: system-ui, sans-serif;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             text-align: center;
             color: #6b7280;
+        }
+
+        footer p {
+            margin: 5px 0;
+            color: #4b5563;
+        }
+
+        footer strong {
+            color: var(--primary-dark);
+        }
+
+        footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s ease, text-decoration 0.2s ease;
+        }
+
+        footer a:hover {
+            color: var(--accent-purple);
+            text-decoration: underline;
+        }
+
+        .footer-copyright {
+            margin-top: 20px !important;
+            font-size: 0.85rem;
+            color: #9ca3af !important;
         }
 
         @media (max-width: 600px) {
@@ -160,293 +187,294 @@
 </head>
 <body>
 <div class="container">
-<header>
-<h1>ENT<br/>Manual de usuario y referencia técnica</h1>
-</header>
-<nav class="toc">
-<strong>Índice de Contenidos</strong>
-<ul>
-<li><a href="#fundamentos">1. Fundamentos del sistema</a></li>
-<li><a href="#gestion-local">2. Gestión de archivos locales</a></li>
-<li><a href="#proceso">3. Proceso de análisis</a></li>
-<li><a href="#division">4. Mecánicas de división</a></li>
-<li><a href="#etiquetado">5. El sistema de etiquetas</a></li>
-<li><a href="#nodos-extra">6. Nodos extra y elisión</a></li>
-<li><a href="#ejercitacion">7. Modo ejercitación</a></li>
-<li><a href="#banco-nube">8. Banco de ejemplos (Google Drive)</a></li>
-<li><a href="#atajos">9. Atajos de teclado</a></li>
-<li><a href="#exportacion">10. Exportación de resultados</a></li>
-</ul>
-</nav>
-<section id="fundamentos">
-<h2>1. Fundamentos del sistema</h2>
-<p>
-<strong>ENT</strong> es un entorno digital diseñado para asistir en el análisis sintáctico basado en el modelo de <strong>constituyentes inmediatos</strong>. Su objetivo es ofrecer una interfaz intuitiva para la creación de diagramas arbóreos.
+    <header>
+        <h1>ENT<br/>Manual de usuario y referencia técnica</h1>
+    </header>
+    <nav class="toc">
+        <strong>Índice de Contenidos</strong>
+        <ul>
+            <li><a href="#fundamentos">1. Fundamentos del sistema</a></li>
+            <li><a href="#gestion-local">2. Gestión de archivos locales</a></li>
+            <li><a href="#proceso">3. Proceso de análisis</a></li>
+            <li><a href="#division">4. Mecánicas de división</a></li>
+            <li><a href="#etiquetado">5. El sistema de etiquetas</a></li>
+            <li><a href="#nodos-extra">6. Nodos extra y elisión</a></li>
+            <li><a href="#ejercitacion">7. Modo ejercitación</a></li>
+            <li><a href="#banco-nube">8. Banco de ejemplos (Google Drive)</a></li>
+            <li><a href="#atajos">9. Atajos de teclado</a></li>
+            <li><a href="#exportacion">10. Exportación de resultados</a></li>
+        </ul>
+    </nav>
+    <section id="fundamentos">
+        <h2>1. Fundamentos del sistema</h2>
+        <p>
+            <strong>ENT</strong> es un entorno digital diseñado para asistir en el análisis sintáctico basado en el modelo de <strong>constituyentes inmediatos</strong>. Su objetivo es ofrecer una interfaz intuitiva para la creación de diagramas arbóreos.
         </p>
-<p>
+        <p>
             ENT es un asistente manual: el usuario toma todas las decisiones analíticas, mientras que el programa gestiona la visualización jerárquica, la consistencia de las etiquetas y la generación de imágenes.
         </p>
-</section>
-<section id="gestion-local">
-<h2>2. Gestión de archivos locales</h2>
-<p>
+    </section>
+    <section id="gestion-local">
+        <h2>2. Gestión de archivos locales</h2>
+        <p>
             ENT permite guardar y cargar el progreso del análisis mediante archivos con extensión propia <code>.ent</code>. Estos archivos son documentos de datos JSON, que preservan la estructura del árbol, las etiquetas y la expresión original.
         </p>
-<ul>
-<li><strong>Guardar:</strong> Accede a <span class="ui-element">📁 Archivos</span> y selecciona <span class="ui-element">💾 Guardar .ent</span>. El archivo se descargará en tu ordenador.</li>
-<li><strong>Cargar:</strong> Usa la opción <span class="ui-element">📂 Cargar .ent</span> para importar un análisis previamente guardado.</li>
-</ul><p>Al guardar, el nombre del archivo se genera automáticamente a partir de las primeras palabras de la oración.</p>
+        <ul>
+            <li><strong>Guardar:</strong> Accede a <span class="ui-element">📁 Archivos</span> y selecciona <span class="ui-element">💾 Guardar .ent</span>. El archivo se descargará en tu ordenador.</li>
+            <li><strong>Cargar:</strong> Usa la opción <span class="ui-element">📂 Cargar .ent</span> para importar un análisis previamente guardado.</li>
+        </ul>
+        <p>Al guardar, el nombre del archivo se genera automáticamente a partir de las primeras palabras de la oración.</p>
 
-<div class="note-block">
-  <p><strong>Autoguardado</strong></p>
-  <p>
-    Además del guardado manual en <code>.ent</code>, ENT realiza un <strong>autoguardado local</strong> de tu trabajo (modo principal y modo ejercitación).
-    Si cierras la pestaña o el navegador, al volver a abrir ENT te ofrecerá <strong>restaurar</strong> el último estado guardado automáticamente.
-    Este autoguardado se almacena en el navegador (no se sube a ninguna nube), por lo que puede perderse si borras los datos del sitio.
-  </p>
-</div>
+        <div class="note-block">
+            <p><strong>Autoguardado</strong></p>
+            <p>
+                Además del guardado manual en <code>.ent</code>, ENT realiza un <strong>autoguardado local</strong> de tu trabajo (modo principal y modo ejercitación).
+                Si cierras la pestaña o el navegador, al volver a abrir ENT te ofrecerá <strong>restaurar</strong> el último estado guardado automáticamente.
+                Este autoguardado se almacena en el navegador (no se sube a ninguna nube), por lo que puede perderse si borras los datos del sitio.
+            </p>
+        </div>
+    </section>
+    <section id="proceso">
+        <h2>3. Proceso de análisis</h2>
 
-</section>
-<section id="proceso">
-<h2>3. Proceso de análisis</h2>
+        <h3>Crear el árbol base</h3>
+        <ol>
+            <li>Escribe la oración en el campo principal.</li>
+            <li>Haz clic en <strong>Analizar</strong>. Se crea el nodo raíz con la oración completa.</li>
+        </ol>
 
-<h3>Crear el árbol base</h3>
-<ol>
-  <li>Escribe la oración en el campo principal.</li>
-  <li>Haz clic en <strong>Analizar</strong>. Se crea el nodo raíz con la oración completa.</li>
-</ol>
+        <p>
+            Desde ese punto, el trabajo consiste en ir dividiendo constituyentes, asignar etiquetas y, cuando sea necesario, introducir nodos extra o marcar núcleos.
+        </p>
 
-<p>
-Desde ese punto, el trabajo consiste en ir dividiendo constituyentes, asignar etiquetas y, cuando sea necesario, introducir nodos extra o marcar núcleos.
-</p>
+        <h3>Zoom</h3>
+        <p>
+            ENT incluye controles de zoom para acercar o alejar el diagrama sin modificar el análisis. Los botones aparecen en la esquina superior derecha del área del diagrama cuando hay un árbol cargado.
+        </p>
+        <ul>
+            <li>Usa los botones <code>[−]</code> y <code>[+]</code> para alejar/acercar.</li>
+            <li>Haz clic en el porcentaje para restablecer al 100%.</li>
+            <li>Rango de zoom: 40% a 200% en incrementos de 20%.</li>
+            <li>En el modo ejercitación, cada panel de comparación tiene su propio zoom.</li>
+        </ul>
 
-<h3>Zoom</h3>
-<p>
-ENT incluye controles de zoom para acercar o alejar el diagrama sin modificar el análisis. Los botones aparecen en la esquina superior derecha del área del diagrama cuando hay un árbol cargado.
-</p>
-<ul>
-  <li>Usa los botones <code>[−]</code> y <code>[+]</code> para alejar/acercar.</li>
-  <li>Haz clic en el porcentaje para restablecer al 100%.</li>
-  <li>Rango de zoom: 40% a 200% en incrementos de 20%.</li>
-  <li>En el modo ejercitación, cada panel de comparación tiene su propio zoom.</li>
-</ul>
+        <h3>Deshacer y rehacer</h3>
+        <p>
+            ENT cuenta con un sistema de historial que permite <strong>deshacer</strong> y <strong>rehacer</strong> acciones. En la barra de herramientas, junto al botón "Analizar", encontrarás los botones <strong>↶</strong> (deshacer) y <strong>↷</strong> (rehacer). Esto te permite corregir errores fácilmente o experimentar con diferentes análisis sin temor a perder tu trabajo. También puedes usar los atajos de teclado (ver sección 9).
+        </p>
 
-<h3>Deshacer y rehacer</h3>
-<p>
-ENT cuenta con un sistema de historial que permite <strong>deshacer</strong> y <strong>rehacer</strong> acciones. En la barra de herramientas, junto al botón "Analizar", encontrarás los botones <strong>↶</strong> (deshacer) y <strong>↷</strong> (rehacer). Esto te permite corregir errores fácilmente o experimentar con diferentes análisis sin temor a perder tu trabajo. También puedes usar los atajos de teclado (ver sección 9).
-</p>
+        <h3>Normalización y separación de palabras gramaticales</h3>
+        <p>
+            Al iniciar el análisis, ENT procesa el texto ingresado en dos etapas para facilitar la división sintáctica:
+        </p>
 
-<h3>Normalización y separación de palabras gramaticales</h3>
-<p>
-Al iniciar el análisis, ENT procesa el texto ingresado en dos etapas para facilitar la división sintáctica:
-</p>
+        <p>
+            <strong>Separación automática de contracciones.</strong> Ciertas palabras ortográficas que fusionan dos palabras gramaticales se separan automáticamente: <em>del</em> → <em>de el</em>, <em>al</em> → <em>a el</em>, <em>conmigo</em> → <em>con migo</em>, <em>contigo</em> → <em>con tigo</em> y <em>consigo</em> → <em>con sigo</em>.
+        </p>
 
-<p>
-<strong>Separación automática de contracciones.</strong> Ciertas palabras ortográficas que fusionan dos palabras gramaticales se separan automáticamente: <em>del</em> → <em>de el</em>, <em>al</em> → <em>a el</em>, <em>conmigo</em> → <em>con migo</em>, <em>contigo</em> → <em>con tigo</em> y <em>consigo</em> → <em>con sigo</em>.
-</p>
+        <p>
+            <strong>Detección de clíticos.</strong> ENT detecta también palabras que podrían contener pronombres clíticos adjuntos, como ocurre con los infinitivos (<em>hacerlo</em>), gerundios (<em>diciéndoselo</em>) e imperativos (<em>dime</em>, <em>pónganselo</em>). Cuando se detectan candidatos, el programa muestra un diálogo con cada palabra identificada, una casilla de verificación y un campo editable con la separación sugerida (por ejemplo, <em>hacerlo</em> → <em>hacer lo</em>). El usuario puede aceptar, corregir o descartar cada sugerencia antes de iniciar el análisis.
+        </p>
+    </section>
+    <section id="division">
+        <h2>4. Mecánicas de división</h2>
 
-<p>
-<strong>Detección de clíticos.</strong> ENT detecta también palabras que podrían contener pronombres clíticos adjuntos, como ocurre con los infinitivos (<em>hacerlo</em>), gerundios (<em>diciéndoselo</em>) e imperativos (<em>dime</em>, <em>pónganselo</em>). Cuando se detectan candidatos, el programa muestra un diálogo con cada palabra identificada, una casilla de verificación y un campo editable con la separación sugerida (por ejemplo, <em>hacerlo</em> → <em>hacer lo</em>). El usuario puede aceptar, corregir o descartar cada sugerencia antes de iniciar el análisis.
-</p>
+        <h3>Dividir un nodo terminal</h3>
+        <p>
+            Para dividir un constituyente, haz clic sobre una caja de texto de color celeste (el nodo). ENT entra en “modo división” y muestra barras de corte entre palabras para que selecciones las fronteras entre constituyentes.
+        </p>
 
-</section>
-<section id="division">
-<h2>4. Mecánicas de división</h2>
+        <ul>
+            <li><strong>Selecciona uno o más cortes</strong> (entre palabras). Cada corte crea un nuevo constituyente.</li>
+            <li>Haz clic en <strong>Dividir</strong> para generar los nodos hijos.</li>
+            <li>Usa <strong>Cancelar</strong> si entraste al modo división por error.</li>
+        </ul>
 
-<h3>Dividir un nodo terminal</h3>
-<p>
-Para dividir un constituyente, haz clic sobre una caja de texto de color celeste (el nodo). ENT entra en “modo división” y muestra barras de corte entre palabras para que selecciones las fronteras entre constituyentes.
-</p>
+        <h3>Consolidar para impedir división</h3>
+        <p>
+            Si un nodo tiene más de una palabra ortográfica pero es solo una palabra sintáctica, puedes “consolidarlo” para que no se divida. Usa para eso el botón <strong>∪</strong> que encontrarás en la parte superior izquierda del nodo. El nodo se volverá de color blanco y aparecerá el botón <strong>÷</strong> en su esquina superior izquierda, por si lo quieres volver a dejar como divisible.
+        </p>
 
-<ul>
-  <li><strong>Selecciona uno o más cortes</strong> (entre palabras). Cada corte crea un nuevo constituyente.</li>
-  <li>Haz clic en <strong>Dividir</strong> para generar los nodos hijos.</li>
-  <li>Usa <strong>Cancelar</strong> si entraste al modo división por error.</li>
-</ul>
+        <h3>Deshacer una división</h3>
+        <p>
+            Si has dividido un nodo en sus nodos hijos, pero te arrepientes y quieres volver atrás, usa el botón <strong>↩</strong> (<em>Deshacer división</em>). Esto elimina los hijos del nodo.
+        </p>
 
-<h3>Consolidar para impedir división</h3>
-<p>
-Si un nodo tiene más de una palabra ortográfica pero es solo una palabra sintáctica, puedes “consolidarlo” para que no se divida. Usa para eso el botón <strong>∪</strong> que encontrarás en la parte superior izquierda del nodo. El nodo se volverá de color blanco y aparecerá el botón <strong>÷</strong> en su esquina superior izquierda, por si lo quieres volver a dejar como divisible.
-</p>
+        <h3>Expandir un nodo de una palabra</h3>
+        <p>
+            Si un nodo terminal tiene <strong>una sola palabra</strong>, ENT permite “expandirlo” para agregar constituyentes debajo. Esto es útil para añadir, por ejemplo, constituyentes elididos. Pulsa el botón <strong>÷</strong> de la esquina superior izquierda. Esto generará un nodo hijo idéntico y aparecerá un botón <strong>+</strong> bajo el nodo, lo que te permitirá agregar constituyentes extra.
+        </p>
 
-<h3>Deshacer una división</h3>
-<p>
-Si has dividido un nodo en sus nodos hijos, pero te arrepientes y quieres volver atrás, usa el botón <strong>↩</strong> (<em>Deshacer división</em>). Esto elimina los hijos del nodo.
-</p>
+        <h3>Eliminar el texto de un nodo</h3>
+        <p>
+            Si lo prefieres, puedes eliminar el texto de un nodo una vez que lo has dividido. Para eso, puedes usar el botón <strong>⨉</strong> rojo que encontrarás en la esquina superior derecha del nodo.
+        </p>
 
-<h3>Expandir un nodo de una palabra</h3>
-<p>
-Si un nodo terminal tiene <strong>una sola palabra</strong>, ENT permite “expandirlo” para agregar constituyentes debajo. Esto es útil para añadir, por ejemplo, constituyentes elididos. Pulsa el botón <strong>÷</strong> de la esquina superior izquierda. Esto generará un nodo hijo idéntico y aparecerá un botón <strong>+</strong> bajo el nodo, lo que te permitirá agregar constituyentes extra.
-</p>
+        <h3>Marcar un nodo como núcleo</h3>
+        <p>
+            En los nodos terminales (los que no tienen hijos), encontrarás un botón <strong>N</strong> que permite marcar ese constituyente como <strong>núcleo</strong>. Al activarlo, el texto del nodo se mostrará en negrita, lo que facilita identificar visualmente los núcleos de cada sintagma en el diagrama.
+        </p>
+    </section>
+    <section id="etiquetado">
+        <h2>5. El sistema de etiquetas</h2>
 
-<h3>Eliminar el texto de un nodo</h3>
-<p>
-Si lo prefieres, puedes eliminar el texto de un nodo una vez que lo has dividido. Para eso, puedes usar el botón <strong>⨉</strong> rojo que encontrarás en la esquina superior derecha del nodo.
-</p>
+        <p>
+            Cada nodo ofrece dos campos: etiqueta superior (<strong>función</strong>) y etiqueta inferior (<strong>categoría</strong>). Para editar, haz clic en la etiqueta y escribe el valor que corresponda.
+        </p>
 
-<h3>Marcar un nodo como núcleo</h3>
-<p>
-En los nodos terminales (los que no tienen hijos), encontrarás un botón <strong>N</strong> que permite marcar ese constituyente como <strong>núcleo</strong>. Al activarlo, el texto del nodo se mostrará en negrita, lo que facilita identificar visualmente los núcleos de cada sintagma en el diagrama.
-</p>
+        <h3>Acceso a sugerencias</h3>
+        <p>
+            En las etiquetas puedes abrir el selector de sugerencias apretando el botón <strong>☰</strong>. Esto abrirá una ventana con un listado en el que podrás buscar las etiquetas que prefieras. Al elegir una etiqueta, ENT inserta su abreviatura en el espacio correspondiente.
+        </p>
 
-</section>
-<section id="etiquetado">
-<h2>5. El sistema de etiquetas</h2>
+        <h3>Etiquetas divididas (dos valores)</h3>
+        <p>
+            Puedes dividir una etiqueta en dos partes usando el botón <strong>⇄</strong>. Esto sirve cuando necesitas dos valores en la misma banda (por ejemplo, dos funciones o dos categorías). ENT conserva el separador y renderiza ambas partes.
+        </p>
 
-<p>
-Cada nodo ofrece dos campos: etiqueta superior (<strong>función</strong>) y etiqueta inferior (<strong>categoría</strong>). Para editar, haz clic en la etiqueta y escribe el valor que corresponda.
-</p>
+        <h3>Formato dentro de etiquetas</h3>
+        <p>
+            ENT permite editar el formato del texto de las etiquetas:
+        </p>
+        <ul>
+            <li><strong>Negrita</strong>: <code>**texto**</code></li>
+            <li><em>Cursiva</em>: <code>*texto*</code></li>
+            <li>Texto en <sub>subíndice</sub>: <code>_i_</code></li>
+            <li>Texto en <sup>superíndice</sup>: <code>¨n¨</code></li>
+        </ul>
+    </section>
+    <section id="nodos-extra">
+        <h2>6. Nodos extra y elisión</h2>
 
-<h3>Acceso a sugerencias</h3>
-<p>
-En las etiquetas puedes abrir el selector de sugerencias apretando el botón <strong>☰</strong>. Esto abrirá una ventana con un listado en el que podrás buscar las etiquetas que prefieras. Al elegir una etiqueta, ENT inserta su abreviatura en el espacio correspondiente.
-</p>
+        <h3>Agregar un nodo hijo “extra”</h3>
+        <p>
+            Cuando un nodo ya ha sido dividido, aparecerá un botón <strong>+</strong> en su parte inferior, que permite insertar un nuevo hijo con texto libre (por ejemplo, para constituyentes elididos).
+        </p>
 
-<h3>Etiquetas divididas (dos valores)</h3>
-<p>
-Puedes dividir una etiqueta en dos partes usando el botón <strong>⇄</strong>. Esto sirve cuando necesitas dos valores en la misma banda (por ejemplo, dos funciones o dos categorías). ENT conserva el separador y renderiza ambas partes.
-</p>
+        <p>
+            Al crear un nodo extra, ENT te pedirá el texto y luego la posición: <em>Al inicio</em>, <em>Al final</em> o <em>Entre “X” y “Y”</em>. Así puedes decidir exactamente dónde se inserta dentro de los hijos del nodo.
+        </p>
+    </section>
+    <section id="ejercitacion">
+        <h2>7. Modo ejercitación</h2>
 
-<h3>Formato dentro de etiquetas</h3>
-<p>
-ENT permite editar el formato del texto de las etiquetas:
-</p>
-<ul>
-  <li><strong>Negrita</strong>: <code>**texto**</code></li>
-  <li><em>Cursiva</em>: <code>*texto*</code></li>
-  <li>Texto en <sub>subíndice</sub>: <code>_i_</code></li>
-  <li>Texto en <sup>superíndice</sup>: <code>¨n¨</code></li>
-</ul>
+        <p>
+            El modo ejercitación permite analizar una oración teniendo un <strong>modelo de referencia</strong> en segundo plano. Se trabaja con un árbol “en blanco” y luego se compara con la solución.
+        </p>
+        <p>
+            Al entrar en el modo ejercitación, se te pedirá que cargues un archivo .ent desde tu computador o desde un banco de ejemplos.
+        </p>
 
-</section>
-<section id="nodos-extra">
-<h2>6. Nodos extra y elisión</h2>
+        <h3>Cómo iniciar un ejercicio desde el Banco de ejemplos</h3>
+        <ol>
+            <li>Abre <span class="ui-element">☁️ Banco de ejemplos</span> desde el panel de archivos o con el botón correspondiente del modo ejercitación.</li>
+            <li>Pega la URL de la carpeta de Google Drive que contiene los archivos .ent</li>
+            <li>Selecciona un archivo <code>.ent</code> del banco.</li>
+            <li>Elige <strong>📚 Cargar como ejercicio</strong>. ENT crea un árbol vacío para el estudiante y guarda el árbol del archivo como modelo.</li>
+        </ol>
 
-<h3>Agregar un nodo hijo “extra”</h3>
-<p>
-Cuando un nodo ya ha sido dividido, aparecerá un botón <strong>+</strong> en su parte inferior, que permite insertar un nuevo hijo con texto libre (por ejemplo, para constituyentes elididos).
-</p>
+        <h3>Comparación con el modelo</h3>
+        <p>
+            Cuando termines el análisis del ejercicio, usa <strong>Comparar</strong>. ENT mostrará dos paneles: <strong>Tu análisis</strong>, a la izquierda, y <strong>Análisis modelo</strong>, a la derecha. Las diferencias se marcan visualmente: en verde aparecen los constituyentes y etiquetas bien identificados; en rojo, los erróneos.
+        </p>
+        <p>
+            En la parte superior de la vista de comparación podrás ver la cantidad de aciertos y el porcentaje de logro en relación con el modelo.
+        </p>
 
-<p>
-Al crear un nodo extra, ENT te pedirá el texto y luego la posición: <em>Al inicio</em>, <em>Al final</em> o <em>Entre “X” y “Y”</em>. Así puedes decidir exactamente dónde se inserta dentro de los hijos del nodo.
-</p>
+        <p>
+            Desde esa vista puedes volver a editar (<strong>← Volver a editar</strong>) o iniciar otro ejercicio (<strong>Nuevo ejercicio</strong>).
+        </p>
+    </section>
+    <section id="banco-nube">
+        <h2>8. Banco de ejemplos (Google Drive)</h2>
+        <p>Permite a los docentes crear una biblioteca de ejercicios accesible desde la nube.</p>
 
+        <p>
+            Si no dispones de una carpeta propia, ENT ofrece un enlace al <strong>banco de ejemplos de ENT</strong>, una carpeta de prueba con ejercicios de muestra que puedes usar para familiarizarte con el sistema.
+        </p>
 
-</section>
-<section id="ejercitacion">
-<h2>7. Modo ejercitación</h2>
+        <div class="note-block">
+            <p><strong>Requisitos mínimos</strong></p>
+            <ul>
+                <li>Los archivos del banco deben estar guardados como <code>.ent</code>.</li>
+                <li>La carpeta de Drive debe estar compartida como <strong>“Cualquier persona con el enlace”</strong> (permiso de lectura).</li>
+                <li>En ENT basta con pegar el enlace (o el ID) de la carpeta y conectar.</li>
+            </ul>
 
-<p>
-El modo ejercitación permite analizar una oración teniendo un <strong>modelo de referencia</strong> en segundo plano. Se trabaja con un árbol “en blanco” y luego se compara con la solución.</p>
-<p>Al entrar en el modo ejercitación, se te pedirá que cargues un archivo .ent desde tu computador o desde un banco de ejemplos.
-</p>
+            <p><strong>Cómo se organiza y qué se muestra</strong></p>
+            <ul>
+                <li>ENT lista los <code>.ent</code> que estén en la <strong>raíz</strong> de la carpeta.</li>
+                <li>También revisa las <strong>subcarpetas directas</strong> (un nivel) y lista sus <code>.ent</code>.</li>
+                <li>Si una subcarpeta no es accesible o no contiene <code>.ent</code>, simplemente no aparece en el banco.</li>
+            </ul>
+        </div>
+    </section>
+    <section id="atajos">
+        <h2>9. Atajos de Teclado</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Acción</th>
+                    <th>Windows / Linux</th>
+                    <th>macOS</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Deshacer</strong></td>
+                    <td><span class="key-tip">Ctrl</span>+<span class="key-tip">Z</span></td>
+                    <td><span class="key-tip">⌘</span>+<span class="key-tip">Z</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Rehacer</strong></td>
+                    <td><span class="key-tip">Ctrl</span>+<span class="key-tip">Y</span> o <span class="key-tip">Ctrl</span>+<span class="key-tip">⇧</span>+<span class="key-tip">Z</span></td>
+                    <td><span class="key-tip">⌘</span>+<span class="key-tip">⇧</span>+<span class="key-tip">Z</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Guardar .ent</strong></td>
+                    <td><span class="key-tip">Ctrl</span>+<span class="key-tip">S</span></td>
+                    <td><span class="key-tip">⌘</span>+<span class="key-tip">S</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Zoom in</strong></td>
+                    <td><span class="key-tip">Ctrl</span>+<span class="key-tip">+</span></td>
+                    <td><span class="key-tip">⌘</span>+<span class="key-tip">+</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Zoom out</strong></td>
+                    <td><span class="key-tip">Ctrl</span>+<span class="key-tip">−</span></td>
+                    <td><span class="key-tip">⌘</span>+<span class="key-tip">−</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Restablecer zoom (100%)</strong></td>
+                    <td><span class="key-tip">Ctrl</span>+<span class="key-tip">0</span></td>
+                    <td><span class="key-tip">⌘</span>+<span class="key-tip">0</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
 
-<h3>Cómo iniciar un ejercicio desde el Banco de ejemplos</h3>
-<ol>
-  <li>Abre <span class="ui-element">☁️ Banco de ejemplos</span> desde el panel de archivos o con el botón correspondiente del modo ejercitación.</li>
-  <li>Pega la URL de la carpeta de Google Drive que contiene los archivos .ent </li>
-  <li>Selecciona un archivo <code>.ent</code> del banco.</li>
-  <li>Elige <strong>📚 Cargar como ejercicio</strong>. ENT crea un árbol vacío para el estudiante y guarda el árbol del archivo como modelo.</li>
-</ol>
+    <section id="exportacion">
+        <h2>10. Exportación de resultados</h2>
 
-<h3>Comparación con el modelo</h3>
-<p>
-Cuando termines el análisis del ejercicio, usa <strong>Comparar</strong>. ENT mostrará dos paneles: <strong>Tu análisis</strong>, a la izquierda, y <strong>Análisis modelo</strong>, a la derecha. Las diferencias se marcan visualmente: en verde aparecen los constituyentes y etiquetas bien identificados; en rojo, los erróneos.
-</p>
-<p> En la parte superior de la vista de comparación podrás ver la cantidad de aciertos y el porcentaje de logro en relación con el modelo</p>
+        <p>
+            ENT exporta el análisis como imagen PNG con <strong>fondo transparente</strong> para que puedas insertarlo en documentos, diapositivas o artículos.
+        </p>
 
-<p>
-Desde esa vista puedes volver a editar (<strong>← Volver a editar</strong>) o iniciar otro ejercicio (<strong>Nuevo ejercicio</strong>).
-</p>
-</section>
-<section id="banco-nube">
-<h2>8. Banco de ejemplos (Google Drive)</h2>
-<p>Permite a los docentes crear una biblioteca de ejercicios accesible desde la nube.</p>
+        <ul>
+            <li><strong>Exportar diagrama</strong>: exporta el diagrama tal como se ve (con cajas).</li>
+            <li><strong>Exportar diagrama arbóreo</strong>: exporta un estilo más “limpio” (modo técnico), ocultando controles de edición y reduciendo elementos visuales no esenciales.</li>
+        </ul>
 
-<p>
-Si no dispones de una carpeta propia, ENT ofrece un enlace al <strong>banco de ejemplos de ENT</strong>, una carpeta de prueba con ejercicios de muestra que puedes usar para familiarizarte con el sistema.
-</p>
+        <p>
+            Durante la exportación, ENT oculta automáticamente los botones interactivos para que no aparezcan en la imagen final.
+        </p>
+    </section>
 
-<div class="note-block">
-  <p><strong>Requisitos mínimos</strong></p>
-  <ul>
-    <li>Los archivos del banco deben estar guardados como <code>.ent</code>.</li>
-    <li>La carpeta de Drive debe estar compartida como <strong>“Cualquier persona con el enlace”</strong> (permiso de lectura).</li>
-    <li>En ENT basta con pegar el enlace (o el ID) de la carpeta y conectar.</li>
-  </ul>
+    <footer>
+        <p>Desarrollado por <strong>Carlos González Vergara</strong> (<a href="mailto:cgonzalv@uc.cl">cgonzalv@uc.cl</a>)</p>
+        <p>Departamento de Ciencias del Lenguaje &bull; Facultad de Letras <br> Pontificia Universidad Católica de Chile</p>
+    </footer>
 
-  <p><strong>Cómo se organiza y qué se muestra</strong></p>
-  <ul>
-    <li>ENT lista los <code>.ent</code> que estén en la <strong>raíz</strong> de la carpeta.</li>
-    <li>También revisa las <strong>subcarpetas directas</strong> (un nivel) y lista sus <code>.ent</code>.</li>
-    <li>Si una subcarpeta no es accesible o no contiene <code>.ent</code>, simplemente no aparece en el banco.</li>
-  </ul>
-
-</div>
-</section>
-<section id="atajos">
-<h2>9. Atajos de Teclado</h2>
-<table>
-<thead>
-<tr>
-<th>Acción</th>
-<th>Windows / Linux</th>
-<th>macOS</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Deshacer</strong></td>
-<td><span class="key-tip">Ctrl</span>+<span class="key-tip">Z</span></td>
-<td><span class="key-tip">⌘</span>+<span class="key-tip">Z</span></td>
-</tr>
-<tr>
-<td><strong>Rehacer</strong></td>
-<td><span class="key-tip">Ctrl</span>+<span class="key-tip">Y</span> o <span class="key-tip">Ctrl</span>+<span class="key-tip">⇧</span>+<span class="key-tip">Z</span></td>
-<td><span class="key-tip">⌘</span>+<span class="key-tip">⇧</span>+<span class="key-tip">Z</span></td>
-</tr>
-<tr>
-<td><strong>Guardar .ent</strong></td>
-<td><span class="key-tip">Ctrl</span>+<span class="key-tip">S</span></td>
-<td><span class="key-tip">⌘</span>+<span class="key-tip">S</span></td>
-</tr>
-
-<tr>
-<td><strong>Zoom in</strong></td>
-<td><span class="key-tip">Ctrl</span>+<span class="key-tip">+</span></td>
-<td><span class="key-tip">⌘</span>+<span class="key-tip">+</span></td>
-</tr>
-<tr>
-<td><strong>Zoom out</strong></td>
-<td><span class="key-tip">Ctrl</span>+<span class="key-tip">−</span></td>
-<td><span class="key-tip">⌘</span>+<span class="key-tip">−</span></td>
-</tr>
-<tr>
-<td><strong>Restablecer zoom (100%)</strong></td>
-<td><span class="key-tip">Ctrl</span>+<span class="key-tip">0</span></td>
-<td><span class="key-tip">⌘</span>+<span class="key-tip">0</span></td>
-</tr>
-
-</tbody>
-</table>
-</section>
-
-<section id="exportacion">
-<h2>10. Exportación de resultados</h2>
-
-<p>
-ENT exporta el análisis como imagen PNG con <strong>fondo transparente</strong> para que puedas insertarlo en documentos, diapositivas o artículos.
-</p>
-
-<ul>
-  <li><strong>Exportar diagrama</strong>: exporta el diagrama tal como se ve (con cajas).</li>
-  <li><strong>Exportar diagrama arbóreo</strong>: exporta un estilo más “limpio” (modo técnico), ocultando controles de edición y reduciendo elementos visuales no esenciales.</li>
-</ul>
-
-<p>
-Durante la exportación, ENT oculta automáticamente los botones interactivos para que no aparezcan en la imagen final.
-</p>
-</section>
-<footer>
-<p>Desarrollado por Carlos González Vergara (<a href="/cdn-cgi/l/email-protection#7b181c1415011a170d3b0e18551817"><span class="__cf_email__" data-cfemail="7013171f1e0a111c063005135e131c">[email&#160;protected]</span></a>)</p>
-<p>Departamento de Ciencias del Lenguaje
+</div> </body>
+</html>
