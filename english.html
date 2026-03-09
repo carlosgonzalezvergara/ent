@@ -329,7 +329,6 @@
             flex-direction: column; 
             align-items: center; 
             position: relative; 
-            z-index: 2; 
             margin: 0 10px; 
             width: fit-content; 
         }
@@ -884,21 +883,6 @@
         /* ===========================================
            EXERCISE MODE
            =========================================== */
-        .exercise-banner {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-left: 6px solid #8b5cf6;
-            color: #111827;
-            padding: 16px 24px;
-            border-radius: 10px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-
         .exercise-banner-text {
             display: flex;
             flex-direction: column;
@@ -1886,6 +1870,91 @@
         // Sections for bottom label (categories)
         const CAT_SECTIONS = ['phrases', 'wordClasses', 'determiners', 'pronouns', 'clausesCat'];
 
+        // Utility debounce (outside component to avoid recreation)
+        const debounce = (func, delay) => {
+            let timeout;
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func(...args), delay);
+            };
+        };
+
+        // Reusable text-scale computation for multiple zoom views
+        const computeTextScale = (zoomLevel) => {
+            const z = zoomLevel / 100;
+            if (z >= 1) return 1;
+            return Math.pow(z, 0.24);
+        };
+
+        // ===========================================
+        // FOOTER COMPONENT (outside SyntaxTreeBuilder to avoid re-mount on every render)
+        // ===========================================
+        const Footer = () => (
+            <footer className="footer">
+                <p>Carlos González Vergara (<strong><a href="mailto:cgonzalv@uc.cl">cgonzalv@uc.cl</a></strong>)</p>
+                <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener noreferrer">
+                    <img 
+                        src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-nc-nd.svg" 
+                        alt="CC BY-NC-ND 4.0" 
+                    />
+                </a>
+            </footer>
+        );
+
+        // ===========================================
+        // LABELDROPDOWN COMPONENT (outside SyntaxTreeBuilder for stable identity)
+        // ===========================================
+        const LabelDropdown = ({ isTop, onSelect, onClose, searchValue, onSearchChange }) => {
+            const sections = isTop ? FUNC_SECTIONS : CAT_SECTIONS;
+            const searchLower = searchValue.toLowerCase();
+            
+            const filteredSections = sections.map(sectionKey => {
+                const section = GTG_LABELS[sectionKey];
+                const filtered = section.items.filter(item => 
+                    item.abbr.toLowerCase().includes(searchLower) ||
+                    item.full.toLowerCase().includes(searchLower)
+                );
+                return { ...section, items: filtered, key: sectionKey };
+            }).filter(s => s.items.length > 0);
+
+            return (
+                <div className="label-dropdown" onClick={(e) => e.stopPropagation()}>
+                    <div className="dropdown-search">
+                        <input
+                            type="text"
+                            placeholder="Search label..."
+                            value={searchValue}
+                            onChange={(e) => onSearchChange(e.target.value)}
+                            autoFocus
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    </div>
+                    {filteredSections.map(section => (
+                        <div key={section.key} className="dropdown-section">
+                            <div className="dropdown-section-title">{section.title}</div>
+                            {section.items.map(item => (
+                                <div 
+                                    key={item.abbr}
+                                    className="dropdown-item"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        e.preventDefault();
+                                        onSelect(item.abbr);
+                                    }}
+                                >
+                                    <span className="dropdown-item-abbr">{item.abbr}</span>
+                                    <span className="dropdown-item-full">{item.full}</span>
+                                </div>
+                            ))}
+                        </div>
+                    ))}
+                    {filteredSections.length === 0 && (
+                        <div className="dropdown-empty">No results</div>
+                    )}
+                </div>
+            );
+        };
+
         const SyntaxTreeBuilder = () => {
             // ===========================================
             // STATE
@@ -1933,19 +2002,10 @@
 
             // Zoom state (for the 3 views)
             const [zoomLevel, setZoomLevel] = useState(100);
-            // Typography scaling curve: at low zoom, shrink text a bit faster to avoid crowding
-            const textScale = useMemo(() => {
-                const z = zoomLevel / 100;
-                // extra factor => overall text scale ~= z^(1.30)
-                // (slightly less aggressive so the minimum zoom doesn't get too tiny)
-                return Math.pow(z, 0.24);
-            }, [zoomLevel]);
+            const textScale = useMemo(() => computeTextScale(zoomLevel), [zoomLevel]);
 
             const [studentZoomLevel, setStudentZoomLevel] = useState(100);
-            const studentTextScale = useMemo(() => {
-                const z = studentZoomLevel / 100;
-                return Math.pow(z, 0.24);
-            }, [studentZoomLevel]);
+            const studentTextScale = useMemo(() => computeTextScale(studentZoomLevel), [studentZoomLevel]);
 
             
             // Auto-save (localStorage)
@@ -1963,10 +2023,7 @@
                 return `${diffHr} h ago`;
             };
 const [modelZoomLevel, setModelZoomLevel] = useState(100);
-            const modelTextScale = useMemo(() => {
-                const z = modelZoomLevel / 100;
-                return Math.pow(z, 0.24);
-            }, [modelZoomLevel]);
+            const modelTextScale = useMemo(() => computeTextScale(modelZoomLevel), [modelZoomLevel]);
 
 
             // Zoom constants
@@ -1974,44 +2031,16 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
             const ZOOM_MAX = 200;
             const ZOOM_STEP = 20;
 
-            // Zoom handlers (main view)
-            const zoomIn = useCallback(() => {
-                setZoomLevel(prev => Math.min(prev + ZOOM_STEP, ZOOM_MAX));
-            }, []);
+            // Zoom handler factory (reusable for all 3 views)
+            const makeZoomHandlers = (setter) => ({
+                zoomIn:    () => setter(prev => Math.min(prev + ZOOM_STEP, ZOOM_MAX)),
+                zoomOut:   () => setter(prev => Math.max(prev - ZOOM_STEP, ZOOM_MIN)),
+                zoomReset: () => setter(100),
+            });
 
-            const zoomOut = useCallback(() => {
-                setZoomLevel(prev => Math.max(prev - ZOOM_STEP, ZOOM_MIN));
-            }, []);
-
-            const zoomReset = useCallback(() => {
-                setZoomLevel(100);
-            }, []);
-
-            // Zoom handlers (student panel)
-            const studentZoomIn = useCallback(() => {
-                setStudentZoomLevel(prev => Math.min(prev + ZOOM_STEP, ZOOM_MAX));
-            }, []);
-
-            const studentZoomOut = useCallback(() => {
-                setStudentZoomLevel(prev => Math.max(prev - ZOOM_STEP, ZOOM_MIN));
-            }, []);
-
-            const studentZoomReset = useCallback(() => {
-                setStudentZoomLevel(100);
-            }, []);
-
-            // Zoom handlers (model panel)
-            const modelZoomIn = useCallback(() => {
-                setModelZoomLevel(prev => Math.min(prev + ZOOM_STEP, ZOOM_MAX));
-            }, []);
-
-            const modelZoomOut = useCallback(() => {
-                setModelZoomLevel(prev => Math.max(prev - ZOOM_STEP, ZOOM_MIN));
-            }, []);
-
-            const modelZoomReset = useCallback(() => {
-                setModelZoomLevel(100);
-            }, []);
+            const { zoomIn, zoomOut, zoomReset } = useMemo(() => makeZoomHandlers(setZoomLevel), []);
+            const { zoomIn: studentZoomIn, zoomOut: studentZoomOut, zoomReset: studentZoomReset } = useMemo(() => makeZoomHandlers(setStudentZoomLevel), []);
+            const { zoomIn: modelZoomIn, zoomOut: modelZoomOut, zoomReset: modelZoomReset } = useMemo(() => makeZoomHandlers(setModelZoomLevel), []);
 
             // ===========================================
             // UTILITIES
@@ -2310,14 +2339,6 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
             // ===========================================
             // AUTO-SAVE (localStorage)
             // ===========================================
-            const debounce = (func, delay) => {
-                let timeout;
-                return (...args) => {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => func(...args), delay);
-                };
-            };
-
             const performAutoSave = useCallback(() => {
                 if (!tree || isUndoRedo.current) return;
 
@@ -3454,58 +3475,6 @@ setExerciseMode(true);
             const [dropdownOpen, setDropdownOpen] = useState(null);
             const [dropdownSearch, setDropdownSearch] = useState('');
 
-            // Dropdown component to select labels
-            const LabelDropdown = ({ isTop, onSelect, onClose }) => {
-                const sections = isTop ? FUNC_SECTIONS : CAT_SECTIONS;
-                const searchLower = dropdownSearch.toLowerCase();
-                
-                const filteredSections = sections.map(sectionKey => {
-                    const section = GTG_LABELS[sectionKey];
-                    const filtered = section.items.filter(item => 
-                        item.abbr.toLowerCase().includes(searchLower) ||
-                        item.full.toLowerCase().includes(searchLower)
-                    );
-                    return { ...section, items: filtered, key: sectionKey };
-                }).filter(s => s.items.length > 0);
-
-                return (
-                    <div className="label-dropdown" onClick={(e) => e.stopPropagation()}>
-                        <div className="dropdown-search">
-                            <input
-                                type="text"
-                                placeholder="Search label..."
-                                value={dropdownSearch}
-                                onChange={(e) => setDropdownSearch(e.target.value)}
-                                autoFocus
-                                onClick={(e) => e.stopPropagation()}
-                            />
-                        </div>
-                        {filteredSections.map(section => (
-                            <div key={section.key} className="dropdown-section">
-                                <div className="dropdown-section-title">{section.title}</div>
-                                {section.items.map(item => (
-                                    <div 
-                                        key={item.abbr}
-                                        className="dropdown-item"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            e.preventDefault();
-                                            onSelect(item.abbr);
-                                        }}
-                                    >
-                                        <span className="dropdown-item-abbr">{item.abbr}</span>
-                                        <span className="dropdown-item-full">{item.full}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        ))}
-                        {filteredSections.length === 0 && (
-                            <div className="dropdown-empty">No results</div>
-                        )}
-                    </div>
-                );
-            };
-
             // Close dropdown on click outside
             const dropdownRef = useRef(null);
             
@@ -3658,6 +3627,8 @@ setExerciseMode(true);
                                                 isTop={isTop}
                                                 onSelect={(abbr) => handleDropdownSelect(abbr, 0)}
                                                 onClose={() => { setDropdownOpen(null); setDropdownSearch(''); }}
+                                                searchValue={dropdownSearch}
+                                                onSearchChange={setDropdownSearch}
                                             />
                                         )}
                                     </div>
@@ -3691,6 +3662,8 @@ setExerciseMode(true);
                                                 isTop={isTop}
                                                 onSelect={(abbr) => handleDropdownSelect(abbr, 1)}
                                                 onClose={() => { setDropdownOpen(null); setDropdownSearch(''); }}
+                                                searchValue={dropdownSearch}
+                                                onSearchChange={setDropdownSearch}
                                             />
                                         )}
                                     </div>
@@ -3722,6 +3695,8 @@ setExerciseMode(true);
                                             isTop={isTop}
                                             onSelect={(abbr) => handleDropdownSelect(abbr)}
                                             onClose={() => { setDropdownOpen(null); setDropdownSearch(''); }}
+                                            searchValue={dropdownSearch}
+                                            onSearchChange={setDropdownSearch}
                                         />
                                     )}
                                 </div>
@@ -4155,21 +4130,6 @@ setExerciseMode(true);
                     </div>
                 );
             };
-
-            // ===========================================
-            // FOOTER COMPONENT
-            // ===========================================
-            const Footer = () => (
-                <footer className="footer">
-                    <p>Carlos González Vergara (<strong><a href="mailto:cgonzalv@uc.cl">cgonzalv@uc.cl</a></strong>)</p>
-                    <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener noreferrer">
-                        <img 
-                            src="https://mirrors.creativecommons.org/presskit/buttons/88x31/svg/by-nc-nd.svg" 
-                            alt="CC BY-NC-ND 4.0" 
-                        />
-                    </a>
-                </footer>
-            );
 
             // ===========================================
             // COMPARISON VIEW
