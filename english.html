@@ -51,11 +51,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         .header-logo {
-            max-width: 380px;
+            max-width: 300px;
             width: 100%;
             height: auto;
         }
@@ -79,7 +79,7 @@
         }
 
         .language-flag {
-            height: 28px;
+            height: 22px;
             width: auto;
             border-radius: 3px;
             transition: opacity 0.2s ease, transform 0.2s ease;
@@ -104,8 +104,8 @@
         .input-section { 
             background: white; 
             border-radius: 8px; 
-            padding: 24px; 
-            margin-bottom: 24px; 
+            padding: 14px; 
+            margin-bottom: 18px; 
             border: 1px solid #e5e7eb; 
             box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
         }
@@ -119,7 +119,7 @@
 
         .input-row input[type="text"] { 
             flex: 1; 
-            padding: 12px 16px; 
+            padding: 10px 16px; 
             border: 1px solid #d1d5db; 
             border-radius: 6px; 
             font-size: 15px; 
@@ -130,7 +130,7 @@
            BUTTONS
            =========================================== */
         .btn {
-            padding: 10px 20px;
+            padding: 9px 20px;
             border: 1px solid transparent;
             border-radius: 8px;
             font-size: 14px;
@@ -264,7 +264,8 @@
             padding: 40px; 
             border: 1px solid #e5e7eb; 
             overflow-x: auto; 
-            min-height: 450px; 
+            min-height: 550px !important;
+            position: relative; 
         }
 
         .tree-wrapper { 
@@ -710,8 +711,8 @@
             display: flex; 
             justify-content: center; 
             gap: 16px; 
-            margin-top: 24px; 
-            padding: 20px; 
+            margin-top: 18px; 
+            padding: 14px; 
             background: #f9fafb; 
             border-radius: 8px; 
             border: 1px solid #e5e7eb; 
@@ -722,7 +723,7 @@
            INSTRUCTIONS PANEL (CARD STYLE)
            =========================================== */
         .instructions-panel {
-            margin-top: 32px;
+            margin-top: 18px;
             background: linear-gradient(135deg, #fdfcfb 0%, #f7f6f3 100%);
             border: 1px solid #e5e7eb;
             border-radius: 16px;
@@ -732,8 +733,8 @@
         .instructions-header {
             background: #374151;
             color: white;
-            padding: 16px 24px;
-            font-size: 1.15rem;
+            padding: 10px 24px;
+            font-size: 0.95rem;
             font-weight: 600;
             letter-spacing: 0.02em;
             cursor: pointer;
@@ -771,9 +772,15 @@
 
         .instructions-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 1px;
             background: #e5e7eb;
+        }
+
+        @media (max-width: 900px) {
+            .instructions-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         @media (max-width: 600px) {
@@ -791,7 +798,7 @@
         }
 
         .instruction-card h4 {
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 600;
             color: #374151;
             display: flex;
@@ -803,20 +810,17 @@
         .instruction-card h4 .icon {
             width: 24px;
             height: 24px;
-            background: #374151;
-            color: white;
-            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 18px;
         }
 
         .instruction-card ul {
             list-style: none;
             padding: 0;
             margin: 0;
-            font-size: 13px;
+            font-size: 11px;
             line-height: 1.6;
             color: #6b7280;
         }
@@ -1416,12 +1420,12 @@
            FOOTER
            =========================================== */
         .footer {
-            margin-top: 40px;
-            padding: 20px 0;
+            margin-top: 20px;
+            padding: 10px 0 20px;
             text-align: center;
             border-top: 1px solid #e5e7eb;
             color: #6b7280;
-            font-size: 14px;
+            font-size: 12px;
         }
         .footer strong { color: #374151; }
         .footer a { color: #374151; text-decoration: none; }
@@ -1431,7 +1435,7 @@
             transition: opacity 0.2s;
             display: block;
             margin: 10px auto 0;
-            height: 31px; 
+            height: 24px; 
             width: auto;
         }
         .footer img:hover { opacity: 1; }
@@ -1671,6 +1675,7 @@
             position: relative;
             overflow: auto;
             max-width: 100%;
+            min-height: 550px !important;
         }
         /* Autosave indicator (as in Kilmer) */
         .autosave-indicator{
@@ -4157,7 +4162,7 @@ setExerciseMode(true);
                                     <p>You are viewing results. You can go back to edit or exit exercise mode.</p>
                                 </div>
                             </div>
-                            <button onClick={resetExercise} className="btn btn-outline">Exit exercise mode</button>
+                            <button onClick={resetExercise} className="btn btn-outline">🚪 Exit exercise mode</button>
                         </div>
 
                         <div className="results-summary">
@@ -4279,8 +4284,8 @@ setExerciseMode(true);
                         </div>
 
                         <div className="bottom-actions">
-                            <button onClick={() => setShowComparison(false)} className="btn btn-outline">← Back to edit</button>
-                            <button onClick={newExercise} className="btn btn-primary">New exercise</button>
+                            <button onClick={() => setShowComparison(false)} className="btn btn-outline">✏️ Back to edit</button>
+                            <button onClick={newExercise} className="btn btn-primary">🔄 New exercise</button>
                         </div>
 
                         <Footer />
@@ -4379,7 +4384,7 @@ setExerciseMode(true);
                                 </div>
                             )}
                             
-                            <button onClick={resetExercise} className="btn btn-outline">Exit exercise mode</button>
+                            <button onClick={resetExercise} className="btn btn-outline">🚪 Exit exercise mode</button>
                         </div>
                     )}
 
@@ -4391,10 +4396,11 @@ setExerciseMode(true);
                                     <p>Analyze the expression and compare your result with the model when done</p>
                                 </div>
                             </div>
-                            <button onClick={resetExercise} className="btn btn-outline">Exit exercise mode</button>
+                            <button onClick={resetExercise} className="btn btn-outline">🚪 Exit exercise mode</button>
                         </div>
                     )}
 
+                    {!(exerciseMode && !modelTree) && (
                     <div className="input-section">
                         <div className="input-row">
                             {!exerciseMode ? (
@@ -4407,7 +4413,7 @@ setExerciseMode(true);
                                         onKeyPress={(e) => e.key === 'Enter' && handleStartAnalysis()} 
                                     />
                                     <div className="analyze-undo-group">
-                                        <button onClick={handleStartAnalysis} className="btn btn-primary">Analyze</button>
+                                        <button onClick={handleStartAnalysis} className="btn btn-primary">🔬 Analyze</button>
                                         <button 
                                             onClick={handleUndo} 
                                             className="btn btn-outline btn-icon" 
@@ -4447,11 +4453,12 @@ setExerciseMode(true);
                                 )
                             )}
                         </div>
-                        <input type="file" ref={exerciseInputRef} style={{display:'none'}} accept=".ent,.json,application/json,text/plain,*/*" onChange={handleLoadExercise} />
                     </div>
+                    )}
+                    <input type="file" ref={exerciseInputRef} style={{display:'none'}} accept=".ent,.json,application/json,text/plain,*/*" onChange={handleLoadExercise} />
 
                     {!(exerciseMode && !modelTree) && (
-                        <div className="tree-container" ref={treeContainerRef}>
+                        <div className="tree-container" ref={treeContainerRef} style={{minHeight: '550px'}}>
                         <div className={`autosave-indicator ${(isSaving || lastSaved) ? 'visible' : ''}`}>
                             <span className={`autosave-dot ${isSaving ? 'saving' : ''}`}></span>
                             <span>
@@ -4507,15 +4514,15 @@ setExerciseMode(true);
                         <div className="bottom-actions">
                             {exerciseMode ? (
                                 <>
-                                    <button onClick={newExercise} className="btn btn-outline">Cancel exercise</button>
-                                    <button onClick={handleFinishExercise} className="btn btn-success">✓ Finish analysis and compare</button>
+                                    <button onClick={newExercise} className="btn btn-outline">↩️ Cancel exercise</button>
+                                    <button onClick={handleFinishExercise} className="btn btn-success">✅ Finish analysis and compare</button>
                                 </>
                             ) : (
                                 <>
-                                    <button onClick={() => { clearAutosave(); setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); }} className="btn btn-new-analysis">✦ New analysis</button>
+                                    <button onClick={() => { clearAutosave(); setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); }} className="btn btn-new-analysis"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{marginRight:'4px'}}><path d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5Z"/><path d="M19 2L19.75 4.25L22 5L19.75 5.75L19 8L18.25 5.75L16 5L18.25 4.25Z"/><path d="M5 16L5.75 18.25L8 19L5.75 19.75L5 22L4.25 19.75L2 19L4.25 18.25Z"/></svg>New analysis</button>
                                     <button onClick={handleSaveJSON} className="btn btn-primary" disabled={!tree} title="Save (Ctrl+S)">💾 Save .ent</button>
-                                    <button onClick={() => handleExport(false)} className="btn btn-primary">Export diagram</button>
-                                    <button onClick={() => handleExport(true)} className="btn btn-primary">Export tree diagram</button>
+                                    <button onClick={() => handleExport(false)} className="btn btn-primary">📤 Export diagram</button>
+                                    <button onClick={() => handleExport(true)} className="btn btn-primary">🌳 Export tree diagram</button>
                                 </>
                             )}
                         </div>
@@ -4533,7 +4540,7 @@ setExerciseMode(true);
                             <div className="instructions-grid">
                                 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">✂</span> Constituents</h4>
+                                    <h4><span className="icon">✂️</span> Constituents</h4>
                                     <ul>
                                         <li>Click on a <strong>light blue box</strong> to divide a syntactic structure into constituents.</li>
                                         <li>Click on the <strong>gray bars</strong> between words to mark boundaries between constituents.</li>
@@ -4544,7 +4551,7 @@ setExerciseMode(true);
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">☖</span> Labels</h4>
+                                    <h4><span className="icon">🏷️</span> Labels</h4>
                                     <ul>
                                         <li>In the <strong>top</strong> label, write the grammatical function (SUBJ, DO, IO, HEAD, DET, etc.).</li>
                                         <li>In the <strong>bottom</strong> label, write the category (N, V, NP, VP, etc.).</li>
@@ -4553,7 +4560,7 @@ setExerciseMode(true);
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">⇄</span> Split labels</h4>
+                                    <h4><span className="icon">⚡</span> Split labels</h4>
                                     <ul>
                                         <li>Hover over the label and click <code>⇄</code> to split or merge.</li>
                                         <li>Useful for analyses with multiple functions or categories.</li>
@@ -4561,7 +4568,7 @@ setExerciseMode(true);
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">＋</span> Add extra constituents</h4>
+                                    <h4><span className="icon">🌱</span> Add extra constituents</h4>
                                     <ul>
                                         <li>Hover over the node under which you want to create an extra constituent and click <code>+</code>.</li>
                                         <li>Type the text and choose the position to insert it.</li>
@@ -4570,7 +4577,7 @@ setExerciseMode(true);
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">Aa</span> Text formatting</h4>
+                                    <h4><span className="icon">🅰️</span> Text formatting</h4>
                                     <ul>
                                         <li><code>*text*</code> for <em>italics</em></li>
                                         <li><code>**text**</code> for <strong>bold</strong></li>
@@ -4580,7 +4587,7 @@ setExerciseMode(true);
                                 </div> 
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">⌘</span> Keyboard shortcuts</h4>
+                                    <h4><span className="icon">⌨️</span> Keyboard shortcuts</h4>
                                         <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '40px', marginTop: '8px' }}>
                                         <ul className="shortcut-list">
                                             <li
@@ -4629,7 +4636,7 @@ setExerciseMode(true);
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">⌕</span> Zoom</h4>
+                                    <h4><span className="icon">🔎</span> Zoom</h4>
                                     <ul>
                                         <li>Use the <code>[−]</code> and <code>[+]</code> buttons in the top-right corner to zoom out/in.</li>
                                         <li>Click the percentage to reset to 100%.</li>
@@ -4639,7 +4646,7 @@ setExerciseMode(true);
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">∪</span> Consolidate nodes</h4>
+                                    <h4><span className="icon">🔗</span> Consolidate nodes</h4>
                                     <ul>
                                         <li>Hover over a light blue node and click <code>∪</code> to consolidate it.</li>
                                         <li>Useful for phrasal verbs or multi-word expressions that should not be syntactically divided.</li>
@@ -4648,7 +4655,7 @@ setExerciseMode(true);
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">÷</span> Expand nodes</h4>
+                                    <h4><span className="icon">🌿</span> Expand nodes</h4>
                                     <ul>
                                         <li>Hover over a terminal node and click <code>÷</code> to expand it.</li>
                                         <li>A child with the same text is created. Use <code>+</code> to add extra constituents.</li>
@@ -4656,7 +4663,7 @@ setExerciseMode(true);
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">◰</span> Files</h4>
+                                    <h4><span className="icon">📁</span> Files</h4>
                                     <ul>
                                         <li>Click <strong>📁 Files</strong> to open the file manager.</li>
                                         <li><strong>Local</strong> tab: save or load <code>.ent</code> files from your computer.</li>
@@ -4668,7 +4675,7 @@ setExerciseMode(true);
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">☷</span> Example bank</h4>
+                                    <h4><span className="icon">☁️</span> Example bank</h4>
                                     <ul>
                                         <li>To create an example bank, upload <code>.ent</code> files to a Google Drive folder.</li>
                                         <li>Right-click the folder → <strong>Share</strong> → <strong>Anyone with the link</strong> (as Viewer).</li>
@@ -4679,7 +4686,7 @@ setExerciseMode(true);
 
                                 {!exerciseMode && (
                                 <div className="instruction-card">
-                                    <h4><span className="icon">✎</span> Exercise mode</h4>
+                                    <h4><span className="icon">📚</span> Exercise mode</h4>
                                     <ul>
                                         <li>Click <strong>📚 Exercise mode</strong> to practice.</li>
                                         <li>Load an exercise from your computer or from an <strong>example bank</strong> on Google Drive.</li>

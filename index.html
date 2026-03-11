@@ -52,11 +52,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         .header-logo {
-            max-width: 380px;
+            max-width: 300px;
             width: 100%;
             height: auto;
         }
@@ -80,7 +80,7 @@
         }
 
         .language-flag {
-            height: 28px;
+            height: 22px;
             width: auto;
             border-radius: 3px;
             transition: opacity 0.2s ease, transform 0.2s ease;
@@ -105,8 +105,8 @@
         .input-section { 
             background: white; 
             border-radius: 8px; 
-            padding: 24px; 
-            margin-bottom: 24px; 
+            padding: 14px; 
+            margin-bottom: 18px; 
             border: 1px solid #e5e7eb; 
             box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
         }
@@ -120,7 +120,7 @@
 
         .input-row input[type="text"] { 
             flex: 1; 
-            padding: 12px 16px; 
+            padding: 10px 16px; 
             border: 1px solid #d1d5db; 
             border-radius: 6px; 
             font-size: 15px; 
@@ -131,7 +131,7 @@
            BOTONES
            =========================================== */
         .btn {
-            padding: 10px 20px;
+            padding: 9px 20px;
             border: 1px solid transparent;
             border-radius: 8px;
             font-size: 14px;
@@ -265,7 +265,7 @@
             padding: 40px; 
             border: 1px solid #e5e7eb; 
             overflow-x: auto; 
-            min-height: 450px;
+            min-height: 550px !important;
             position: relative; 
         }
         /* Autosave indicator (as in Kilmer) */
@@ -775,8 +775,8 @@
             display: flex; 
             justify-content: center; 
             gap: 16px; 
-            margin-top: 24px; 
-            padding: 20px; 
+            margin-top: 18px; 
+            padding: 14px; 
             background: #f9fafb; 
             border-radius: 8px; 
             border: 1px solid #e5e7eb; 
@@ -787,7 +787,7 @@
            PANEL DE INSTRUCCIONES (ESTILO TARJETAS)
            =========================================== */
         .instructions-panel {
-            margin-top: 32px;
+            margin-top: 18px;
             background: linear-gradient(135deg, #fdfcfb 0%, #f7f6f3 100%);
             border: 1px solid #e5e7eb;
             border-radius: 16px;
@@ -797,8 +797,8 @@
         .instructions-header {
             background: #374151;
             color: white;
-            padding: 16px 24px;
-            font-size: 1.15rem;
+            padding: 10px 24px;
+            font-size: 0.95rem;
             font-weight: 600;
             letter-spacing: 0.02em;
             cursor: pointer;
@@ -836,9 +836,15 @@
 
         .instructions-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 1px;
             background: #e5e7eb;
+        }
+
+        @media (max-width: 900px) {
+            .instructions-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         @media (max-width: 600px) {
@@ -856,7 +862,7 @@
         }
 
         .instruction-card h4 {
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 600;
             color: #374151;
             display: flex;
@@ -868,20 +874,17 @@
         .instruction-card h4 .icon {
             width: 24px;
             height: 24px;
-            background: #374151;
-            color: white;
-            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 18px;
         }
 
         .instruction-card ul {
             list-style: none;
             padding: 0;
             margin: 0;
-            font-size: 13px;
+            font-size: 11px;
             line-height: 1.6;
             color: #6b7280;
         }
@@ -1499,12 +1502,12 @@
            PIE DE PÁGINA
            =========================================== */
         .footer {
-            margin-top: 40px;
-            padding: 20px 0;
+            margin-top: 20px;
+            padding: 10px 0 20px;
             text-align: center;
             border-top: 1px solid #e5e7eb;
             color: #6b7280;
-            font-size: 14px;
+            font-size: 12px;
         }
         .footer strong { color: #374151; }
         .footer a { color: #374151; text-decoration: none; }
@@ -1514,7 +1517,7 @@
             transition: opacity 0.2s;
             display: block;
             margin: 10px auto 0;
-            height: 31px; 
+            height: 24px; 
             width: auto;
         }
         .footer img:hover { opacity: 1; }
@@ -1730,6 +1733,7 @@
             position: relative;
             overflow: auto;
             max-width: 100%;
+            min-height: 550px !important;
         }
 
         /* Ajustes para comparison-panel con zoom */
@@ -4256,7 +4260,7 @@
                                     <p>Estás viendo los resultados. Puedes volver a editar o salir del modo ejercitación.</p>
                                 </div>
                             </div>
-                            <button onClick={resetExercise} className="btn btn-outline">Salir del modo ejercitación</button>
+                            <button onClick={resetExercise} className="btn btn-outline">🚪 Salir del modo ejercitación</button>
                         </div>
 
                         <div className="results-summary">
@@ -4376,8 +4380,8 @@
                         </div>
 
                         <div className="bottom-actions">
-                            <button onClick={() => setShowComparison(false)} className="btn btn-outline">← Volver a editar</button>
-                            <button onClick={newExercise} className="btn btn-primary">Nuevo ejercicio</button>
+                            <button onClick={() => setShowComparison(false)} className="btn btn-outline">✏️ Volver a editar</button>
+                            <button onClick={newExercise} className="btn btn-primary">🔄 Nuevo ejercicio</button>
                         </div>
 
                         <Footer />
@@ -4474,7 +4478,7 @@
                                 </div>
                             )}
                             
-                            <button onClick={resetExercise} className="btn btn-outline">Salir del modo ejercitación</button>
+                            <button onClick={resetExercise} className="btn btn-outline">🚪 Salir del modo ejercitación</button>
                         </div>
                     )}
 
@@ -4486,10 +4490,11 @@
                                     <p>Analiza la expresión y compara tu resultado con el modelo cuando termines</p>
                                 </div>
                             </div>
-                            <button onClick={resetExercise} className="btn btn-outline">Salir del modo ejercitación</button>
+                            <button onClick={resetExercise} className="btn btn-outline">🚪 Salir del modo ejercitación</button>
                         </div>
                     )}
 
+                    {!(exerciseMode && !modelTree) && (
                     <div className="input-section">
                         <div className="input-row">
                             {!exerciseMode ? (
@@ -4502,7 +4507,7 @@
                                         onKeyPress={(e) => e.key === 'Enter' && handleStartAnalysis()} 
                                     />
                                     <div className="analyze-undo-group">
-                                        <button onClick={handleStartAnalysis} className="btn btn-primary">Analizar</button>
+                                        <button onClick={handleStartAnalysis} className="btn btn-primary">🔬 Analizar</button>
                                         <button 
                                             onClick={handleUndo} 
                                             className="btn btn-outline btn-icon" 
@@ -4542,11 +4547,12 @@
                                 )
                             )}
                         </div>
-                        <input type="file" ref={exerciseInputRef} style={{display:'none'}} accept=".ent,.json,application/json,text/plain,*/*" onChange={handleLoadExercise} />
                     </div>
+                    )}
+                    <input type="file" ref={exerciseInputRef} style={{display:'none'}} accept=".ent,.json,application/json,text/plain,*/*" onChange={handleLoadExercise} />
 
                     {!(exerciseMode && !modelTree) && (
-                        <div className="tree-container" ref={treeContainerRef}>
+                        <div className="tree-container" ref={treeContainerRef} style={{minHeight: '550px'}}>
                             <div className={`autosave-indicator ${(isSaving || lastSaved) ? 'visible' : ''}`}>
                                 <span className={`autosave-dot ${isSaving ? 'saving' : ''}`}></span>
                                 <span className="autosave-text">
@@ -4610,15 +4616,15 @@
                         <div className="bottom-actions">
                             {exerciseMode ? (
                                 <>
-                                    <button onClick={newExercise} className="btn btn-outline">Cancelar ejercicio</button>
-                                    <button onClick={handleFinishExercise} className="btn btn-success">✓ Terminar análisis y comparar</button>
+                                    <button onClick={newExercise} className="btn btn-outline">↩️ Cancelar ejercicio</button>
+                                    <button onClick={handleFinishExercise} className="btn btn-success">✅ Terminar análisis y comparar</button>
                                 </>
                             ) : (
                                 <>
-                                    <button onClick={() => { setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); localStorage.removeItem('ent-autosave'); setLastSaved(null); }} className="btn btn-new-analysis">✦ Nuevo análisis</button>
+                                    <button onClick={() => { setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); localStorage.removeItem('ent-autosave'); setLastSaved(null); }} className="btn btn-new-analysis"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{marginRight:'4px'}}><path d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5Z"/><path d="M19 2L19.75 4.25L22 5L19.75 5.75L19 8L18.25 5.75L16 5L18.25 4.25Z"/><path d="M5 16L5.75 18.25L8 19L5.75 19.75L5 22L4.25 19.75L2 19L4.25 18.25Z"/></svg>Nuevo análisis</button>
                                     <button onClick={handleSaveJSON} className="btn btn-primary" disabled={!tree} title="Save (Ctrl+S)">💾 Guardar .ent</button>
-                                    <button onClick={() => handleExport(false)} className="btn btn-primary">Exportar diagrama</button>
-                                    <button onClick={() => handleExport(true)} className="btn btn-primary">Exportar diagrama arbóreo</button>
+                                    <button onClick={() => handleExport(false)} className="btn btn-primary">📤 Exportar diagrama</button>
+                                    <button onClick={() => handleExport(true)} className="btn btn-primary">🌳 Exportar diagrama arbóreo</button>
                                 </>
                             )}
                         </div>
@@ -4636,7 +4642,7 @@
                             <div className="instructions-grid">
                                 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">✂</span> Constituyentes</h4>
+                                    <h4><span className="icon">✂️</span> Constituyentes</h4>
                                     <ul>
                                         <li>Haz clic en un <strong>recuadro celeste</strong> para dividir una estructura sintáctica en constituyentes.</li>
                                         <li>Haz clic en las <strong>barras grises</strong> entre palabras para marcar fronteras entre constituyentes.</li>
@@ -4647,7 +4653,7 @@
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">☖</span> Etiquetas</h4>
+                                    <h4><span className="icon">🏷️</span> Etiquetas</h4>
                                     <ul>
                                         <li>En la etiqueta <strong>superior</strong> escribe la función sintáctica (Suj, CD, CI, N, Det, etc.).</li>
                                         <li>En la etiqueta <strong>inferior</strong> escribe la categoría (sust, v, SN, SV, etc.).</li>
@@ -4656,7 +4662,7 @@
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">⇄</span> Dividir etiquetas</h4>
+                                    <h4><span className="icon">⚡</span> Dividir etiquetas</h4>
                                     <ul>
                                         <li>Pasa el cursor por la etiqueta y pulsa <code>⇄</code> para dividir o unir.</li>
                                         <li>Útil para análisis con múltiples funciones o categorías.</li>
@@ -4664,7 +4670,7 @@
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">＋</span> Agregar constituyentes extra</h4>
+                                    <h4><span className="icon">🌱</span> Agregar constituyentes extra</h4>
                                     <ul>
                                         <li>Pasa el cursor por el nodo bajo el cual quieres crear un constituyente extra y haz clic en <code>+</code>.</li>
                                         <li>Escribe el texto y elige la posición donde insertarlo.</li>
@@ -4673,7 +4679,7 @@
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">Aa</span> Formato de texto</h4>
+                                    <h4><span className="icon">🅰️</span> Formato de texto</h4>
                                     <ul>
                                         <li><code>*texto*</code> para <em>cursivas</em></li>
                                         <li><code>**texto**</code> para <strong>negritas</strong></li>
@@ -4683,7 +4689,7 @@
                                 </div> 
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">⌘</span> Atajos de teclado</h4>
+                                    <h4><span className="icon">⌨️</span> Atajos de teclado</h4>
                                             <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '40px', marginTop: '8px' }}>
                                             <ul className="shortcut-list">
                                                 <li style={{ marginBottom: '10px', opacity: 0.7, fontSize: '11px', fontWeight: 'bold',
@@ -4712,7 +4718,7 @@
                                 </div>
                                 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">⌕</span> Zoom</h4>
+                                    <h4><span className="icon">🔎</span> Zoom</h4>
                                     <ul>
                                         <li>Usa los botones <code>[−]</code> y <code>[+]</code> en la esquina superior derecha para alejar/acercar.</li>
                                         <li>Haz clic en el porcentaje para restablecer al 100%.</li>
@@ -4722,7 +4728,7 @@
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">∪</span> Consolidar nodos</h4>
+                                    <h4><span className="icon">🔗</span> Consolidar nodos</h4>
                                     <ul>
                                         <li>Pasa el cursor por un nodo celeste y pulsa <code>∪</code> para consolidarlo.</li>
                                         <li>Útil para perífrasis verbales o locuciones, que no deben dividirse sintácticamente.</li>
@@ -4731,7 +4737,7 @@
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">÷</span> Expandir nodos</h4>
+                                    <h4><span className="icon">🌿</span> Expandir nodos</h4>
                                     <ul>
                                         <li>Pasa el cursor por un nodo terminal y pulsa <code>÷</code> para expandirlo.</li>
                                         <li>Se crea un hijo con el mismo texto. Usa <code>+</code> para agregar constituyentes extra.</li>
@@ -4739,7 +4745,7 @@
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">◰</span> Archivos</h4>
+                                    <h4><span className="icon">📁</span> Archivos</h4>
                                     <ul>
                                         <li>Haz clic en <strong>📁 Archivos</strong> para abrir el gestor de archivos.</li>
                                         <li>Pestaña <strong>Local</strong>: guarda o carga archivos <code>.ent</code> desde tu computador.</li>
@@ -4750,7 +4756,7 @@
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">☷</span> Banco de ejemplos</h4>
+                                    <h4><span className="icon">☁️</span> Banco de ejemplos</h4>
                                     <ul>
                                         <li>Para crear un banco de ejemplos, sube archivos <code>.ent</code> a una carpeta de Google Drive.</li>
                                         <li>Haz clic derecho en la carpeta → <strong>Compartir</strong> → <strong>Cualquier persona con el enlace</strong> (como Lector).</li>
@@ -4761,7 +4767,7 @@
 
                                 {!exerciseMode && (
                                 <div className="instruction-card">
-                                    <h4><span className="icon">✎</span> Modo ejercitación</h4>
+                                    <h4><span className="icon">📚</span> Modo ejercitación</h4>
                                     <ul>
                                         <li>Haz clic en <strong>📚 Modo ejercitación</strong> para practicar.</li>
                                         <li>Carga un ejercicio desde tu computador o desde un <strong>banco de ejemplos</strong> en Google Drive.</li>
@@ -4772,7 +4778,7 @@
 
                                 {exerciseMode && (
                                 <div className="instruction-card">
-                                    <h4 style={{color: '#5b21b6'}}><span className="icon" style={{backgroundColor: '#5b21b6'}}>✎</span> Ejercicio activo</h4>
+                                    <h4 style={{color: '#5b21b6'}}><span className="icon">📚</span> Ejercicio activo</h4>
                                     <ul>
                                         <li>Completa el análisis de la expresión.</li>
                                         <li>Usa <strong>Comparar</strong> para ver la solución.</li>
