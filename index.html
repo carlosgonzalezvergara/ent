@@ -13,8 +13,8 @@
            VARIABLES Y RESET
            =========================================== */
         :root {
-            --btn-primary-bg: #374151;
-            --btn-primary-bg-hover: #1f2937;
+            --btn-primary-bg: #1E8C5C;
+            --btn-primary-bg-hover: #166b46;
             --btn-primary-text: #ffffff;
             --btn-outline-bg: #ffffff;
             --btn-outline-border: #d1d5db;
@@ -125,6 +125,12 @@
             border-radius: 6px; 
             font-size: 15px; 
             min-width: 200px; 
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .input-row input[type="text"]:focus {
+            border-color: #1E8C5C;
+            box-shadow: 0 0 0 3px rgba(30, 140, 92, 0.18);
         }
 
         /* ===========================================
@@ -146,7 +152,7 @@
         }
 
         .btn:active { transform: translateY(1px); }
-        .btn:focus-visible { outline: 3px solid rgba(59,130,246,.35); outline-offset: 2px; }
+        .btn:focus-visible { outline: 3px solid rgba(30, 140, 92, 0.35); outline-offset: 2px; }
 
         .btn-primary {
             background-color: var(--btn-primary-bg);
@@ -154,8 +160,8 @@
             box-shadow: 0 1px 2px rgba(0,0,0,0.08);
         }
         .btn-primary:hover { 
-            background-color: #111827; 
-            box-shadow: 0 6px 16px rgba(17, 24, 39, 0.35);
+            background-color: var(--btn-primary-bg-hover); 
+            box-shadow: 0 6px 16px rgba(30, 140, 92, 0.35);
             transform: translateY(-2px);
         }
 
@@ -410,7 +416,7 @@
             border-radius: 4px; 
             background-color: white; 
             font-size: 16px; 
-            color: #111827; 
+            color: #374151; 
             min-width: 100px; 
             text-align: center; 
             position: relative; 
@@ -606,13 +612,13 @@
         }
 
         .dropdown-item:hover {
-            background: #f0f7ff;
+            background: #f0fdf4;
         }
 
         .dropdown-item-abbr {
             font-weight: 600;
             min-width: 50px;
-            color: #1f2937;
+            color: #374151;
         }
 
         .dropdown-item-full {
@@ -676,7 +682,7 @@
             bottom: -10px;
             left: 50%;
             transform: translateX(-50%);
-            background: #2563eb;
+            background: #1E8C5C;
             color: white;
             border: none;
             border-radius: 50%;
@@ -694,7 +700,7 @@
             position: absolute;
             top: -10px;
             left: -10px;
-            background: #f59e0b;
+            background: #F46A12;
             color: white;
             border: none;
             border-radius: 50%;
@@ -737,18 +743,18 @@
         }
         .nucleus-toggle-btn:hover {
             color: #374151;
-            border-color: #93c5fd;
-            background: #f0f9ff;
+            border-color: #6ee7b7;
+            background: #f0fdf4;
             opacity: 1;
             pointer-events: auto;
         }
         .nucleus-toggle-btn.is-nucleus {
-            background: #374151;
+            background: #1E8C5C;
             color: white;
-            border-color: #374151;
+            border-color: #1E8C5C;
         }
         .nucleus-toggle-btn.is-nucleus:hover {
-            background: #1f2937;
+            background: #166b46;
         }
 
         
@@ -795,7 +801,7 @@
         }
 
         .instructions-header {
-            background: #374151;
+            background: #1E8C5C;
             color: white;
             padding: 10px 24px;
             font-size: 0.95rem;
@@ -810,7 +816,7 @@
         }
 
         .instructions-header:hover {
-            background: #4b5563;
+            background: #166b46;
         }
 
         .instructions-toggle {
@@ -959,7 +965,7 @@
         }
 
         .exercise-banner-icon { font-size: 20px; }
-        .exercise-banner h3 { margin: 0; font-size: 16px; color: #111827; }
+        .exercise-banner h3 { margin: 0; font-size: 16px; color: #374151; }
         .exercise-banner p { margin: 4px 0 0; font-size: 13px; color: #6b7280; }
 
         .exercise-banner {
@@ -1083,7 +1089,7 @@
 
         .pos-title {
             font-weight: 700;
-            color: #111827;
+            color: #374151;
             margin: 0 0 6px;
         }
 
@@ -1107,7 +1113,7 @@
             border-radius: 8px;
             font-size: 14px;
             background: #fff;
-            color: #111827;
+            color: #374151;
         }
 
         .pos-actions {
@@ -1133,7 +1139,7 @@
 
         .clitic-title {
             font-weight: 700;
-            color: #111827;
+            color: #374151;
             margin: 0 0 4px;
             font-size: 16px;
         }
@@ -1177,7 +1183,7 @@
 
         .clitic-original {
             font-weight: 600;
-            color: #111827;
+            color: #374151;
             font-size: 14px;
             min-width: 90px;
             flex-shrink: 0;
@@ -1195,15 +1201,15 @@
             border: 1px solid #d1d5db;
             border-radius: 6px;
             font-size: 14px;
-            color: #111827;
+            color: #374151;
             background: #fff;
             min-width: 120px;
         }
 
         .clitic-input:focus {
             outline: none;
-            border-color: #93c5fd;
-            box-shadow: 0 0 0 2px rgba(59,130,246,.15);
+            border-color: #6ee7b7;
+            box-shadow: 0 0 0 2px rgba(30, 140, 92, 0.12);
         }
 
         .clitic-item.unchecked .clitic-input {
@@ -1239,7 +1245,7 @@
 
         .files-modal-title {
             font-weight: 700;
-            color: #111827;
+            color: #374151;
             margin: 0 0 16px;
             font-size: 18px;
             display: flex;
@@ -1265,13 +1271,13 @@
         }
 
         .files-tab:hover {
-            color: #374151;
-            background: #f9fafb;
+            color: #1E8C5C;
+            background: #f0fdf4;
         }
 
         .files-tab.active {
-            color: #374151;
-            border-bottom-color: #374151;
+            color: #1E8C5C;
+            border-bottom-color: #1E8C5C;
         }
 
         .files-modal-body {
@@ -1325,8 +1331,8 @@
         }
 
         .drive-url-input:focus {
-            border-color: #93c5fd;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            border-color: #6ee7b7;
+            box-shadow: 0 0 0 3px rgba(30, 140, 92, 0.12);
         }
 
         .drive-url-input::placeholder {
@@ -1343,9 +1349,9 @@
         }
 
         .drive-status.loading {
-            background: #f0f9ff;
-            color: #0369a1;
-            border: 1px solid #bae6fd;
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #86efac;
         }
 
         .drive-status.error {
@@ -1442,12 +1448,12 @@
         }
 
         .drive-file-item:hover {
-            background: #f0f7ff;
+            background: #f0fdf4;
         }
 
         .drive-file-item.selected {
-            background: #eff6ff;
-            border-left: 3px solid #3b82f6;
+            background: #dcfce7;
+            border-left: 3px solid #1E8C5C;
             padding-left: 25px;
         }
 
@@ -3348,7 +3354,7 @@
                         
                         const mergedSpan = document.createElement('span');
                         mergedSpan.className = 'exp-merged';
-                        mergedSpan.style.cssText = `display: block; text-align: center; font-size: 16px; color: #111827; font-weight: ${isNucleus ? 'bold' : 'normal'}; padding: 4px; text-transform: uppercase;`;
+                        mergedSpan.style.cssText = `display: block; text-align: center; font-size: 16px; color: #374151; font-weight: ${isNucleus ? 'bold' : 'normal'}; padding: 4px; text-transform: uppercase;`;
                         applyFormatToSpan(mergedSpan, combinedText.toUpperCase());
                         
                         labelWraps.forEach(lw => lw.style.display = 'none');
@@ -3903,7 +3909,7 @@
                                                     {i < words.length - 1 && (
                                                         <button
                                                             onClick={() => setSelectedCuts(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i].sort((a, b) => a - b))}
-                                                            style={{width:'10px', background: selectedCuts.includes(i) ? '#374151' : '#e2e8f0', border:'none', cursor:'pointer'}}
+                                                            style={{width:'10px', background: selectedCuts.includes(i) ? '#1E8C5C' : '#e2e8f0', border:'none', cursor:'pointer'}}
                                                         />
                                                     )}
                                                 </React.Fragment>
@@ -4507,7 +4513,7 @@
                                         onKeyPress={(e) => e.key === 'Enter' && handleStartAnalysis()} 
                                     />
                                     <div className="analyze-undo-group">
-                                        <button onClick={handleStartAnalysis} className="btn btn-primary">🔬 Analizar</button>
+                                        <button onClick={handleStartAnalysis} className="btn btn-primary">Analizar</button>
                                         <button 
                                             onClick={handleUndo} 
                                             className="btn btn-outline btn-icon" 
@@ -4622,9 +4628,9 @@
                             ) : (
                                 <>
                                     <button onClick={() => { setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); localStorage.removeItem('ent-autosave'); setLastSaved(null); }} className="btn btn-new-analysis"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{marginRight:'4px'}}><path d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5Z"/><path d="M19 2L19.75 4.25L22 5L19.75 5.75L19 8L18.25 5.75L16 5L18.25 4.25Z"/><path d="M5 16L5.75 18.25L8 19L5.75 19.75L5 22L4.25 19.75L2 19L4.25 18.25Z"/></svg>Nuevo análisis</button>
-                                    <button onClick={handleSaveJSON} className="btn btn-primary" disabled={!tree} title="Save (Ctrl+S)">💾 Guardar .ent</button>
-                                    <button onClick={() => handleExport(false)} className="btn btn-primary">📤 Exportar diagrama</button>
-                                    <button onClick={() => handleExport(true)} className="btn btn-primary">🌳 Exportar diagrama arbóreo</button>
+                                    <button onClick={handleSaveJSON} className="btn btn-outline" disabled={!tree} title="Save (Ctrl+S)">💾 Guardar .ent</button>
+                                    <button onClick={() => handleExport(false)} className="btn btn-outline">📤 Exportar diagrama</button>
+                                    <button onClick={() => handleExport(true)} className="btn btn-outline">🌳 Exportar diagrama arbóreo</button>
                                 </>
                             )}
                         </div>
@@ -4820,13 +4826,13 @@
                                             <div className="files-btn-row">
                                                 <button 
                                                     onClick={() => { fileInputRef.current.click(); setShowFilesModal(false); }} 
-                                                    className="btn btn-primary"
+                                                    className="btn btn-outline"
                                                 >
                                                     📂 Cargar .ent
                                                 </button>
                                                 <button 
                                                     onClick={() => { handleSaveJSON(); setShowFilesModal(false); }} 
-                                                    className="btn btn-primary" 
+                                                    className="btn btn-outline" 
                                                     disabled={!tree}
                                                     title="Guardar (Ctrl+S)"
                                                 >
