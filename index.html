@@ -254,6 +254,39 @@
             box-shadow: none !important;
         }
 
+        .icon-svg {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 0;
+        }
+
+        .icon-svg svg {
+            display: block;
+            overflow: visible;
+        }
+
+        .icon-undo svg,
+        .icon-redo svg {
+            width: 19px;
+            height: 19px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .icon-revert svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
         .btn-separator {
             width: 1px;
             height: 24px;
@@ -677,24 +710,33 @@
         }
         .node-box:hover .clear-text-btn { display: flex; }
 
-        .add-node-btn {
+        .add-sibling-btn {
             position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 50%;
             background: #1E8C5C;
             color: white;
             border: none;
-            border-radius: 50%;
-            width: 18px;
+            border-radius: 999px;
+            min-width: 34px;
             height: 18px;
-            font-size: 12px;
+            padding: 0 6px;
+            font-size: 10px;
+            line-height: 1;
             cursor: pointer;
             display: none;
             align-items: center;
             justify-content: center;
+            white-space: nowrap;
         }
-        .node-box:hover .add-node-btn { display: flex; }
+        .add-sibling-btn.left {
+            left: 0;
+            transform: translate(-50%, -50%);
+        }
+        .add-sibling-btn.right {
+            left: 100%;
+            transform: translate(-50%, -50%);
+        }
+        .node-box:hover .add-sibling-btn { display: flex; }
 
         .consolidate-btn {
             position: absolute;
@@ -716,9 +758,9 @@
 
         .nucleus-toggle-btn {
             position: absolute;
-            right: -10px;
-            top: 50%;
-            transform: translateY(-50%);
+            left: 50%;
+            top: 0;
+            transform: translate(-50%, -50%);
             width: 18px;
             height: 18px;
             border-radius: 4px;
@@ -2026,6 +2068,33 @@
             );
         };
 
+        const UndoIcon = () => (
+            <span className="icon-svg icon-undo" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M9 7 L4 12 L9 17" />
+                    <path d="M5 12 H14.5 C18 12 20.5 14.2 20.5 17.5" />
+                </svg>
+            </span>
+        );
+
+        const RedoIcon = () => (
+            <span className="icon-svg icon-redo" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M15 7 L20 12 L15 17" />
+                    <path d="M19 12 H9.5 C6 12 3.5 14.2 3.5 17.5" />
+                </svg>
+            </span>
+        );
+
+        const RevertDivisionIcon = () => (
+            <span className="icon-svg icon-revert" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                    <path d="M11 7 L6 12 L11 17" />
+                    <path d="M7 12 H14.2 C17 12 18.8 10.7 18.8 8.4 C18.8 6.8 17.7 5.6 15.9 5.1" />
+                </svg>
+            </span>
+        );
+
         const SyntaxTreeBuilder = () => {
             // ===========================================
             // ESTADO
@@ -2264,6 +2333,32 @@
                 return null;
             };
 
+            const findParentId = (node, childId, parentId = null) => {
+                if (!node) return null;
+                if (node.id === childId) return parentId;
+                if (!node.children) return null;
+                for (const child of node.children) {
+                    const found = findParentId(child, childId, node.id);
+                    if (found) return found;
+                }
+                return null;
+            };
+
+            const insertSiblingNode = (node, targetId, side, newNode) => {
+                if (!node?.children) return node;
+                const targetIndex = node.children.findIndex(child => child.id === targetId);
+                if (targetIndex !== -1) {
+                    const children = [...node.children];
+                    const insertAt = side === 'left' ? targetIndex : targetIndex + 1;
+                    children.splice(insertAt, 0, newNode);
+                    return { ...node, children };
+                }
+                return {
+                    ...node,
+                    children: node.children.map(child => insertSiblingNode(child, targetId, side, newNode))
+                };
+            };
+
             const shorten = (s, n = 18) => {
                 const t = (s || '').trim();
                 if (!t) return '∅';
@@ -2292,8 +2387,8 @@
                 const patterns = [
                     { regex: /\*\*([^*]+)\*\*/, style: { fontWeight: 'bold' } },
                     { regex: /\*([^*]+)\*/, style: { fontStyle: 'italic' } },
-                    { regex: /_([^_]+)_/, style: { fontSize: '0.75em', verticalAlign: 'sub' } },
-                    { regex: /¨([^¨]+)¨/, style: { fontSize: '0.75em', verticalAlign: 'super' } }
+                    { regex: /__([^_]+)__/, style: { fontSize: '0.75em', verticalAlign: 'super' } },
+                    { regex: /_([^_]+)_/, style: { fontSize: '0.75em', verticalAlign: 'sub' } }
                 ];
                 
                 while (remaining.length > 0) {
@@ -2342,8 +2437,8 @@
                 const patterns = [
                     { regex: /\*\*([^*]+)\*\*/, tag: 'strong', style: '' },
                     { regex: /\*([^*]+)\*/, tag: 'em', style: '' },
-                    { regex: /_([^_]+)_/, tag: 'sub', style: 'font-size: 0.75em;' },
-                    { regex: /¨([^¨]+)¨/, tag: 'sup', style: 'font-size: 0.75em;' }
+                    { regex: /__([^_]+)__/, tag: 'sup', style: 'font-size: 0.75em;' },
+                    { regex: /_([^_]+)_/, tag: 'sub', style: 'font-size: 0.75em;' }
                 ];
                 
                 while (remaining.length > 0) {
@@ -2810,42 +2905,15 @@
                 });
             };
 
-            const expandNode = (nodeId) => {
-                setTree(prev => {
-                    const node = findNodeById(prev, nodeId);
-                    if (!node || node.children) return prev;
-                    
-                    // Crear un hijo con el mismo texto del nodo padre
-                    const childNode = {
-                        id: `${nodeId}-child-${Date.now()}`,
-                        text: node.text,
-                        labelTop: '',
-                        labelBottom: '',
-                        children: null,
-                        isNucleus: node.isNucleus,
-                        isConsolidated: false
-                    };
-                    
-                    return updateNode(prev, nodeId, { 
-                        children: [childNode],
-                        isNucleus: false
-                    });
-                });
-            };
 
-            const addChildNode = (parentId) => {
+            const addSiblingNode = (targetId, side) => {
                 const txt = window.prompt('Texto del nodo extra:');
                 if (txt === null) return;
 
-                const parent = findNodeById(tree, parentId);
-                const existing = parent?.children ? [...parent.children] : [];
-                const siblings = existing.map(c => (c.text || '').trim() || '∅');
-
-                setPosPicker({
-                    parentId,
-                    txt: txt.trim(),
-                    siblings,
-                    pos: 1
+                setTree(prev => {
+                    const parentId = findParentId(prev, targetId);
+                    if (!parentId) return prev;
+                    return insertSiblingNode(prev, targetId, side, makeNewNode(txt.trim()));
                 });
             };
 
@@ -3268,7 +3336,7 @@
                 // Ocultar botones de edición y controles de zoom
                 const undoBtns = treeWrapper.querySelectorAll('.btn-danger-soft');
                 const clearBtns = treeWrapper.querySelectorAll('.clear-text-btn');
-                const addBtns = treeWrapper.querySelectorAll('.add-node-btn');
+                const addBtns = treeWrapper.querySelectorAll('.add-sibling-btn');
                 const splitBtns = treeWrapper.querySelectorAll('.split-toggle-btn');
                 const zoomControls = treeContainer.querySelector('.zoom-controls');
 
@@ -3883,10 +3951,11 @@
                 const words = node.text ? node.text.split(/\s+/) : [];
                 const canDivide = words.length > 1 && !node.isInserted && !node.isConsolidated;
                 const canConsolidate = words.length > 1 && !node.isInserted && !hasC;
-                // Nodos de una sola palabra pueden expandirse para agregar hijos
-                const canExpand = words.length === 1 && !node.isInserted && !hasC;
-                // Mostrar botón de negritas en nodos terminales (sin hijos)
+                // Nodos terminales absolutos: no tienen hijos y no pueden dividirse
                 const isTerminal = !hasC;
+                const isAbsoluteTerminal = isTerminal && !canDivide;
+                const hasParent = !!findParentId(tree, node.id);
+                const showAddSiblingButtons = isAbsoluteTerminal && hasParent;
 
                 return (
                     <div
@@ -3937,23 +4006,23 @@
                                                     {node.isConsolidated ? '÷' : '∪'}
                                                 </button>
                                             )}
-                                            {canExpand && (
-                                                <button
-                                                    className="consolidate-btn"
-                                                    title="Expandir (agregar constituyentes)"
-                                                    onClick={(e) => { e.stopPropagation(); expandNode(node.id); }}
-                                                >
-                                                    ÷
-                                                </button>
-                                            )}
-                                            {hasC && !node.isInserted && (
-                                                <button
-                                                    className="add-node-btn"
-                                                    title="Agregar nodo hijo"
-                                                    onClick={(e) => { e.stopPropagation(); addChildNode(node.id); }}
-                                                >
-                                                    +
-                                                </button>
+                                            {showAddSiblingButtons && (
+                                                <>
+                                                    <button
+                                                        className="add-sibling-btn left"
+                                                        title="Agregar hermano a la izquierda"
+                                                        onClick={(e) => { e.stopPropagation(); addSiblingNode(node.id, 'left'); }}
+                                                    >
+                                                        ← +
+                                                    </button>
+                                                    <button
+                                                        className="add-sibling-btn right"
+                                                        title="Agregar hermano a la derecha"
+                                                        onClick={(e) => { e.stopPropagation(); addSiblingNode(node.id, 'right'); }}
+                                                    >
+                                                        + →
+                                                    </button>
+                                                </>
                                             )}
                                             {hasC && (
                                                 <button
@@ -3963,7 +4032,7 @@
                                                     ✕
                                                 </button>
                                             )}
-                                            {isTerminal && (
+                                            {isAbsoluteTerminal && (
                                                 <button
                                                     className={`nucleus-toggle-btn ${node.isNucleus ? 'is-nucleus' : ''}`}
                                                     title={node.isNucleus ? "Quitar negritas (núcleo)" : "Marcar como núcleo (negritas)"}
@@ -3987,7 +4056,7 @@
                                                 title="Deshacer división"
                                                 aria-label="Deshacer división"
                                             >
-                                                ↩
+                                                <RevertDivisionIcon />
                                             </button>
                                         )}</div>
                                 )}
@@ -4521,7 +4590,7 @@
                                             disabled={!canUndo}
                                             title="Deshacer (Ctrl+Z)"
                                         >
-                                            ↶
+                                            <UndoIcon />
                                         </button>
                                         <button 
                                             onClick={handleRedo} 
@@ -4529,7 +4598,7 @@
                                             disabled={!canRedo}
                                             title="Rehacer (Ctrl+Shift+Z)"
                                         >
-                                            ↷
+                                            <RedoIcon />
                                         </button>
                                     </div>
                                     <span className="btn-separator"></span>
@@ -4654,8 +4723,8 @@
                                         <li>Haz clic en un <strong>recuadro celeste</strong> para dividir una estructura sintáctica en constituyentes.</li>
                                         <li>Haz clic en las <strong>barras grises</strong> entre palabras para marcar fronteras entre constituyentes.</li>
                                         <li>Haz clic en <code>↩</code> junto a un recuadro celeste para revertir la división.</li>
-                                        <li>Haz clic en la <code>⨉</code> roja si quieres eliminar el texto de un nodo y mantener solo las etiquetas.</li>
-                                        <li>Pasa el cursor por un nodo terminal (palabra) y pulsa <code>N</code> para marcarlo como <strong>núcleo</strong> (negritas).</li>
+                                        <li>Haz clic en la <code>⨉</code> roja si quieres eliminar el texto de un nodo y mantener solo las etiquetas y la jerarquía.</li>
+                                        <li>Pasa el cursor por un nodo terminal y pulsa <code>N</code> en el borde superior para marcarlo como <strong>núcleo</strong> (negritas).</li>
                                     </ul>
                                 </div>
 
@@ -4665,63 +4734,17 @@
                                         <li>En la etiqueta <strong>superior</strong> escribe la función sintáctica (Suj, CD, CI, N, Det, etc.).</li>
                                         <li>En la etiqueta <strong>inferior</strong> escribe la categoría (sust, v, SN, SV, etc.).</li>
                                         <li>Si lo prefieres, haz clic en <code>☰</code> para seleccionar etiquetas predefinidas.</li>
+                                        <li>Pasa el cursor por la etiqueta y pulsa <code>⇄</code> para dividirla o unirla. (Útil para análisis con múltiples funciones o categorías).</li>
                                     </ul>
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">⚡</span> Dividir etiquetas</h4>
+                                    <h4><span className="icon">🌱</span> Consolidar nodos y añadir constituyentes extra</h4>
                                     <ul>
-                                        <li>Pasa el cursor por la etiqueta y pulsa <code>⇄</code> para dividir o unir.</li>
-                                        <li>Útil para análisis con múltiples funciones o categorías.</li>
+                                        <li>Pasa el cursor por un nodo celeste y pulsa <code>∪</code> para consolidarlo cuando no deba dividirse sintácticamente.</li>
+                                        <li>Pulsa de nuevo <code>∪</code> para volver a permitir la división.</li>
+                                        <li>En nodos terminales, usa <code>← +</code> o <code>+ →</code> para añadir un constituyente hermano inmediato a la izquierda o a la derecha. (Útil para perífrasis, locuciones o constituyentes elididos).</li>
                                     </ul>
-                                </div>
-
-                                <div className="instruction-card">
-                                    <h4><span className="icon">🌱</span> Agregar constituyentes extra</h4>
-                                    <ul>
-                                        <li>Pasa el cursor por el nodo bajo el cual quieres crear un constituyente extra y haz clic en <code>+</code>.</li>
-                                        <li>Escribe el texto y elige la posición donde insertarlo.</li>
-                                        <li>Útil para añadir constituyentes elididos.</li>
-                                    </ul>
-                                </div>
-
-                                <div className="instruction-card">
-                                    <h4><span className="icon">🅰️</span> Formato de texto</h4>
-                                    <ul>
-                                        <li><code>*texto*</code> para <em>cursivas</em></li>
-                                        <li><code>**texto**</code> para <strong>negritas</strong></li>
-                                        <li><code>_texto_</code> para <sub>subíndice</sub></li>
-                                        <li><code>¨texto¨</code> para <sup>superíndice</sup></li>
-                                    </ul>
-                                </div> 
-
-                                <div className="instruction-card">
-                                    <h4><span className="icon">⌨️</span> Atajos de teclado</h4>
-                                            <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '40px', marginTop: '8px' }}>
-                                            <ul className="shortcut-list">
-                                                <li style={{ marginBottom: '10px', opacity: 0.7, fontSize: '11px', fontWeight: 'bold',
-                                    whiteSpace: 'normal',
-                                    wordBreak: 'break-word', color: '#6b7280' }}>WINDOWS / LINUX</li>
-                                                <li><span className="key">Ctrl</span>+<span className="key">Z</span> Deshacer</li>
-                                                <li><span className="key">Ctrl</span>+<span className="key">Y</span> Rehacer</li>
-                                                <li><span className="key">Ctrl</span>+<span className="key">S</span> Guardar</li>
-                                                <li><span className="key">Ctrl</span>+<span className="key">+</span> Acercar</li>
-                                                <li><span className="key">Ctrl</span>+<span className="key">−</span> Alejar</li>
-                                                <li><span className="key">Ctrl</span>+<span className="key">0</span> Restablecer zoom</li>
-                                            </ul>
-
-                                            <ul className="shortcut-list">
-                                                <li style={{ marginBottom: '10px', opacity: 0.7, fontSize: '11px', fontWeight: 'bold',
-                                    whiteSpace: 'normal',
-                                    wordBreak: 'break-word', color: '#6b7280' }}>macOS</li>
-                                                <li><span className="key">⌘</span>+<span className="key">Z</span> Deshacer</li>
-                                                <li><span className="key">⌘</span>+<span className="key">⇧</span>+<span className="key">Z</span> Rehacer</li>
-                                                <li><span className="key">⌘</span>+<span className="key">S</span> Guardar</li>
-                                                <li><span className="key">⌘</span>+<span className="key">+</span> Acercar</li>
-                                                <li><span className="key">⌘</span>+<span className="key">−</span> Alejar</li>
-                                                <li><span className="key">⌘</span>+<span className="key">0</span> Restablecer zoom</li>
-                                            </ul>
-                                        </div>
                                 </div>
                                 
                                 <div className="instruction-card">
@@ -4730,24 +4753,6 @@
                                         <li>Usa los botones <code>[−]</code> y <code>[+]</code> en la esquina superior derecha para alejar/acercar.</li>
                                         <li>Haz clic en el porcentaje para restablecer al 100%.</li>
                                         <li>Rango de zoom: 40% a 200% en incrementos de 20%.</li>
-                                        <li>Los controles aparecen cuando hay un diagrama presente.</li>
-                                    </ul>
-                                </div>
-
-                                <div className="instruction-card">
-                                    <h4><span className="icon">🔗</span> Consolidar nodos</h4>
-                                    <ul>
-                                        <li>Pasa el cursor por un nodo celeste y pulsa <code>∪</code> para consolidarlo.</li>
-                                        <li>Útil para perífrasis verbales o locuciones, que no deben dividirse sintácticamente.</li>
-                                        <li>Pulsa <code>÷</code> para volver a permitir la división.</li>
-                                    </ul>
-                                </div>
-
-                                <div className="instruction-card">
-                                    <h4><span className="icon">🌿</span> Expandir nodos</h4>
-                                    <ul>
-                                        <li>Pasa el cursor por un nodo terminal y pulsa <code>÷</code> para expandirlo.</li>
-                                        <li>Se crea un hijo con el mismo texto. Usa <code>+</code> para agregar constituyentes extra.</li>
                                     </ul>
                                 </div>
 
@@ -4792,6 +4797,45 @@
                                     </ul>
                                 </div>
                                 )}
+
+                                <div className="instruction-card">
+                                    <h4><span className="icon">🅰️</span> Formato de texto</h4>
+                                    <ul>
+                                        <li><code>*texto*</code> para <em>cursivas</em></li>
+                                        <li><code>**texto**</code> para <strong>negritas</strong></li>
+                                        <li><code>_texto_</code> para <sub>subíndice</sub></li>
+                                        <li><code>__texto__</code> para <sup>superíndice</sup></li>
+                                    </ul>
+                                </div>
+
+                                <div className="instruction-card">
+                                    <h4><span className="icon">⌨️</span> Atajos de teclado</h4>
+                                            <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '40px', marginTop: '8px' }}>
+                                            <ul className="shortcut-list">
+                                                <li style={{ marginBottom: '10px', opacity: 0.7, fontSize: '11px', fontWeight: 'bold',
+                                    whiteSpace: 'normal',
+                                    wordBreak: 'break-word', color: '#6b7280' }}>WINDOWS / LINUX</li>
+                                                <li><span className="key">Ctrl</span>+<span className="key">Z</span> Deshacer</li>
+                                                <li><span className="key">Ctrl</span>+<span className="key">Y</span> Rehacer</li>
+                                                <li><span className="key">Ctrl</span>+<span className="key">S</span> Guardar</li>
+                                                <li><span className="key">Ctrl</span>+<span className="key">+</span> Acercar</li>
+                                                <li><span className="key">Ctrl</span>+<span className="key">−</span> Alejar</li>
+                                                <li><span className="key">Ctrl</span>+<span className="key">0</span> Restablecer zoom</li>
+                                            </ul>
+
+                                            <ul className="shortcut-list">
+                                                <li style={{ marginBottom: '10px', opacity: 0.7, fontSize: '11px', fontWeight: 'bold',
+                                    whiteSpace: 'normal',
+                                    wordBreak: 'break-word', color: '#6b7280' }}>macOS</li>
+                                                <li><span className="key">⌘</span>+<span className="key">Z</span> Deshacer</li>
+                                                <li><span className="key">⌘</span>+<span className="key">⇧</span>+<span className="key">Z</span> Rehacer</li>
+                                                <li><span className="key">⌘</span>+<span className="key">S</span> Guardar</li>
+                                                <li><span className="key">⌘</span>+<span className="key">+</span> Acercar</li>
+                                                <li><span className="key">⌘</span>+<span className="key">−</span> Alejar</li>
+                                                <li><span className="key">⌘</span>+<span className="key">0</span> Restablecer zoom</li>
+                                            </ul>
+                                        </div>
+                                </div>
 
                             </div>
                         </div>

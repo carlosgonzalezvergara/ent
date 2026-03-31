@@ -292,27 +292,21 @@
 
         <h3>Consolidar para impedir división</h3>
         <p>
-            Si un nodo tiene más de una palabra ortográfica pero es solo una palabra sintáctica, puedes “consolidarlo” para que no se divida. Usa para eso el botón <strong>∪</strong> que encontrarás en la parte superior izquierda del nodo. El nodo se volverá de color blanco y aparecerá el botón <strong>÷</strong> en su esquina superior izquierda, por si lo quieres volver a dejar como divisible.
+            Si un nodo tiene más de una palabra ortográfica pero constituye una sola palabra sintáctica, puedes “consolidarlo” para impedir su división. Usa para eso el botón <strong>∪</strong> que encontrarás en la parte superior izquierda del nodo. El nodo se volverá de color blanco y pasará a comportarse como un nodo terminal absoluto.
         </p>
 
         <h3>Deshacer una división</h3>
         <p>
             Si has dividido un nodo en sus nodos hijos, pero te arrepientes y quieres volver atrás, usa el botón <strong>↩</strong> (<em>Deshacer división</em>). Esto elimina los hijos del nodo.
         </p>
-
-        <h3>Expandir un nodo de una palabra</h3>
-        <p>
-            Si un nodo terminal tiene <strong>una sola palabra</strong>, ENT permite “expandirlo” para agregar constituyentes debajo. Esto es útil para añadir, por ejemplo, constituyentes elididos. Pulsa el botón <strong>÷</strong> de la esquina superior izquierda. Esto generará un nodo hijo idéntico y aparecerá un botón <strong>+</strong> bajo el nodo, lo que te permitirá agregar constituyentes extra.
-        </p>
-
-        <h3>Eliminar el texto de un nodo</h3>
+<h3>Eliminar el texto de un nodo</h3>
         <p>
             Si lo prefieres, puedes eliminar el texto de un nodo una vez que lo has dividido. Para eso, puedes usar el botón <strong>⨉</strong> rojo que encontrarás en la esquina superior derecha del nodo.
         </p>
 
         <h3>Marcar un nodo como núcleo</h3>
         <p>
-            En los nodos terminales (los que no tienen hijos), encontrarás un botón <strong>N</strong> que permite marcar ese constituyente como <strong>núcleo</strong>. Al activarlo, el texto del nodo se mostrará en negrita, lo que facilita identificar visualmente los núcleos de cada sintagma en el diagrama.
+            En los nodos terminales (los que no tienen hijos), encontrarás un botón <strong>N</strong> situado en el <strong>centro del borde superior</strong> del nodo. Ese botón permite marcar el constituyente como <strong>núcleo</strong>. Al activarlo, el texto del nodo se mostrará en negrita, lo que facilita identificar visualmente los núcleos de cada sintagma en el diagrama.
         </p>
     </section>
     <section id="etiquetado">
@@ -340,19 +334,23 @@
             <li><strong>Negrita</strong>: <code>**texto**</code></li>
             <li><em>Cursiva</em>: <code>*texto*</code></li>
             <li>Texto en <sub>subíndice</sub>: <code>_i_</code></li>
-            <li>Texto en <sup>superíndice</sup>: <code>¨n¨</code></li>
+            <li>Texto en <sup>superíndice</sup>: <code>__texto__</code></li>
         </ul>
     </section>
     <section id="nodos-extra">
         <h2>6. Nodos extra y elisión</h2>
 
-        <h3>Agregar un nodo hijo “extra”</h3>
+        <h3>Agregar un nodo hermano extra</h3>
         <p>
-            Cuando un nodo ya ha sido dividido, aparecerá un botón <strong>+</strong> en su parte inferior, que permite insertar un nuevo hijo con texto libre (por ejemplo, para constituyentes elididos).
+            En los <strong>nodos terminales absolutos</strong> —es decir, en aquellos que no tienen hijos y que ya no pueden dividirse— aparecen dos botones verdes para insertar constituyentes adicionales: <strong>← +</strong> en el borde izquierdo y <strong>+ →</strong> en el borde derecho del nodo.
         </p>
 
         <p>
-            Al crear un nodo extra, ENT te pedirá el texto y luego la posición: <em>Al inicio</em>, <em>Al final</em> o <em>Entre “X” y “Y”</em>. Así puedes decidir exactamente dónde se inserta dentro de los hijos del nodo.
+            Si pulsas uno de esos botones, ENT crea un <strong>nodo hermano</strong> inmediato a la izquierda o a la derecha del nodo seleccionado. El nuevo nodo pasa a ser hijo del mismo nodo padre que domina al nodo desde el que se hizo la inserción. Esta operación está disponible también en nodos que fueron consolidados con <strong>∪</strong>.
+        </p>
+
+        <p>
+            Esta función resulta útil para introducir constituyentes elididos u otros elementos necesarios sin alterar la jerarquía ya construida.
         </p>
     </section>
     <section id="ejercitacion">

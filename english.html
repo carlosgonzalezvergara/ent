@@ -613,24 +613,33 @@
         }
         .node-box:hover .clear-text-btn { display: flex; }
 
-        .add-node-btn {
+        .add-sibling-btn {
             position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 50%;
             background: #1E8C5C;
             color: white;
             border: none;
-            border-radius: 50%;
-            width: 18px;
+            border-radius: 999px;
+            min-width: 34px;
             height: 18px;
-            font-size: 12px;
+            padding: 0 6px;
+            font-size: 10px;
+            line-height: 1;
             cursor: pointer;
             display: none;
             align-items: center;
             justify-content: center;
+            white-space: nowrap;
         }
-        .node-box:hover .add-node-btn { display: flex; }
+        .add-sibling-btn.left {
+            left: 0;
+            transform: translate(-50%, -50%);
+        }
+        .add-sibling-btn.right {
+            left: 100%;
+            transform: translate(-50%, -50%);
+        }
+        .node-box:hover .add-sibling-btn { display: flex; }
 
         .consolidate-btn {
             position: absolute;
@@ -652,9 +661,9 @@
 
         .nucleus-toggle-btn {
             position: absolute;
-            right: -10px;
-            top: 50%;
-            transform: translateY(-50%);
+            left: 50%;
+            top: 0;
+            transform: translate(-50%, -50%);
             width: 18px;
             height: 18px;
             border-radius: 4px;
@@ -1966,6 +1975,27 @@
             );
         };
 
+        const UndoIcon = () => (
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+                <path d="M7.2 4.6 3.8 8l3.4 3.4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M4.2 8h5.9c2.6 0 4.2 1.4 4.2 3.8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+        );
+
+        const RedoIcon = () => (
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+                <path d="m10.8 4.6 3.4 3.4-3.4 3.4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M13.8 8H7.9c-2.6 0-4.2 1.4-4.2 3.8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+        );
+
+        const RevertDivisionIcon = () => (
+            <svg width="14" height="14" viewBox="0 0 18 18" aria-hidden="true">
+                <path d="M7.3 5 4.2 8.1l3.1 3.1" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M4.6 8.1h5.1c2.2 0 3.6 1.1 3.6 3" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+        );
+
         const SyntaxTreeBuilder = () => {
             // ===========================================
             // STATE
@@ -2183,6 +2213,32 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
                 return null;
             };
 
+            const findParentId = (node, childId, parentId = null) => {
+                if (!node) return null;
+                if (node.id === childId) return parentId;
+                if (!node.children) return null;
+                for (const child of node.children) {
+                    const found = findParentId(child, childId, node.id);
+                    if (found) return found;
+                }
+                return null;
+            };
+
+            const insertSiblingNode = (node, targetId, side, newNode) => {
+                if (!node?.children) return node;
+                const targetIndex = node.children.findIndex(child => child.id === targetId);
+                if (targetIndex !== -1) {
+                    const children = [...node.children];
+                    const insertAt = side === 'left' ? targetIndex : targetIndex + 1;
+                    children.splice(insertAt, 0, newNode);
+                    return { ...node, children };
+                }
+                return {
+                    ...node,
+                    children: node.children.map(child => insertSiblingNode(child, targetId, side, newNode))
+                };
+            };
+
             const shorten = (s, n = 18) => {
                 const t = (s || '').trim();
                 if (!t) return '∅';
@@ -2212,7 +2268,7 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
                     { regex: /\*\*([^*]+)\*\*/, style: { fontWeight: 'bold' } },
                     { regex: /\*([^*]+)\*/, style: { fontStyle: 'italic' } },
                     { regex: /_([^_]+)_/, style: { fontSize: '0.75em', verticalAlign: 'sub' } },
-                    { regex: /¨([^¨]+)¨/, style: { fontSize: '0.75em', verticalAlign: 'super' } }
+                    { regex: /__([^_]+)__/, style: { fontSize: '0.75em', verticalAlign: 'super' } }
                 ];
                 
                 while (remaining.length > 0) {
@@ -2262,7 +2318,7 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
                     { regex: /\*\*([^*]+)\*\*/, tag: 'strong', style: '' },
                     { regex: /\*([^*]+)\*/, tag: 'em', style: '' },
                     { regex: /_([^_]+)_/, tag: 'sub', style: 'font-size: 0.75em;' },
-                    { regex: /¨([^¨]+)¨/, tag: 'sup', style: 'font-size: 0.75em;' }
+                    { regex: /__([^_]+)__/, tag: 'sup', style: 'font-size: 0.75em;' }
                 ];
                 
                 while (remaining.length > 0) {
@@ -2718,43 +2774,15 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
                     return updateNode(prev, nodeId, { isConsolidated: !node.isConsolidated });
                 });
             };
-
-            const expandNode = (nodeId) => {
-                setTree(prev => {
-                    const node = findNodeById(prev, nodeId);
-                    if (!node || node.children) return prev;
                     
-                    // Create a child with the same text as the parent node
-                    const childNode = {
-                        id: `${nodeId}-child-${Date.now()}`,
-                        text: node.text,
-                        labelTop: '',
-                        labelBottom: '',
-                        children: null,
-                        isNucleus: node.isNucleus,
-                        isConsolidated: false
-                    };
-                    
-                    return updateNode(prev, nodeId, { 
-                        children: [childNode],
-                        isNucleus: false
-                    });
-                });
-            };
-
-            const addChildNode = (parentId) => {
+            const addSiblingNode = (targetId, side) => {
                 const txt = window.prompt('Text for extra node:');
                 if (txt === null) return;
 
-                const parent = findNodeById(tree, parentId);
-                const existing = parent?.children ? [...parent.children] : [];
-                const siblings = existing.map(c => (c.text || '').trim() || '∅');
-
-                setPosPicker({
-                    parentId,
-                    txt: txt.trim(),
-                    siblings,
-                    pos: 1
+                setTree(prev => {
+                    const parentId = findParentId(prev, targetId);
+                    if (!parentId) return prev;
+                    return insertSiblingNode(prev, targetId, side, makeNewNode(txt.trim()));
                 });
             };
 
@@ -3170,7 +3198,7 @@ setExerciseMode(true);
                 // Hide edit buttons
                 const undoBtns = treeWrapper.querySelectorAll('.btn-danger-soft');
                 const clearBtns = treeWrapper.querySelectorAll('.clear-text-btn');
-                const addBtns = treeWrapper.querySelectorAll('.add-node-btn');
+                const addBtns = treeWrapper.querySelectorAll('.add-sibling-btn');
                 const splitBtns = treeWrapper.querySelectorAll('.split-toggle-btn');
                 const zoomControls = treeContainer.querySelector('.zoom-controls');
 
@@ -3783,10 +3811,10 @@ setExerciseMode(true);
                 const words = node.text ? node.text.split(/\s+/) : [];
                 const canDivide = words.length > 1 && !node.isInserted && !node.isConsolidated;
                 const canConsolidate = words.length > 1 && !node.isInserted && !hasC;
-                // Single-word nodes can be expanded to add children
-                const canExpand = words.length === 1 && !node.isInserted && !hasC;
-                // Show bold button on terminal nodes (no children)
                 const isTerminal = !hasC;
+                const isAbsoluteTerminal = isTerminal && !canDivide;
+                const hasParent = !!findParentId(tree, node.id);
+                const showAddSiblingButtons = isAbsoluteTerminal && hasParent;
 
                 return (
                     <div
@@ -3837,23 +3865,23 @@ setExerciseMode(true);
                                                     {node.isConsolidated ? '÷' : '∪'}
                                                 </button>
                                             )}
-                                            {canExpand && (
-                                                <button
-                                                    className="consolidate-btn"
-                                                    title="Expand (add constituents)"
-                                                    onClick={(e) => { e.stopPropagation(); expandNode(node.id); }}
-                                                >
-                                                    ÷
-                                                </button>
-                                            )}
-                                            {hasC && !node.isInserted && (
-                                                <button
-                                                    className="add-node-btn"
-                                                    title="Add child node"
-                                                    onClick={(e) => { e.stopPropagation(); addChildNode(node.id); }}
-                                                >
-                                                    +
-                                                </button>
+                                            {showAddSiblingButtons && (
+                                                <>
+                                                    <button
+                                                        className="add-sibling-btn left"
+                                                        title="Add sibling to the left"
+                                                        onClick={(e) => { e.stopPropagation(); addSiblingNode(node.id, 'left'); }}
+                                                    >
+                                                        ← +
+                                                    </button>
+                                                    <button
+                                                        className="add-sibling-btn right"
+                                                        title="Add sibling to the right"
+                                                        onClick={(e) => { e.stopPropagation(); addSiblingNode(node.id, 'right'); }}
+                                                    >
+                                                        + →
+                                                    </button>
+                                                </>
                                             )}
                                             {hasC && (
                                                 <button
@@ -3863,7 +3891,7 @@ setExerciseMode(true);
                                                     ✕
                                                 </button>
                                             )}
-                                            {isTerminal && (
+                                            {isAbsoluteTerminal && (
                                                 <button
                                                     className={`nucleus-toggle-btn ${node.isNucleus ? 'is-nucleus' : ''}`}
                                                     title={node.isNucleus ? "Remove bold (head)" : "Mark as head (bold)"}
@@ -3887,7 +3915,7 @@ setExerciseMode(true);
                                                 title="Undo division"
                                                 aria-label="Undo division"
                                             >
-                                                ↩
+                                                <RevertDivisionIcon />
                                             </button>
                                         )}</div>
                                 )}
@@ -4426,7 +4454,7 @@ setExerciseMode(true);
                                             disabled={!canUndo}
                                             title="Undo (Ctrl+Z)"
                                         >
-                                            ↶
+                                            <UndoIcon />
                                         </button>
                                         <button 
                                             onClick={handleRedo} 
@@ -4434,7 +4462,7 @@ setExerciseMode(true);
                                             disabled={!canRedo}
                                             title="Redo (Ctrl+Shift+Z)"
                                         >
-                                            ↷
+                                            <RedoIcon />
                                         </button>
                                     </div>
                                     <span className="btn-separator"></span>
@@ -4550,9 +4578,9 @@ setExerciseMode(true);
                                     <ul>
                                         <li>Click on a <strong>light blue box</strong> to divide a syntactic structure into constituents.</li>
                                         <li>Click on the <strong>gray bars</strong> between words to mark boundaries between constituents.</li>
-                                        <li>Click <code>↩</code> next to a light blue box to revert the division.</li>
-                                        <li>Click the red <code>⨉</code> to remove the text from a node and keep only the labels.</li>
-                                        <li>Hover over a terminal node (word) and click <code>H</code> to mark it as <strong>head</strong> (bold).</li>
+                                        <li>Click the curved arrow next to a divided node to revert the division.</li>
+                                        <li>Click the red <code>⨉</code> to remove the text from a node and keep only the labels and the hierarchy.</li>
+                                        <li>In absolute terminal nodes, click <code>H</code> at the top edge to mark the node as <strong>head</strong> (bold).</li>
                                     </ul>
                                 </div>
 
@@ -4562,25 +4590,71 @@ setExerciseMode(true);
                                         <li>In the <strong>top</strong> label, write the grammatical function (SUBJ, DO, IO, HEAD, DET, etc.).</li>
                                         <li>In the <strong>bottom</strong> label, write the category (N, V, NP, VP, etc.).</li>
                                         <li>If you prefer, click <code>☰</code> to select predefined labels.</li>
+                                        <li>Hover over a label and click <code>⇄</code> to split or merge it.</li>
                                     </ul>
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">⚡</span> Split labels</h4>
+                                    <h4><span className="icon">🔗</span> Consolidate nodes and add extra constituents</h4>
                                     <ul>
-                                        <li>Hover over the label and click <code>⇄</code> to split or merge.</li>
-                                        <li>Useful for analyses with multiple functions or categories.</li>
+                                        <li>Hover over a light blue node and click <code>∪</code> to consolidate it.</li>
+                                        <li>Use this for multi-word expressions that should not be syntactically divided.</li>
+                                        <li>Click <code>÷</code> to allow division again.</li>
+                                        <li>In terminal nodes, use <code>← +</code> or <code>+ →</code> to add an immediate sibling to the left or right. (Useful for adding elided constituents).</li>
                                     </ul>
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">🌱</span> Add extra constituents</h4>
+                                    <h4><span className="icon">🔎</span> Zoom</h4>
                                     <ul>
-                                        <li>Hover over the node under which you want to create an extra constituent and click <code>+</code>.</li>
-                                        <li>Type the text and choose the position to insert it.</li>
-                                        <li>Useful for adding elided constituents.</li>
+                                        <li>Use the <code>[−]</code> and <code>[+]</code> buttons in the top-right corner to zoom out/in.</li>
+                                        <li>Click the percentage to reset to 100%.</li>
+                                        <li>Zoom range: 40% to 200% in 20% increments.</li>
+                                        <li>The controls appear when a diagram is present.</li>
                                     </ul>
                                 </div>
+
+                                <div className="instruction-card">
+                                    <h4><span className="icon">📁</span> Files</h4>
+                                    <ul>
+                                        <li>Click <strong>📁 Files</strong> to open the file manager.</li>
+                                        <li><strong>Local</strong> tab: save or load <code>.ent</code> files from your computer.</li>
+                                        <li><strong>Example bank</strong> tab: connect to Google Drive to access shared examples.</li>
+                                        <li>Shortcut: <span className="key">Ctrl</span>/<span className="key">⌘</span>+<span className="key">S</span> saves directly.</li>
+                                        <li><strong>Auto-save:</strong> your work is saved locally every ~3 seconds. When you reopen the page, ENT will offer to restore it.</li>
+                                    </ul>
+                                </div>
+
+                                <div className="instruction-card">
+                                    <h4><span className="icon">☁️</span> Example bank</h4>
+                                    <ul>
+                                        <li>To create an example bank, upload <code>.ent</code> files to a Google Drive folder.</li>
+                                        <li>Right-click the folder → <strong>Share</strong> → <strong>Anyone with the link</strong> (as Viewer).</li>
+                                        <li>Copy the link and share it with your students.</li>
+                                        <li>You can organize examples in subfolders (by topic, difficulty, etc.).</li>
+                                    </ul>
+                                </div>
+
+                                {!exerciseMode && (
+                                <div className="instruction-card">
+                                    <h4><span className="icon">📚</span> Exercise mode</h4>
+                                    <ul>
+                                        <li>Click <strong>📚 Exercise mode</strong> to practice.</li>
+                                        <li>Load an exercise from your computer or from an <strong>example bank</strong> on Google Drive.</li>
+                                        <li>Analyze the given expression and compare your result with the model.</li>
+                                    </ul>
+                                </div>
+                                )}
+
+                                {exerciseMode && (
+                                <div className="instruction-card">
+                                    <h4 style={{color: '#5b21b6'}}><span className="icon" style={{backgroundColor: '#5b21b6'}}>✎</span> Active exercise</h4>
+                                    <ul>
+                                        <li>Complete the analysis of the expression.</li>
+                                        <li>Use <strong>Compare</strong> to see the solution.</li>
+                                    </ul>
+                                </div>
+                                )}    
 
                                 <div className="instruction-card">
                                     <h4><span className="icon">🅰️</span> Text formatting</h4>
@@ -4588,7 +4662,7 @@ setExerciseMode(true);
                                         <li><code>*text*</code> for <em>italics</em></li>
                                         <li><code>**text**</code> for <strong>bold</strong></li>
                                         <li><code>_text_</code> for <sub>subscript</sub></li>
-                                        <li><code>¨text¨</code> for <sup>superscript</sup></li>
+                                        <li><code>__text__</code> for <sup>superscript</sup></li>
                                     </ul>
                                 </div> 
 
@@ -4640,76 +4714,6 @@ setExerciseMode(true);
                                         </ul>
                                         </div>
                                 </div>
-
-                                <div className="instruction-card">
-                                    <h4><span className="icon">🔎</span> Zoom</h4>
-                                    <ul>
-                                        <li>Use the <code>[−]</code> and <code>[+]</code> buttons in the top-right corner to zoom out/in.</li>
-                                        <li>Click the percentage to reset to 100%.</li>
-                                        <li>Zoom range: 40% to 200% in 20% increments.</li>
-                                        <li>The controls appear when a diagram is present.</li>
-                                    </ul>
-                                </div>
-
-                                <div className="instruction-card">
-                                    <h4><span className="icon">🔗</span> Consolidate nodes</h4>
-                                    <ul>
-                                        <li>Hover over a light blue node and click <code>∪</code> to consolidate it.</li>
-                                        <li>Useful for phrasal verbs or multi-word expressions that should not be syntactically divided.</li>
-                                        <li>Click <code>÷</code> to allow division again.</li>
-                                    </ul>
-                                </div>
-
-                                <div className="instruction-card">
-                                    <h4><span className="icon">🌿</span> Expand nodes</h4>
-                                    <ul>
-                                        <li>Hover over a terminal node and click <code>÷</code> to expand it.</li>
-                                        <li>A child with the same text is created. Use <code>+</code> to add extra constituents.</li>
-                                    </ul>
-                                </div>
-
-                                <div className="instruction-card">
-                                    <h4><span className="icon">📁</span> Files</h4>
-                                    <ul>
-                                        <li>Click <strong>📁 Files</strong> to open the file manager.</li>
-                                        <li><strong>Local</strong> tab: save or load <code>.ent</code> files from your computer.</li>
-                                        <li><strong>Example bank</strong> tab: connect to Google Drive to access shared examples.</li>
-                                        <li>Shortcut: <span className="key">Ctrl</span>/<span className="key">⌘</span>+<span className="key">S</span> saves directly.</li>
-                                    
-                                <li><strong>Auto-save:</strong> your work is saved locally every ~3 seconds. When you reopen the page, ENT will offer to restore it.</li>
-</ul>
-                                </div>
-
-                                <div className="instruction-card">
-                                    <h4><span className="icon">☁️</span> Example bank</h4>
-                                    <ul>
-                                        <li>To create an example bank, upload <code>.ent</code> files to a Google Drive folder.</li>
-                                        <li>Right-click the folder → <strong>Share</strong> → <strong>Anyone with the link</strong> (as Viewer).</li>
-                                        <li>Copy the link and share it with your students.</li>
-                                        <li>You can organize examples in subfolders (by topic, difficulty, etc.).</li>
-                                    </ul>
-                                </div>
-
-                                {!exerciseMode && (
-                                <div className="instruction-card">
-                                    <h4><span className="icon">📚</span> Exercise mode</h4>
-                                    <ul>
-                                        <li>Click <strong>📚 Exercise mode</strong> to practice.</li>
-                                        <li>Load an exercise from your computer or from an <strong>example bank</strong> on Google Drive.</li>
-                                        <li>Analyze the given expression and compare your result with the model.</li>
-                                    </ul>
-                                </div>
-                                )}
-
-                                {exerciseMode && (
-                                <div className="instruction-card">
-                                    <h4 style={{color: '#5b21b6'}}><span className="icon" style={{backgroundColor: '#5b21b6'}}>✎</span> Active exercise</h4>
-                                    <ul>
-                                        <li>Complete the analysis of the expression.</li>
-                                        <li>Use <strong>Compare</strong> to see the solution.</li>
-                                    </ul>
-                                </div>
-                                )}
 
                             </div>
                         </div>

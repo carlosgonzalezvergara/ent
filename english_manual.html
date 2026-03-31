@@ -292,17 +292,12 @@
 
         <h3>Consolidating to prevent division</h3>
         <p>
-            If a node has more than one orthographic word but is only one syntactic word, you can "consolidate" it so it cannot be divided. Use the <strong>∪</strong> button you'll find in the upper left corner of the node. The node will turn white and the <strong>÷</strong> button will appear in its upper left corner, in case you want to make it divisible again.
+            If a node has more than one orthographic word but corresponds to a single syntactic word, you can "consolidate" it so that it can no longer be divided. Use the <strong>∪</strong> button in the upper left corner of the node. The node will turn white and will behave as an <strong>absolute terminal node</strong>.
         </p>
 
         <h3>Undoing a division</h3>
         <p>
             If you have divided a node into its child nodes but regret it and want to go back, use the <strong>↩</strong> button (<em>Undo split</em>). This removes the node's children.
-        </p>
-
-        <h3>Expanding a single-word node</h3>
-        <p>
-            If a terminal node has <strong>a single word</strong>, ENT allows you to "expand" it to add constituents below. This is useful for adding, for example, elided constituents. Press the <strong>÷</strong> button in the upper left corner. This will generate an identical child node and a <strong>+</strong> button will appear below the node, allowing you to add extra constituents.
         </p>
 
         <h3>Deleting node text</h3>
@@ -312,7 +307,7 @@
 
         <h3>Marking a node as head</h3>
         <p>
-            In terminal nodes (those without children), you'll find an <strong>H</strong> button that allows you to mark that constituent as <strong>head</strong>. When activated, the node's text will be displayed in bold, making it easier to visually identify the heads of each phrase in the diagram.
+            In <strong>absolute terminal nodes</strong> (that is, nodes without children that are no longer divisible), you'll find an <strong>H</strong> button centered on the <strong>top edge</strong> of the node. This button is not shown in light blue nodes that can still be divided, but it is available in nodes that have been consolidated with <strong>∪</strong>. When activated, the node's text is displayed in bold, making it easier to identify the head of the phrase.
         </p>
     </section>
     <section id="etiquetado">
@@ -340,19 +335,23 @@
             <li><strong>Bold</strong>: <code>**text**</code></li>
             <li><em>Italic</em>: <code>*text*</code></li>
             <li>Text in <sub>subscript</sub>: <code>_i_</code></li>
-            <li>Text in <sup>superscript</sup>: <code>¨n¨</code></li>
+            <li>Text in <sup>superscript</sup>: <code>__n__</code></li>
         </ul>
     </section>
     <section id="nodos-extra">
         <h2>6. Extra nodes and elision</h2>
 
-        <h3>Adding an "extra" child node</h3>
+        <h3>Adding extra constituents</h3>
         <p>
-            When a node has already been divided, a <strong>+</strong> button will appear at the bottom, allowing you to insert a new child with free text (for example, for elided constituents).
+            ENT allows you to add extra constituents by creating an <strong>immediate sibling</strong> of an existing node. This option is available only in <strong>absolute terminal nodes</strong>, including nodes that became terminal through consolidation.
         </p>
 
         <p>
-            When creating an extra node, ENT will ask you for the text and then the position: <em>At the beginning</em>, <em>At the end</em>, or <em>Between "X" and "Y"</em>. This way you can decide exactly where it is inserted among the node's children.
+            These nodes display two green buttons: <strong>← +</strong> on the left edge and <strong>+ →</strong> on the right edge. Clicking either one creates a new sibling immediately to the left or to the right of the selected node. The new node becomes a child of the same parent as the node from which the button was pressed.
+        </p>
+
+        <p>
+            When creating the extra constituent, ENT will ask for its text and insert it directly in the corresponding adjacent position. This is useful, for example, for representing elided material or adding missing constituents without altering the existing structure.
         </p>
     </section>
     <section id="ejercitacion">
