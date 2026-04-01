@@ -292,7 +292,15 @@
 
         <h3>Consolidating to prevent division</h3>
         <p>
-            If a node has more than one orthographic word but corresponds to a single syntactic word, you can "consolidate" it so that it can no longer be divided. Use the <strong>∪</strong> button in the upper left corner of the node. The node will turn white and will behave as an <strong>absolute terminal node</strong>.
+            If a node has more than one orthographic word but corresponds to a single syntactic word, you can "consolidate" it so that it can no longer be divided. Use the <strong>∪</strong> (orange) button in the upper left corner of the node. The node will turn white and will behave as an <strong>absolute terminal node</strong>.
+        </p>
+        <p>
+            To allow division again on a consolidated node, click the <strong>✂</strong> (blue) button that replaces the <strong>∪</strong> button on consolidated nodes.
+        </p>
+
+        <h3>Expanding a terminal node</h3>
+        <p>
+            On terminal nodes that cannot be divided (either because they contain a single word or because they were consolidated), you will find a <strong>÷</strong> (orange) button in the upper left corner. This button opens a dialog that allows you to create child constituents manually: you can specify the number of constituents (from 2 to 8) and enter the text for each one. This is useful when you need to subdivide a node into constituents that do not correspond to the words in the original text.
         </p>
 
         <h3>Undoing a division</h3>
@@ -347,11 +355,11 @@
         </p>
 
         <p>
-            These nodes display two green buttons: <strong>← +</strong> on the left edge and <strong>+ →</strong> on the right edge. Clicking either one creates a new sibling immediately to the left or to the right of the selected node. The new node becomes a child of the same parent as the node from which the button was pressed.
+            These nodes display two green buttons: <strong>← +</strong> on the left edge and <strong>+ →</strong> on the right edge. Clicking either one opens a dialog where you can enter the text for the new constituent.
         </p>
 
         <p>
-            When creating the extra constituent, ENT will ask for its text and insert it directly in the corresponding adjacent position. This is useful, for example, for representing elided material or adding missing constituents without altering the existing structure.
+            Upon confirmation, the new sibling is inserted immediately to the left or to the right of the selected node. The new node becomes a child of the same parent as the node from which the button was pressed. This is useful, for example, for representing elided material or adding missing constituents without altering the existing structure.
         </p>
     </section>
     <section id="ejercitacion">
@@ -471,9 +479,5 @@
     </section>
 
     <footer>
-        <p>Developed by <strong>Carlos González Vergara</strong> (<a href="mailto:cgonzalv@uc.cl">cgonzalv@uc.cl</a>)</p>
-        <p>Departamento de Ciencias del Lenguaje &bull; Facultad de Letras <br> Pontificia Universidad Católica de Chile</p>
-    </footer>
-
-</div> </body>
-</html>
+        <p>Developed by <strong>Carlos González Vergara</strong> (<a href="/cdn-cgi/l/email-protection#096a6e66677368657f497c6a276a65"><span class="__cf_email__" data-cfemail="afccc8c0c1d5cec3d9efdacc81ccc3">[email&#160;protected]</span></a>)</p>
+        <p>Departamento de Ciencias de

@@ -756,6 +756,24 @@
         }
         .node-box:hover .consolidate-btn { display: flex; }
 
+        .deconsolidate-btn {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #93c5fd;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .node-box:hover .deconsolidate-btn { display: flex; }
+
         .nucleus-toggle-btn {
             position: absolute;
             left: 50%;
@@ -1126,31 +1144,40 @@
             border: 1px solid #e5e7eb;
             border-radius: 12px;
             box-shadow: 0 20px 40px rgba(0,0,0,.18);
-            padding: 18px 18px 14px;
+            padding: 22px 22px 16px;
         }
 
         .pos-title {
             font-weight: 700;
             color: #374151;
-            margin: 0 0 6px;
+            margin: 0 0 4px;
+            font-size: 16px;
         }
 
         .pos-sub {
-            margin: 0 0 12px;
+            margin: 0 0 16px;
             color: #6b7280;
             font-size: 13px;
-            line-height: 1.35;
+            line-height: 1.45;
         }
 
         .pos-row {
-            display: flex;
-            gap: 10px;
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 10px 12px;
             align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .pos-row-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
         }
 
         .pos-select {
-            flex: 1;
-            padding: 10px 12px;
+            width: 100%;
+            padding: 9px 11px;
             border: 1px solid #d1d5db;
             border-radius: 8px;
             font-size: 14px;
@@ -1158,11 +1185,16 @@
             color: #374151;
         }
 
+        .pos-select:focus {
+            outline: none;
+            border-color: #6ee7b7;
+            box-shadow: 0 0 0 3px rgba(30, 140, 92, 0.12);
+        }
+
         .pos-actions {
             display: flex;
             justify-content: flex-end;
             gap: 10px;
-            margin-top: 14px;
         }
 
         /* ===========================================
@@ -1263,6 +1295,93 @@
             display: flex;
             justify-content: flex-end;
             gap: 10px;
+        }
+
+        /* ===========================================
+           MODAL DE EXPANSIÓN
+           =========================================== */
+        .expand-modal {
+            width: min(620px, calc(100vw - 32px));
+            max-height: calc(100vh - 64px);
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,.18);
+            padding: 22px 22px 16px;
+            overflow-y: auto;
+        }
+
+        .expand-title {
+            font-weight: 700;
+            color: #374151;
+            margin: 0 0 4px;
+            font-size: 16px;
+        }
+
+        .expand-sub {
+            margin: 0 0 16px;
+            color: #6b7280;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .expand-grid {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 10px 12px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .expand-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .expand-count-select,
+        .expand-part-input {
+            width: 100%;
+            padding: 9px 11px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #374151;
+            background: #fff;
+        }
+
+        .expand-count-select:focus,
+        .expand-part-input:focus {
+            outline: none;
+            border-color: #6ee7b7;
+            box-shadow: 0 0 0 3px rgba(30, 140, 92, 0.12);
+        }
+
+        .expand-parts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .expand-part-row {
+            display: grid;
+            grid-template-columns: 130px 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .expand-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        @media (max-width: 560px) {
+            .expand-grid,
+            .expand-part-row {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* ===========================================
@@ -1641,11 +1760,7 @@
             }
             
             .pos-row {
-                flex-direction: column;
-            }
-            
-            .pos-select {
-                width: 100%;
+                grid-template-columns: 1fr;
             }
 
             .btn-separator {
@@ -2131,6 +2246,10 @@
             // Detección de clíticos
             const [cliticCandidates, setCliticCandidates] = useState([]);
             const [showCliticModal, setShowCliticModal] = useState(false);
+
+            // Modal de expansión guiada
+            const [expandModal, setExpandModal] = useState(null);
+            const [siblingModal, setSiblingModal] = useState(null);
 
             // Referencias
             const fileInputRef = useRef(null);
@@ -2907,14 +3026,71 @@
 
 
             const addSiblingNode = (targetId, side) => {
-                const txt = window.prompt('Texto del nodo extra:');
-                if (txt === null) return;
+                setSiblingModal({ targetId, side, text: '' });
+            };
 
+            const confirmAddSibling = () => {
+                if (!siblingModal) return;
+                const { targetId, side, text } = siblingModal;
                 setTree(prev => {
                     const parentId = findParentId(prev, targetId);
                     if (!parentId) return prev;
-                    return insertSiblingNode(prev, targetId, side, makeNewNode(txt.trim()));
+                    return insertSiblingNode(prev, targetId, side, makeNewNode(text.trim()));
                 });
+                setSiblingModal(null);
+            };
+
+            const openExpandModal = (nodeId) => {
+                const node = findNodeById(tree, nodeId);
+                if (!node || node.children) return;
+                setExpandModal({
+                    nodeId,
+                    count: 2,
+                    parts: ['', '']
+                });
+            };
+
+            const updateExpandCount = (rawCount) => {
+                const count = Math.max(2, Math.min(8, parseInt(rawCount, 10) || 2));
+                setExpandModal(prev => {
+                    if (!prev) return prev;
+                    const nextParts = Array.from({ length: count }, (_, idx) => prev.parts[idx] || '');
+                    return { ...prev, count, parts: nextParts };
+                });
+            };
+
+            const updateExpandPart = (index, value) => {
+                setExpandModal(prev => {
+                    if (!prev) return prev;
+                    const parts = [...prev.parts];
+                    parts[index] = value;
+                    return { ...prev, parts };
+                });
+            };
+
+            const confirmExpandNode = () => {
+                if (!expandModal) return;
+                const cleanedParts = expandModal.parts.map(part => part.trim()).filter(Boolean);
+                if (cleanedParts.length !== expandModal.count) {
+                    alert('Debes ingresar texto para todos los constituyentes.');
+                    return;
+                }
+
+                const newChildren = cleanedParts.map((part, idx) => ({
+                    id: `${expandModal.nodeId}-exp-${idx}-${Date.now()}`,
+                    text: part,
+                    labelTop: '',
+                    labelBottom: '',
+                    children: null,
+                    isNucleus: false,
+                    isConsolidated: false
+                }));
+
+                setTree(prev => updateNode(prev, expandModal.nodeId, {
+                    children: newChildren,
+                    isNucleus: false
+                }));
+                setExpandModal(null);
             };
 
             const confirmInsertAtPosition = () => {
@@ -3951,6 +4127,7 @@
                 const words = node.text ? node.text.split(/\s+/) : [];
                 const canDivide = words.length > 1 && !node.isInserted && !node.isConsolidated;
                 const canConsolidate = words.length > 1 && !node.isInserted && !hasC;
+                const canExpand = !hasC && !node.isInserted && !canDivide;
                 // Nodos terminales absolutos: no tienen hijos y no pueden dividirse
                 const isTerminal = !hasC;
                 const isAbsoluteTerminal = isTerminal && !canDivide;
@@ -3997,13 +4174,32 @@
                                             onClick={() => !hasC && canDivide && setDivisionMode(node.id)}
                                         >
                                             {node.text}
-                                            {canConsolidate && (
+                                            {canConsolidate && !node.isConsolidated && (
                                                 <button
                                                     className="consolidate-btn"
-                                                    title={node.isConsolidated ? "Permitir división" : "Consolidar (no dividir)"}
+                                                    title="Consolidar (no dividir)"
                                                     onClick={(e) => { e.stopPropagation(); toggleConsolidated(node.id); }}
                                                 >
-                                                    {node.isConsolidated ? '÷' : '∪'}
+                                                    ∪
+                                                </button>
+                                            )}
+                                            {canConsolidate && node.isConsolidated && (
+                                                <button
+                                                    className="deconsolidate-btn"
+                                                    title="Permitir división"
+                                                    onClick={(e) => { e.stopPropagation(); toggleConsolidated(node.id); }}
+                                                >
+                                                    ✂
+                                                </button>
+                                            )}
+                                            {canExpand && (
+                                                <button
+                                                    className="consolidate-btn"
+                                                    style={canConsolidate ? { left: 'auto', right: '-10px' } : undefined}
+                                                    title="Expandir (crear constituyentes hijos)"
+                                                    onClick={(e) => { e.stopPropagation(); openExpandModal(node.id); }}
+                                                >
+                                                    ÷
                                                 </button>
                                             )}
                                             {showAddSiblingButtons && (
@@ -4739,11 +4935,12 @@
                                 </div>
 
                                 <div className="instruction-card">
-                                    <h4><span className="icon">🌱</span> Consolidar nodos y añadir constituyentes extra</h4>
+                                    <h4><span className="icon">🔗</span> Consolidar nodos y añadir constituyentes extra</h4>
                                     <ul>
                                         <li>Pasa el cursor por un nodo celeste y pulsa <code>∪</code> para consolidarlo cuando no deba dividirse sintácticamente.</li>
-                                        <li>Pulsa de nuevo <code>∪</code> para volver a permitir la división.</li>
-                                        <li>En nodos terminales, usa <code>← +</code> o <code>+ →</code> para añadir un constituyente hermano inmediato a la izquierda o a la derecha. (Útil para perífrasis, locuciones o constituyentes elididos).</li>
+                                        <li>Pulsa <code>✂</code> para volver a permitir la división.</li>
+                                        <li>En nodos terminales, usa <code>÷</code> para abrir el cuadro de expansión e ingresar constituyentes hijos manualmente.</li>
+                                        <li>En nodos terminales absolutos, usa <code>← +</code> o <code>+ →</code> para añadir un constituyente hermano inmediato a la izquierda o a la derecha. (Útil para perífrasis, locuciones o constituyentes elididos).</li>
                                     </ul>
                                 </div>
                                 
@@ -5011,6 +5208,79 @@
                         </div>
                     )}
 
+                    {siblingModal && (
+                        <div className="pos-overlay" onClick={() => setSiblingModal(null)}>
+                            <div className="expand-modal" onClick={(e) => e.stopPropagation()}>
+                                <h4 className="expand-title">Añadir nodo extra</h4>
+                                <p className="expand-sub">
+                                    Ingresa el texto del nuevo constituyente que se insertará {siblingModal.side === 'left' ? 'a la izquierda' : 'a la derecha'}.
+                                </p>
+                                <div style={{marginBottom: '16px'}}>
+                                    <input
+                                        id="sibling-text"
+                                        type="text"
+                                        className="expand-part-input"
+                                        value={siblingModal.text}
+                                        onChange={(e) => setSiblingModal(prev => ({ ...prev, text: e.target.value }))}
+                                        onKeyDown={(e) => { if (e.key === 'Enter' && siblingModal.text.trim()) confirmAddSibling(); }}
+                                        placeholder="Texto del constituyente"
+                                        autoFocus
+                                    />
+                                </div>
+                                <div className="expand-actions">
+                                    <button className="btn btn-outline" onClick={() => setSiblingModal(null)}>Cancelar</button>
+                                    <button className="btn btn-primary" onClick={confirmAddSibling} disabled={!siblingModal.text.trim()}>Insertar</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {expandModal && (
+                        <div className="pos-overlay" onClick={() => setExpandModal(null)}>
+                            <div className="expand-modal" onClick={(e) => e.stopPropagation()}>
+                                <h4 className="expand-title">Expandir nodo</h4>
+                                <p className="expand-sub">
+                                    Indica cuántos constituyentes hijos quieres crear e ingresa el texto de cada uno.
+                                </p>
+                                <div className="expand-grid">
+                                    <label className="expand-label" htmlFor="expand-count">Número de constituyentes</label>
+                                    <select
+                                        id="expand-count"
+                                        className="expand-count-select"
+                                        value={expandModal.count}
+                                        onChange={(e) => updateExpandCount(e.target.value)}
+                                    >
+                                        {Array.from({ length: 7 }, (_, idx) => idx + 2).map(n => (
+                                            <option key={n} value={n}>{n}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="expand-parts-list">
+                                    {expandModal.parts.map((part, idx) => (
+                                        <div key={idx} className="expand-part-row">
+                                            <label className="expand-label" htmlFor={`expand-part-${idx}`}>
+                                                Constituyente {idx + 1}
+                                            </label>
+                                            <input
+                                                id={`expand-part-${idx}`}
+                                                type="text"
+                                                className="expand-part-input"
+                                                value={part}
+                                                onChange={(e) => updateExpandPart(idx, e.target.value)}
+                                                placeholder={`Texto del constituyente ${idx + 1}`}
+                                                autoFocus={idx === 0}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="expand-actions">
+                                    <button className="btn btn-outline" onClick={() => setExpandModal(null)}>Cancelar</button>
+                                    <button className="btn btn-primary" onClick={confirmExpandNode}>Crear hijos</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {showCliticModal && (
                         <div className="pos-overlay" onClick={skipCliticSeparation}>
                             <div className="clitic-modal" onClick={(e) => e.stopPropagation()}>
@@ -5061,7 +5331,9 @@
                                 <h4 className="pos-title">¿Dónde quieres el nuevo constituyente?</h4>
                                 <p className="pos-sub">Elige la posición para insertarlo entre los constituyentes actuales.</p>
                                 <div className="pos-row">
+                                    <label className="pos-row-label" htmlFor="pos-select">Posición</label>
                                     <select
+                                        id="pos-select"
                                         className="pos-select"
                                         value={posPicker.pos}
                                         onChange={(e) => setPosPicker(pp => ({ ...pp, pos: parseInt(e.target.value, 10) }))}
