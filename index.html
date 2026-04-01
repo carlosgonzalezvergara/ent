@@ -209,6 +209,9 @@
             cursor: pointer; 
             border-radius: 4px;
             transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
         .btn-danger-soft:hover {
             background-color: #fecaca;
@@ -285,6 +288,7 @@
             stroke-width: 2.2;
             stroke-linecap: round;
             stroke-linejoin: round;
+            display: block;
         }
 
         .btn-separator {
@@ -740,8 +744,9 @@
 
         .consolidate-btn {
             position: absolute;
-            top: -10px;
-            left: -10px;
+            bottom: -9px;
+            left: 50%;
+            transform: translateX(-50%);
             background: #F46A12;
             color: white;
             border: none;
@@ -753,16 +758,18 @@
             display: none;
             align-items: center;
             justify-content: center;
+            z-index: 2;
         }
         .node-box:hover .consolidate-btn { display: flex; }
 
         .deconsolidate-btn {
             position: absolute;
-            top: -10px;
-            left: -10px;
-            background: #eff6ff;
-            color: #1d4ed8;
-            border: 1px solid #93c5fd;
+            bottom: -9px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #F46A12;
+            color: white;
+            border: none;
             border-radius: 50%;
             width: 18px;
             height: 18px;
@@ -771,6 +778,7 @@
             display: none;
             align-items: center;
             justify-content: center;
+            z-index: 2;
         }
         .node-box:hover .deconsolidate-btn { display: flex; }
 
@@ -4187,6 +4195,7 @@
                                                 <button
                                                     className="deconsolidate-btn"
                                                     title="Permitir división"
+                                                    style={canExpand ? { left: '25%', transform: 'translateX(-50%)' } : undefined}
                                                     onClick={(e) => { e.stopPropagation(); toggleConsolidated(node.id); }}
                                                 >
                                                     ✂
@@ -4195,11 +4204,11 @@
                                             {canExpand && (
                                                 <button
                                                     className="consolidate-btn"
-                                                    style={canConsolidate ? { left: 'auto', right: '-10px' } : undefined}
+                                                    style={canConsolidate && node.isConsolidated ? { left: '75%', transform: 'translateX(-50%)' } : undefined}
                                                     title="Expandir (crear constituyentes hijos)"
                                                     onClick={(e) => { e.stopPropagation(); openExpandModal(node.id); }}
                                                 >
-                                                    ÷
+                                                    ⑃
                                                 </button>
                                             )}
                                             {showAddSiblingButtons && (
@@ -4939,7 +4948,7 @@
                                     <ul>
                                         <li>Pasa el cursor por un nodo celeste y pulsa <code>∪</code> para consolidarlo cuando no deba dividirse sintácticamente.</li>
                                         <li>Pulsa <code>✂</code> para volver a permitir la división.</li>
-                                        <li>En nodos terminales, usa <code>÷</code> para abrir el cuadro de expansión e ingresar constituyentes hijos manualmente.</li>
+                                        <li>En nodos terminales, usa <code>⑃</code> para abrir el cuadro de expansión e ingresar constituyentes hijos manualmente.</li>
                                         <li>En nodos terminales absolutos, usa <code>← +</code> o <code>+ →</code> para añadir un constituyente hermano inmediato a la izquierda o a la derecha. (Útil para perífrasis, locuciones o constituyentes elididos).</li>
                                     </ul>
                                 </div>

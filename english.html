@@ -208,6 +208,9 @@
             cursor: pointer; 
             border-radius: 4px;
             transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
         .btn-danger-soft:hover {
             background-color: #fecaca;
@@ -643,8 +646,9 @@
 
         .consolidate-btn {
             position: absolute;
-            top: -10px;
-            left: -10px;
+            bottom: -9px;
+            left: 50%;
+            transform: translateX(-50%);
             background: #F46A12;
             color: white;
             border: none;
@@ -656,16 +660,18 @@
             display: none;
             align-items: center;
             justify-content: center;
+            z-index: 2;
         }
         .node-box:hover .consolidate-btn { display: flex; }
 
         .deconsolidate-btn {
             position: absolute;
-            top: -10px;
-            left: -10px;
-            background: #eff6ff;
-            color: #1d4ed8;
-            border: 1px solid #93c5fd;
+            bottom: -9px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #F46A12;
+            color: white;
+            border: none;
             border-radius: 50%;
             width: 18px;
             height: 18px;
@@ -674,6 +680,7 @@
             display: none;
             align-items: center;
             justify-content: center;
+            z-index: 2;
         }
         .node-box:hover .deconsolidate-btn { display: flex; }
 
@@ -4091,6 +4098,7 @@ setExerciseMode(true);
                                                 <button
                                                     className="deconsolidate-btn"
                                                     title="Allow division"
+                                                    style={canExpand ? { left: '25%', transform: 'translateX(-50%)' } : undefined}
                                                     onClick={(e) => { e.stopPropagation(); toggleConsolidated(node.id); }}
                                                 >
                                                     ✂
@@ -4099,11 +4107,11 @@ setExerciseMode(true);
                                             {canExpand && (
                                                 <button
                                                     className="consolidate-btn"
-                                                    style={canConsolidate ? { left: 'auto', right: '-10px' } : undefined}
+                                                    style={canConsolidate && node.isConsolidated ? { left: '75%', transform: 'translateX(-50%)' } : undefined}
                                                     title="Expand (create child constituents)"
                                                     onClick={(e) => { e.stopPropagation(); openExpandModal(node.id); }}
                                                 >
-                                                    ÷
+                                                    ⑃
                                                 </button>
                                             )}
                                             {showAddSiblingButtons && (
@@ -4841,7 +4849,7 @@ setExerciseMode(true);
                                         <li>Hover over a light blue node and click <code>∪</code> to consolidate it.</li>
                                         <li>Use this for multi-word expressions that should not be syntactically divided.</li>
                                         <li>Click <code>✂</code> to allow division again.</li>
-                                        <li>In terminal nodes, use <code>÷</code> to open the expand dialog and create child constituents manually.</li>
+                                        <li>In terminal nodes, use <code>⑃</code> to open the expand dialog and create child constituents manually.</li>
                                         <li>In terminal nodes, use <code>← +</code> or <code>+ →</code> to add an immediate sibling to the left or right. (Useful for adding elided constituents).</li>
                                     </ul>
                                 </div>
