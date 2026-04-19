@@ -199,6 +199,17 @@
             transform: translateY(-2px);
         }
 
+        .btn-danger {
+            background-color: #dc2626;
+            color: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+        }
+        .btn-danger:hover {
+            background-color: #b91c1c;
+            box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+            transform: translateY(-2px);
+        }
+
         .btn-danger-soft { 
             background-color: #fff1f2; 
             color: #991b1b; 
@@ -4448,7 +4459,7 @@ setExerciseMode(true);
                                     <p>You are viewing results. You can go back to edit or exit exercise mode.</p>
                                 </div>
                             </div>
-                            <button onClick={resetExercise} className="btn btn-outline">🚪 Exit exercise mode</button>
+                            <button onClick={resetExercise} className="btn btn-danger"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:"6px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Exit exercise mode</button>
                         </div>
 
                         <div className="results-summary">
@@ -4670,7 +4681,7 @@ setExerciseMode(true);
                                 </div>
                             )}
                             
-                            <button onClick={resetExercise} className="btn btn-outline">🚪 Exit exercise mode</button>
+                            <button onClick={resetExercise} className="btn btn-danger"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:"6px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Exit exercise mode</button>
                         </div>
                     )}
 
@@ -4682,7 +4693,27 @@ setExerciseMode(true);
                                     <p>Analyze the expression and compare your result with the model when done</p>
                                 </div>
                             </div>
-                            <button onClick={resetExercise} className="btn btn-outline">🚪 Exit exercise mode</button>
+                            <div style={{display:'flex', alignItems:'center', gap:'6px'}}>
+                                <button 
+                                    onClick={handleUndo} 
+                                    className="btn btn-outline" 
+                                    disabled={!canUndo}
+                                    title="Undo (Ctrl+Z)"
+                                >
+                                    <UndoIcon /> Undo
+                                </button>
+                                <button 
+                                    onClick={handleRedo} 
+                                    className="btn btn-outline" 
+                                    disabled={!canRedo}
+                                    title="Redo (Ctrl+Shift+Z)"
+                                >
+                                    <RedoIcon /> Redo
+                                </button>
+                                <span className="btn-separator"></span>
+                                <button onClick={handleFinishExercise} className="btn btn-success" disabled={!tree}>✅ Finish analysis and compare</button>
+                                <button onClick={resetExercise} className="btn btn-danger"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:"6px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Exit exercise mode</button>
+                            </div>
                         </div>
                     )}
 
@@ -4798,12 +4829,7 @@ setExerciseMode(true);
 
                     {tree && (
                         <div className="bottom-actions">
-                            {exerciseMode ? (
-                                <>
-                                    <button onClick={newExercise} className="btn btn-outline">↩️ Cancel exercise</button>
-                                    <button onClick={handleFinishExercise} className="btn btn-success">✅ Finish analysis and compare</button>
-                                </>
-                            ) : (
+                            {!exerciseMode && (
                                 <>
                                     <button onClick={() => { clearAutosave(); setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); }} className="btn btn-new-analysis"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{marginRight:'4px'}}><path d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5Z"/><path d="M19 2L19.75 4.25L22 5L19.75 5.75L19 8L18.25 5.75L16 5L18.25 4.25Z"/><path d="M5 16L5.75 18.25L8 19L5.75 19.75L5 22L4.25 19.75L2 19L4.25 18.25Z"/></svg>New analysis</button>
                                     <button onClick={handleSaveJSON} className="btn btn-outline" disabled={!tree} title="Save (Ctrl+S)">💾 Save .ent</button>
