@@ -632,6 +632,25 @@
             margin-top: 4px;
         }
 
+        /* Modificadores de posición cuando no hay espacio suficiente abajo */
+        .label-dropdown.above-right {
+            top: auto;
+            left: 100%;
+            bottom: 100%;
+            margin-top: 0;
+            margin-bottom: 4px;
+            margin-left: 4px;
+        }
+        .label-dropdown.above-left {
+            top: auto;
+            left: auto;
+            right: 100%;
+            bottom: 100%;
+            margin-top: 0;
+            margin-bottom: 4px;
+            margin-right: 4px;
+        }
+
         .dropdown-section {
             padding: 4px 0;
             border-bottom: 1px solid #f3f4f6;
@@ -1950,7 +1969,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useRef, useEffect, useCallback, useMemo } = React;
+        const { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } = React;
 
         // ===========================================
         // CATÁLOGO DE ETIQUETAS GTG (RAE)
@@ -2154,10 +2173,51 @@
         // ===========================================
         // COMPONENTE LABELDROPDOWN (fuera de SyntaxTreeBuilder para identidad estable)
         // ===========================================
-        const LabelDropdown = ({ isTop, onSelect, onClose, searchValue, onSearchChange }) => {
+        const LabelDropdown = ({ isTop, onSelect, onClose, searchValue, onSearchChange, hideSearch = false }) => {
             const sections = isTop ? FUNC_SECTIONS : CAT_SECTIONS;
             const searchLower = searchValue.toLowerCase();
-            
+
+            // Referencia al dropdown para medirlo tras el montaje
+            const dropdownRef = useRef(null);
+            // Clase de posición: '' (por defecto, abajo-centrado), 'above-right', 'above-left'
+            const [positionClass, setPositionClass] = useState('');
+
+            useLayoutEffect(() => {
+                const el = dropdownRef.current;
+                if (!el) return;
+                // El dropdown está posicionado como descendiente de .label-with-dropdown (position: relative).
+                // Tomamos como referencia el rect del ancestro para saber dónde está el nodo en el viewport.
+                const anchor = el.parentElement; // .label-with-dropdown
+                if (!anchor) return;
+                const anchorRect = anchor.getBoundingClientRect();
+                const dropdownRect = el.getBoundingClientRect();
+                const viewportH = window.innerHeight;
+                const viewportW = window.innerWidth;
+                const MARGIN = 8;
+
+                // ¿Hay espacio suficiente abajo para el dropdown completo?
+                const spaceBelow = viewportH - anchorRect.bottom - MARGIN;
+                const fitsBelow = spaceBelow >= dropdownRect.height;
+
+                if (fitsBelow) {
+                    setPositionClass(''); // caso normal: abajo-centrado
+                    return;
+                }
+
+                // No cabe abajo. Preferimos arriba-derecha del nodo.
+                // Arriba-derecha: el borde izquierdo del dropdown queda en anchorRect.right.
+                const spaceRight = viewportW - anchorRect.right - MARGIN;
+                const fitsAboveRight = spaceRight >= dropdownRect.width;
+
+                if (fitsAboveRight) {
+                    setPositionClass('above-right');
+                    return;
+                }
+
+                // Si no cabe arriba-derecha, intentamos arriba-izquierda.
+                setPositionClass('above-left');
+            }, []);
+
             const filteredSections = sections.map(sectionKey => {
                 const section = GTG_LABELS[sectionKey];
                 const filtered = section.items.filter(item => 
@@ -2168,17 +2228,19 @@
             }).filter(s => s.items.length > 0);
 
             return (
-                <div className="label-dropdown" onClick={(e) => e.stopPropagation()}>
-                    <div className="dropdown-search">
-                        <input
-                            type="text"
-                            placeholder="Buscar etiqueta..."
-                            value={searchValue}
-                            onChange={(e) => onSearchChange(e.target.value)}
-                            autoFocus
-                            onClick={(e) => e.stopPropagation()}
-                        />
-                    </div>
+                <div ref={dropdownRef} className={`label-dropdown ${positionClass}`} onClick={(e) => e.stopPropagation()}>
+                    {!hideSearch && (
+                        <div className="dropdown-search">
+                            <input
+                                type="text"
+                                placeholder="Buscar etiqueta..."
+                                value={searchValue}
+                                onChange={(e) => onSearchChange(e.target.value)}
+                                autoFocus
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        </div>
+                    )}
                     {filteredSections.map(section => (
                         <div key={section.key} className="dropdown-section">
                             <div className="dropdown-section-title">{section.title}</div>
@@ -3962,6 +4024,18 @@
                     }
                 };
 
+                // Helper: mantener el dropdown abierto/cerrado según el texto tipeado en el input.
+                // Si hay texto y el dropdown no está abierto para este input, lo abre.
+                // Si el texto queda vacío, lo cierra.
+                const syncDropdownWithTyping = (suffix, currentText) => {
+                    const targetId = dropdownId + suffix;
+                    if (currentText.trim() === '') {
+                        if (dropdownOpen === targetId) setDropdownOpen(null);
+                    } else {
+                        if (dropdownOpen !== targetId) setDropdownOpen(targetId);
+                    }
+                };
+
                 // Modo edición: mostrar inputs con botones de dropdown
                 if (isEditing) {
                     return (
@@ -3976,6 +4050,7 @@
                                                 const left = e.target.value;
                                                 const right = parts.slice(1).join('/').trim();
                                                 setValue(left + ' / ' + right);
+                                                syncDropdownWithTyping('-0', left);
                                             }}
                                             onBlur={handleBlur}
                                             onKeyDown={handleKeyDown}
@@ -3998,8 +4073,9 @@
                                                 isTop={isTop}
                                                 onSelect={(abbr) => handleDropdownSelect(abbr, 0)}
                                                 onClose={() => { setDropdownOpen(null); setDropdownSearch(''); }}
-                                                searchValue={dropdownSearch}
+                                                searchValue={(parts[0] || '').trim() !== '' ? (parts[0] || '').trim() : dropdownSearch}
                                                 onSearchChange={setDropdownSearch}
+                                                hideSearch={(parts[0] || '').trim() !== ''}
                                             />
                                         )}
                                     </div>
@@ -4016,6 +4092,7 @@
                                                 const right = e.target.value;
                                                 const left = (parts[0] || '').trim();
                                                 setValue(left + ' / ' + right);
+                                                syncDropdownWithTyping('-1', right);
                                             }}
                                             onBlur={handleBlur}
                                             onKeyDown={handleKeyDown}
@@ -4037,8 +4114,9 @@
                                                 isTop={isTop}
                                                 onSelect={(abbr) => handleDropdownSelect(abbr, 1)}
                                                 onClose={() => { setDropdownOpen(null); setDropdownSearch(''); }}
-                                                searchValue={dropdownSearch}
+                                                searchValue={parts.slice(1).join('/').trim() !== '' ? parts.slice(1).join('/').trim() : dropdownSearch}
                                                 onSearchChange={setDropdownSearch}
+                                                hideSearch={parts.slice(1).join('/').trim() !== ''}
                                             />
                                         )}
                                     </div>
@@ -4048,7 +4126,10 @@
                                     <input
                                         type="text"
                                         value={value}
-                                        onChange={(e) => setValue(e.target.value)}
+                                        onChange={(e) => {
+                                            setValue(e.target.value);
+                                            syncDropdownWithTyping('', e.target.value);
+                                        }}
                                         onBlur={handleBlur}
                                         onKeyDown={handleKeyDown}
                                         autoFocus
@@ -4070,8 +4151,9 @@
                                             isTop={isTop}
                                             onSelect={(abbr) => handleDropdownSelect(abbr)}
                                             onClose={() => { setDropdownOpen(null); setDropdownSearch(''); }}
-                                            searchValue={dropdownSearch}
+                                            searchValue={value.trim() !== '' ? value.trim() : dropdownSearch}
                                             onSearchChange={setDropdownSearch}
+                                            hideSearch={value.trim() !== ''}
                                         />
                                     )}
                                 </div>
