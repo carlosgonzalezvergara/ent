@@ -313,6 +313,12 @@
             align-self: center;
         }
 
+        .analyze-undo-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         /* ===========================================
            ÁRBOL SINTÁCTICO
            =========================================== */
@@ -4945,6 +4951,9 @@
                                     />
                                     <div className="analyze-undo-group">
                                         <button onClick={handleStartAnalysis} className="btn btn-primary">Analizar</button>
+
+                                        <span className="btn-separator"></span>
+
                                         <button 
                                             onClick={handleUndo} 
                                             className="btn btn-outline btn-icon" 
