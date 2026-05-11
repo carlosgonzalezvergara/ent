@@ -3478,30 +3478,10 @@
                         }
                     }
                     
-                    // Para nodos extra: verificar que cada nodo extra del estudiante 
-                    // tenga etiquetas que coincidan con algún nodo extra del modelo
-                    const usedModelExtras = new Set();
-                    for (const studentExtraNode of studentExtra) {
-                        const studentLabelTop = normalizeLabel(studentExtraNode.labelTop);
-                        const studentLabelBottom = normalizeLabel(studentExtraNode.labelBottom);
-                        
-                        // Buscar un nodo extra del modelo con las mismas etiquetas que aún no haya sido usado
-                        let foundMatch = false;
-                        for (let j = 0; j < modelExtra.length; j++) {
-                            if (usedModelExtras.has(j)) continue;
-                            
-                            const modelLabelTop = normalizeLabel(modelExtra[j].labelTop);
-                            const modelLabelBottom = normalizeLabel(modelExtra[j].labelBottom);
-                            
-                            if (studentLabelTop === modelLabelTop && studentLabelBottom === modelLabelBottom) {
-                                usedModelExtras.add(j);
-                                foundMatch = true;
-                                break;
-                            }
-                        }
-                        
-                        if (!foundMatch) return false;
-                    }
+                    // Para nodos extra: basta con que coincida la cantidad (ya verificada arriba).
+                    // No exigimos coincidencia de etiquetas aquí: si las etiquetas del extra
+                    // están mal, el propio nodo se marcará en rojo a nivel individual, pero
+                    // la división del padre se considera correcta y sus hermanos quedan visibles.
                     
                     return true;
                 };
@@ -3611,25 +3591,59 @@
                             compareNodes(studentChild, modelChild, `${path}-n${mi}`);
                         });
                         
-                        // Emparejar nodos extra por etiquetas
+                        // Emparejar nodos extra: tres niveles de preferencia.
+                        //   1) Coincidencia exacta (labelTop + labelBottom).
+                        //   2) Coincidencia solo de labelTop (la categoría).
+                        //   3) Posicional (primer extra del estudiante aún libre).
+                        // El nodo extra individual se sigue evaluando estrictamente dentro de
+                        // compareNodes (nodeIdentifiedCorrectly exige ambas etiquetas), así que
+                        // un emparejamiento por niveles 2 o 3 producirá un nodo rojo, pero NO
+                        // truncará al padre ni ocultará a sus hermanos.
                         const usedStudentExtras = new Set();
                         modelExtra.forEach((modelChild, mi) => {
                             const modelLabelTop = normalizeLabel(modelChild.labelTop);
                             const modelLabelBottom = normalizeLabel(modelChild.labelBottom);
                             
-                            // Buscar un nodo extra del estudiante con las mismas etiquetas
                             let matchedStudent = null;
+                            let matchedIndex = -1;
+                            
+                            // Nivel 1: match exacto
                             for (let si = 0; si < studentExtra.length; si++) {
                                 if (usedStudentExtras.has(si)) continue;
-                                
-                                const studentLabelTop = normalizeLabel(studentExtra[si].labelTop);
-                                const studentLabelBottom = normalizeLabel(studentExtra[si].labelBottom);
-                                
-                                if (studentLabelTop === modelLabelTop && studentLabelBottom === modelLabelBottom) {
-                                    usedStudentExtras.add(si);
+                                const sTop = normalizeLabel(studentExtra[si].labelTop);
+                                const sBottom = normalizeLabel(studentExtra[si].labelBottom);
+                                if (sTop === modelLabelTop && sBottom === modelLabelBottom) {
                                     matchedStudent = studentExtra[si];
+                                    matchedIndex = si;
                                     break;
                                 }
+                            }
+                            
+                            // Nivel 2: match solo por labelTop (categoría)
+                            if (matchedIndex === -1 && modelLabelTop !== '') {
+                                for (let si = 0; si < studentExtra.length; si++) {
+                                    if (usedStudentExtras.has(si)) continue;
+                                    const sTop = normalizeLabel(studentExtra[si].labelTop);
+                                    if (sTop === modelLabelTop) {
+                                        matchedStudent = studentExtra[si];
+                                        matchedIndex = si;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            // Nivel 3: posicional (primer extra libre)
+                            if (matchedIndex === -1) {
+                                for (let si = 0; si < studentExtra.length; si++) {
+                                    if (usedStudentExtras.has(si)) continue;
+                                    matchedStudent = studentExtra[si];
+                                    matchedIndex = si;
+                                    break;
+                                }
+                            }
+                            
+                            if (matchedIndex !== -1) {
+                                usedStudentExtras.add(matchedIndex);
                             }
                             
                             compareNodes(matchedStudent, modelChild, `${path}-e${mi}`);

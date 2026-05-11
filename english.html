@@ -2130,39 +2130,11 @@
 
         // Utility debounce (outside component to avoid recreation)
         const debounce = (func, delay) => {
-            let timeout = null;
-            let lastArgs = null;
-            let lastThis = null;
-
-            const debounced = function(...args) {
-                lastArgs = args;
-                lastThis = this;
+            let timeout;
+            return (...args) => {
                 clearTimeout(timeout);
-                timeout = setTimeout(() => {
-                    timeout = null;
-                    func.apply(lastThis, lastArgs);
-                    lastArgs = null;
-                    lastThis = null;
-                }, delay);
+                timeout = setTimeout(() => func(...args), delay);
             };
-
-            debounced.cancel = () => {
-                clearTimeout(timeout);
-                timeout = null;
-                lastArgs = null;
-                lastThis = null;
-            };
-
-            debounced.flush = () => {
-                if (!timeout) return;
-                clearTimeout(timeout);
-                timeout = null;
-                func.apply(lastThis, lastArgs);
-                lastArgs = null;
-                lastThis = null;
-            };
-
-            return debounced;
         };
 
         // Reusable text-scale computation for multiple zoom views
@@ -2753,7 +2725,7 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
                 }
             }, [tree, buildAutoSaveData]);
 
-            const clearAutosave = useCallback(() => {
+            const clearAutoSave = useCallback(() => {
                 autoSaveDebounced.current?.cancel?.();
                 localStorage.removeItem(AUTOSAVE_KEY);
                 setLastSaved(null);
@@ -2763,37 +2735,37 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
             const handleSaveJSON = useCallback(() => {
                 if (!tree) return;
 
-                // Before downloading, run any pending auto-save and write the current
-                // state. The backup is not deleted: this prevents losing the restore
-                // point if the user closes the tab right after a manual save.
+                // Before downloading, flush any pending autosave and write the current
+                // state. The backup is NOT cleared: this avoids losing the restoration
+                // point if the user closes the tab right after saving manually.
                 autoSaveDebounced.current?.flush?.();
                 writeAutoSave({ silent: true });
 
                 const blob = new Blob([JSON.stringify({ sentence, tree }, null, 2)], { type: 'application/json' });
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
-                const words = sentence.trim().split(/\s+/).slice(0, 5).join('_') || 'ent_analysis';
+                const words = sentence.trim().split(/\s+/).slice(0, 5).join('_') || 'analysis_ent';
                 a.download = `${words}.ent`;
                 a.click();
                 URL.revokeObjectURL(a.href);
             }, [tree, sentence, writeAutoSave]);
 
-            
+
             // ===========================================
             // AUTO-SAVE (localStorage)
             // ===========================================
             const performAutoSave = useCallback(() => {
-                // Auto-save must reflect the visible user state, including after undo/redo.
-                // For that reason, it is not blocked by isUndoRedo.current.
+                // Autosave should reflect the user's visible state, even after undo/redo.
+                // That's why we don't block on isUndoRedo.current.
                 writeAutoSave();
             }, [writeAutoSave]);
 
-            // Trigger autosave on relevant changes (main + exercise mode)
+            // Auto-save: trigger when relevant state changes
             useEffect(() => {
                 if (tree) {
                     autoSaveDebounced.current(performAutoSave);
                 }
-            }, [tree, sentence, divisionMode, selectedCuts, exerciseMode, modelTree, performAutoSave]);
+            }, [sentence, tree, divisionMode, selectedCuts, exerciseMode, modelTree, performAutoSave]);
 
             // Emergency save before closing, reloading, or hiding the tab.
             useEffect(() => {
@@ -2824,7 +2796,7 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
                 try {
                     const data = JSON.parse(saved);
                     if (!data || !data.tree) {
-                        clearAutosave();
+                        clearAutoSave();
                         return;
                     }
 
@@ -2835,16 +2807,10 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
                         : null;
 
                     const message = minutesAgo === null
-                        ? 'Unsaved work was found.
-
-Do you want to continue where you left off?'
+                        ? 'Unsaved work was found.\n\nDo you want to continue where you left off?'
                         : minutesAgo < 1
-                            ? 'Unsaved work was found.
-
-Do you want to continue where you left off?'
-                            : `Unsaved work from ${minutesAgo} minute${minutesAgo === 1 ? '' : 's'} ago was found.
-
-Do you want to continue where you left off?`;
+                            ? 'Unsaved work was found.\n\nDo you want to continue where you left off?'
+                            : `Unsaved work from ${minutesAgo} minute${minutesAgo === 1 ? '' : 's'} ago was found.\n\nDo you want to continue where you left off?`;
 
                     const restore = confirm(message);
 
@@ -2867,12 +2833,2680 @@ Do you want to continue where you left off?`;
 
                         setTimeout(() => { isUndoRedo.current = false; }, 0);
                     } else {
-                        clearAutosave();
+                        clearAutoSave();
                     }
                 } catch (err) {
                     console.error('Error restoring auto-save:', err);
-                    clearAutosave();
+                    clearAutoSave();
                 }
-            }, [clearAutosave]); // Only on mount
+            }, [clearAutoSave]); // Only on mount
+// ===========================================
+            // GOOGLE DRIVE API
+            // ===========================================
+            const GOOGLE_API_KEY = 'AIzaSyB1XWEgGpX-SWi6GlzqXcOOk7pFc6jLCsU';
 
->
+            const extractFolderId = (url) => {
+                // Soportar varios formatos de URL de Google Drive
+                const patterns = [
+                    /\/folders\/([a-zA-Z0-9_-]+)/,
+                    /id=([a-zA-Z0-9_-]+)/,
+                    /^([a-zA-Z0-9_-]+)$/
+                ];
+                for (const pattern of patterns) {
+                    const match = url.match(pattern);
+                    if (match) return match[1];
+                }
+                return null;
+            };
+
+            const fetchDriveFolder = async (folderId, folderName = 'Root') => {
+                const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents&key=${GOOGLE_API_KEY}&fields=files(id,name,mimeType)&orderBy=name`;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error?.message || 'Error accessing folder');
+                }
+                const data = await response.json();
+                return { folderId, folderName, files: data.files || [] };
+            };
+
+            const organizeFiles = async (rootFolderId) => {
+                const result = [];
+                const rootData = await fetchDriveFolder(rootFolderId, 'Root');
+                
+                // Separate .ent files and subfolders
+                const entFiles = rootData.files.filter(f => f.name.endsWith('.ent'));
+                const folders = rootData.files.filter(f => f.mimeType === 'application/vnd.google-apps.folder');
+                
+                // Add root files
+                if (entFiles.length > 0) {
+                    result.push({ folderName: null, files: entFiles });
+                }
+                
+                // Process subfolders
+                for (const folder of folders) {
+                    try {
+                        const folderData = await fetchDriveFolder(folder.id, folder.name);
+                        const folderEntFiles = folderData.files.filter(f => f.name.endsWith('.ent'));
+                        if (folderEntFiles.length > 0) {
+                            result.push({ folderName: folder.name, folderId: folder.id, files: folderEntFiles });
+                        }
+                    } catch (e) {
+                        console.warn(`Could not access folder ${folder.name}:`, e);
+                    }
+                }
+                
+                return result;
+            };
+
+            const handleConnectDrive = async () => {
+                const folderId = extractFolderId(driveUrl.trim());
+                if (!folderId) {
+                    setDriveStatus({ type: 'error', message: 'Invalid URL. Please enter a Google Drive folder URL.' });
+                    return;
+                }
+
+                // Save URL to localStorage
+                localStorage.setItem('ent_drive_url', driveUrl.trim());
+                
+                setDriveStatus({ type: 'loading', message: 'Connecting to Google Drive...' });
+                setDriveFiles([]);
+                setSelectedDriveFile(null);
+
+                try {
+                    const files = await organizeFiles(folderId);
+                    if (files.length === 0 || files.every(f => f.files.length === 0)) {
+                        setDriveStatus({ type: 'error', message: 'No .ent files found in this folder.' });
+                        return;
+                    }
+                    setDriveFiles(files);
+                    setDriveStatus({ type: 'success', message: `Found ${files.reduce((sum, f) => sum + f.files.length, 0)} .ent files` });
+                } catch (error) {
+                    console.error('Error connecting to Google Drive:', error);
+                    if (error.message.includes('API key')) {
+                        setDriveStatus({ type: 'error', message: 'API Key error. Check configuration.' });
+                    } else if (error.message.includes('not found') || error.message.includes('404')) {
+                        setDriveStatus({ type: 'error', message: 'Folder not found. Check the URL.' });
+                    } else if (error.message.includes('permission') || error.message.includes('403')) {
+                        setDriveStatus({ type: 'error', message: 'No permissions. The folder must be public (shared with "Anyone with the link").' });
+                    } else {
+                        setDriveStatus({ type: 'error', message: `Error: ${error.message}` });
+                    }
+                }
+            };
+
+            const fetchDriveFile = async (fileId) => {
+                const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${GOOGLE_API_KEY}`;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Could not download file');
+                }
+                return await response.json();
+            };
+
+            const handleLoadFromDrive = async (asExercise = false) => {
+                if (!selectedDriveFile) return;
+
+                setDriveStatus({ type: 'loading', message: 'Loading file...' });
+
+                try {
+                    const data = await fetchDriveFile(selectedDriveFile.id);
+                    
+                    if (!data.tree || !data.sentence) {
+                        setDriveStatus({ type: 'error', message: 'File does not have the expected format.' });
+                        return;
+                    }
+
+                    if (asExercise) {
+                        // Load as exercise
+                        const originalSentence = data.sentence || '';
+                        setSentence(originalSentence);
+                        setModelTree(data.tree);
+                        const newTree = createEmptyTree(originalSentence);
+                        setTree(newTree);
+                        setDivisionMode(null);
+                        setSelectedCuts([]);
+                        setExerciseMode(true);
+                        setShowComparison(false);
+                        setComparisonResults(null);
+                        setHistory([JSON.stringify(newTree)]);
+                        setHistoryIndex(0);
+                        clearAutoSave();
+                    }
+                    else {
+                        // Load as reference (view/edit)
+                        setSentence(data.sentence || '');
+                        setTree(data.tree);
+                        setExerciseMode(false);
+                        setModelTree(null);
+                        setShowComparison(false);
+                        setHistory([JSON.stringify(data.tree)]);
+                        setHistoryIndex(0);
+                        clearAutoSave();
+                    }
+
+                    setShowFilesModal(false);
+                    setSelectedDriveFile(null);
+                } catch (error) {
+                    console.error('Error loading file:', error);
+                    setDriveStatus({ type: 'error', message: `Error loading: ${error.message}` });
+                }
+            };
+
+            const toggleFolder = (folderId) => {
+                setCollapsedFolders(prev => ({
+                    ...prev,
+                    [folderId]: !prev[folderId]
+                }));
+            };
+
+            // ===========================================
+            // KEYBOARD SHORTCUTS
+            // ===========================================
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+                    const modifier = isMac ? e.metaKey : e.ctrlKey;
+                    const key = e.key.toLowerCase();
+                    
+                    if (modifier && key === 'z' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleUndo();
+                    } else if (modifier && key === 'z' && e.shiftKey) {
+                        e.preventDefault();
+                        handleRedo();
+                    } else if (modifier && key === 'y') {
+                        e.preventDefault();
+                        handleRedo();
+                    } else if (modifier && key === 's') {
+                        e.preventDefault();
+                        handleSaveJSON();
+                    }
+                };
+                
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [handleUndo, handleRedo, handleSaveJSON]);
+
+            // ===========================================
+            // MAIN ACTIONS
+            // ===========================================
+            const startAnalysis = (overrideSentence) => {
+                const text = overrideSentence !== undefined ? overrideSentence : sentence;
+                if (text.trim()) {
+                    if (overrideSentence !== undefined) setSentence(overrideSentence);
+                    const newTree = createEmptyTree(text);
+                    setTree(newTree);
+                    setDivisionMode(null);
+                    setSelectedCuts([]);
+                    setExerciseMode(false);
+                    setModelTree(null);
+                    setShowComparison(false);
+                    // Reset history
+                    setHistory([JSON.stringify(newTree)]);
+                    setHistoryIndex(0);
+                }
+            };
+
+            const handleStartAnalysis = () => {
+                if (!sentence.trim()) return;
+                const candidates = detectAmbiguousContractions(sentence);
+                if (candidates.length > 0) {
+                    setContractionCandidates(candidates);
+                    setShowContractionModal(true);
+                } else {
+                    startAnalysis();
+                }
+            };
+
+            const confirmContractionExpansion = () => {
+                const normalized = sentence.replace(/['']/g, "'");
+                const words = normalized.trim().split(/\s+/);
+                // Apply in reverse order to preserve indices
+                const sorted = [...contractionCandidates].sort((a, b) => b.index - a.index);
+                for (const c of sorted) {
+                    if (c.expansion === 'possessive') {
+                        // Keep as-is (with straight apostrophe)
+                        words[c.index] = c.puncBefore + c.core + c.puncAfter;
+                    } else {
+                        const expanded = c.base + ' ' + c.expansion;
+                        words[c.index] = c.puncBefore + expanded + c.puncAfter;
+                    }
+                }
+                const newSentence = words.join(' ');
+                setShowContractionModal(false);
+                setContractionCandidates([]);
+                startAnalysis(newSentence);
+            };
+
+            const skipContractionExpansion = () => {
+                setShowContractionModal(false);
+                setContractionCandidates([]);
+                startAnalysis();
+            };
+
+            const handleDivide = () => {
+                const node = findNodeById(tree, divisionMode);
+                const words = node.text.split(/\s+/);
+                const segments = [];
+                let start = 0;
+                
+                // Ensure cuts are sorted numerically
+                const sortedCuts = [...selectedCuts].sort((a, b) => a - b);
+                
+                [...sortedCuts, words.length - 1].forEach(cut => {
+                    segments.push(words.slice(start, cut + 1).join(' '));
+                    start = cut + 1;
+                });
+                
+                const children = segments.filter(s => s.trim()).map((s, i) => ({
+                    id: `${divisionMode}-${i}-${Date.now()}`,
+                    text: s,
+                    labelTop: '',
+                    labelBottom: '',
+                    children: null,
+                    isNucleus: false,
+                    isConsolidated: false
+                }));
+                
+                setTree(prev => updateNode(prev, divisionMode, { children }));
+                setDivisionMode(null);
+                setSelectedCuts([]);
+            };
+
+            const toggleConsolidated = (nodeId) => {
+                setTree(prev => {
+                    const node = findNodeById(prev, nodeId);
+                    return updateNode(prev, nodeId, { isConsolidated: !node.isConsolidated });
+                });
+            };
+                    
+            const addSiblingNode = (targetId, side) => {
+                setSiblingModal({ targetId, side, text: '' });
+            };
+
+            const confirmAddSibling = () => {
+                if (!siblingModal) return;
+                const { targetId, side, text } = siblingModal;
+                setTree(prev => {
+                    const parentId = findParentId(prev, targetId);
+                    if (!parentId) return prev;
+                    return insertSiblingNode(prev, targetId, side, makeNewNode(text.trim()));
+                });
+                setSiblingModal(null);
+            };
+
+            const openExpandModal = (nodeId) => {
+                const node = findNodeById(tree, nodeId);
+                if (!node || node.children) return;
+                setExpandModal({
+                    nodeId,
+                    count: 2,
+                    parts: ['', '']
+                });
+            };
+
+            const updateExpandCount = (rawCount) => {
+                const count = Math.max(2, Math.min(8, parseInt(rawCount, 10) || 2));
+                setExpandModal(prev => {
+                    if (!prev) return prev;
+                    const nextParts = Array.from({ length: count }, (_, idx) => prev.parts[idx] || '');
+                    return { ...prev, count, parts: nextParts };
+                });
+            };
+
+            const updateExpandPart = (index, value) => {
+                setExpandModal(prev => {
+                    if (!prev) return prev;
+                    const nextParts = [...prev.parts];
+                    nextParts[index] = value;
+                    return { ...prev, parts: nextParts };
+                });
+            };
+
+            const confirmExpandNode = () => {
+                if (!expandModal) return;
+                const cleanedParts = expandModal.parts.map(part => part.trim()).filter(Boolean);
+                if (cleanedParts.length !== expandModal.count) {
+                    return;
+                }
+                const newChildren = cleanedParts.map((text, idx) => ({
+                    id: `${expandModal.nodeId}-exp-${idx}-${Date.now()}`,
+                    text,
+                    labelTop: '',
+                    labelBottom: '',
+                    children: null,
+                    isInserted: false,
+                    isConsolidated: false,
+                    isNucleus: false
+                }));
+                setTree(prev => updateNode(prev, expandModal.nodeId, {
+                    children: newChildren,
+                    text: ''
+                }));
+                setExpandModal(null);
+            };
+
+            const confirmInsertAtPosition = () => {
+                if (!posPicker) return;
+                const { parentId, txt, pos } = posPicker;
+
+                setTree(prev => {
+                    const parent = findNodeById(prev, parentId);
+                    const existing = parent?.children ? [...parent.children] : [];
+                    const n = existing.length;
+                    let p = parseInt(pos, 10);
+                    if (Number.isNaN(p)) p = n + 1;
+                    p = Math.max(1, Math.min(n + 1, p));
+
+                    const newNode = makeNewNode(txt);
+                    existing.splice(p - 1, 0, newNode);
+                    return updateNode(prev, parentId, { children: existing });
+                });
+
+                setPosPicker(null);
+            };
+
+            // ===========================================
+            // LOAD FILES
+            // ===========================================
+            const handleLoadJSON = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        if (!imported.tree || !imported.sentence) {
+                            alert('Error: File does not have the expected format.\n\nThe file must contain "sentence" and "tree" properties.');
+                            return;
+                        }
+                        setSentence(imported.sentence || '');
+                        setTree(imported.tree);
+                        setExerciseMode(false);
+                        setModelTree(null);
+                        setShowComparison(false);
+                        // Reset history with loaded tree
+                        setHistory([JSON.stringify(imported.tree)]);
+                        setHistoryIndex(0);
+                    } catch (error) {
+                        alert('Error reading file.\n\nThe file is not valid (.ent or .json) or is corrupted.\n\nDetail: ' + error.message);
+                    }
+                };
+                reader.onerror = () => {
+                    alert('Error reading file. Please try again.');
+                };
+                reader.readAsText(file);
+                event.target.value = '';
+            };
+
+            const handleLoadExercise = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        if (!imported.tree || !imported.sentence) {
+                            alert('Error: File does not have the expected format.\n\nThe exercise file must contain "sentence" and "tree" properties.');
+                            return;
+                        }
+                        const originalSentence = imported.sentence || '';
+                        setSentence(originalSentence);
+                        setModelTree(imported.tree);
+                        const newTree = createEmptyTree(originalSentence);
+                        setTree(newTree);
+                        setDivisionMode(null);
+                        setSelectedCuts([]);
+                        setExerciseMode(true);
+                        setShowComparison(false);
+                        setComparisonResults(null);
+                        // Reset history
+                        setHistory([JSON.stringify(newTree)]);
+                        setHistoryIndex(0);
+                    } catch (error) {
+                        alert('Error reading exercise file.\n\nThe file is not valid or is corrupted.\n\nDetail: ' + error.message);
+                    }
+                };
+                reader.onerror = () => {
+                    alert('Error reading file. Please try again.');
+                };
+                reader.readAsText(file);
+                event.target.value = '';
+            };
+
+            // ===========================================
+            // EXERCISE MODE
+            // ===========================================
+            const compareTrees = (studentTree, modelTree) => {
+                const results = {
+                    totalNodes: 0,
+                    correctNodes: 0,
+                    totalLabelTopParts: 0,
+                    totalLabelBottomParts: 0,
+                    correctLabelTopParts: 0,
+                    correctLabelBottomParts: 0,
+                    totalElements: 0,
+                    correctElements: 0,
+                    errorElements: 0,
+                    accuracy: 0,
+                    nodeComparisons: new Map()
+                };
+
+                const normalizeText = (text) => (text || '').trim().toLowerCase();
+                
+                // Extract normalized parts from a label
+                const getLabelParts = (label) => {
+                    if (!label) return [];
+                    return label.split('/')
+                        .map(p => p.trim().toLowerCase().replace(/\s+/g, ''))
+                        .filter(p => p);
+                };
+                
+                // Normalize complete label (for full equality comparison)
+                const normalizeLabel = (label) => {
+                    const parts = getLabelParts(label);
+                    return parts.sort().join('•');
+                };
+                
+                // Compare two labels and return how many model parts matched
+                const compareLabelParts = (studentLabel, modelLabel) => {
+                    const studentParts = getLabelParts(studentLabel);
+                    const modelParts = getLabelParts(modelLabel);
+                    
+                    if (modelParts.length === 0) {
+                        return { total: 0, correct: 0, allMatch: true };
+                    }
+                    
+                    const studentSet = new Set(studentParts);
+                    let correct = 0;
+                    for (const part of modelParts) {
+                        if (studentSet.has(part)) correct++;
+                    }
+                    
+                    // allMatch is true if all parts match (same content, regardless of order)
+                    const allMatch = correct === modelParts.length && studentParts.length === modelParts.length;
+                    
+                    return { total: modelParts.length, correct, allMatch };
+                };
+                
+                const getChildCount = (node) => (node?.children?.length) || 0;
+
+                // Check if student children match model children
+                // For normal nodes: check exact text at same position
+                // For extra nodes (isInserted): only check label match (ignore text and position)
+                const childrenMatch = (studentNode, modelNode) => {
+                    const studentChildren = studentNode?.children || [];
+                    const modelChildren = modelNode?.children || [];
+                    
+                    // Separate normal and extra nodes
+                    const studentNormal = studentChildren.filter(c => !c.isInserted);
+                    const studentExtra = studentChildren.filter(c => c.isInserted);
+                    const modelNormal = modelChildren.filter(c => !c.isInserted);
+                    const modelExtra = modelChildren.filter(c => c.isInserted);
+                    
+                    // Check that number of normal nodes matches
+                    if (studentNormal.length !== modelNormal.length) return false;
+                    
+                    // Check that number of extra nodes matches
+                    if (studentExtra.length !== modelExtra.length) return false;
+                    
+                    // Check that each normal node has same text at same position
+                    for (let i = 0; i < modelNormal.length; i++) {
+                        if (normalizeText(studentNormal[i]?.text) !== normalizeText(modelNormal[i]?.text)) {
+                            return false;
+                        }
+                    }
+                    
+                    // For extra nodes: count match is sufficient (already checked above).
+                    // We no longer require label matching here: if the extra's labels are
+                    // wrong, the node itself will be marked red individually, but the
+                    // parent's division is considered correct and its siblings stay visible.
+                    
+                    return true;
+                };
+
+                // Count all model elements (for total score)
+                const countModelElements = (modelNode) => {
+                    const children = modelNode.children || [];
+                    children.forEach((child) => {
+                        results.totalNodes++;
+                        const topParts = getLabelParts(child.labelTop);
+                        const bottomParts = getLabelParts(child.labelBottom);
+                        results.totalLabelTopParts += topParts.length;
+                        results.totalLabelBottomParts += bottomParts.length;
+                        countModelElements(child);
+                    });
+                };
+
+                const compareNodes = (student, model, path = 'root') => {
+                    if (!model) return;
+                    
+                    // 1. IDEAL SCORE: Always add based exclusively on model
+                    results.totalNodes++;
+                    const modelTopParts = getLabelParts(model.labelTop);
+                    const modelBottomParts = getLabelParts(model.labelBottom);
+                    results.totalLabelTopParts += modelTopParts.length;
+                    results.totalLabelBottomParts += modelBottomParts.length;
+
+                    // 2. Check if student has this node and if correctly identified
+                    const hasStudent = !!student;
+                    const isExtraNode = model.isInserted;
+                    
+                    // For normal nodes: check text match
+                    // For extra nodes (isInserted): check label match (ignore text)
+                    let nodeIdentifiedCorrectly;
+                    if (isExtraNode) {
+                        // Extra node: correctly identified if labels match
+                        nodeIdentifiedCorrectly = hasStudent && 
+                            normalizeLabel(student.labelTop) === normalizeLabel(model.labelTop) &&
+                            normalizeLabel(student.labelBottom) === normalizeLabel(model.labelBottom);
+                    } else {
+                        // Normal node: correctly identified if text matches
+                        nodeIdentifiedCorrectly = hasStudent && normalizeText(student.text) === normalizeText(model.text);
+                    }
+                    
+                    // 3. Check if division is correct (children match exactly)
+                    const divisionCorrect = nodeIdentifiedCorrectly && childrenMatch(student, model);
+                    
+                    // 4. Compare labels by parts
+                    const topComparison = hasStudent 
+                        ? compareLabelParts(student.labelTop, model.labelTop)
+                        : { total: modelTopParts.length, correct: 0, allMatch: modelTopParts.length === 0 };
+                    const bottomComparison = hasStudent 
+                        ? compareLabelParts(student.labelBottom, model.labelBottom)
+                        : { total: modelBottomParts.length, correct: 0, allMatch: modelBottomParts.length === 0 };
+
+                    const comparison = {
+                        path,
+                        // Node is correctly identified
+                        nodeCorrect: nodeIdentifiedCorrectly,
+                        // Division is correct (children match)
+                        divisionCorrect,
+                        // Complete label comparison (all parts match)
+                        labelTopMatch: topComparison.allMatch,
+                        labelBottomMatch: bottomComparison.allMatch,
+                        // Detailed part information for visualization
+                        labelTopComparison: topComparison,
+                        labelBottomComparison: bottomComparison,
+                        studentNode: hasStudent ? student : null,
+                        modelNode: model,
+                        isExtraNode,
+                        // Flag indicating if we should show error message and truncate
+                        // (node correctly identified but incorrectly divided)
+                        shouldTruncate: nodeIdentifiedCorrectly && !divisionCorrect && (getChildCount(model) > 0 || getChildCount(student) > 0)
+                    };
+
+                    // 5. CORRECT ANSWERS
+                    // Node counts as correct if correctly identified
+                    if (nodeIdentifiedCorrectly) {
+                        results.correctNodes++;
+                    }
+                    // Labels are evaluated by parts
+                    // For extra nodes, labels already counted as part of nodeIdentifiedCorrectly
+                    if (!isExtraNode && hasStudent) {
+                        results.correctLabelTopParts += topComparison.correct;
+                        results.correctLabelBottomParts += bottomComparison.correct;
+                    }
+
+                    results.nodeComparisons.set(path, comparison);
+
+                    // 6. RECURSION: Only continue if division is correct
+                    if (divisionCorrect) {
+                        const modelChildren = model.children || [];
+                        const studentChildren = student?.children || [];
+                        
+                        // Separate normal and extra nodes
+                        const modelNormal = modelChildren.filter(c => !c.isInserted);
+                        const modelExtra = modelChildren.filter(c => c.isInserted);
+                        const studentNormal = studentChildren.filter(c => !c.isInserted);
+                        const studentExtra = studentChildren.filter(c => c.isInserted);
+                        
+                        // Match normal nodes by position
+                        modelNormal.forEach((modelChild, mi) => {
+                            const studentChild = studentNormal[mi] || null;
+                            compareNodes(studentChild, modelChild, `${path}-n${mi}`);
+                        });
+                        
+                        // Match extra nodes: three preference tiers.
+                        //   1. Exact match (labelTop + labelBottom).
+                        //   2. labelTop only (category).
+                        //   3. Positional (first available student extra).
+                        // The individual extra node is still evaluated strictly inside
+                        // compareNodes (nodeIdentifiedCorrectly requires both labels), so
+                        // a tier-2 or tier-3 match will produce a red node but will NOT
+                        // truncate the parent or hide its siblings.
+                        const usedStudentExtras = new Set();
+                        modelExtra.forEach((modelChild, mi) => {
+                            const modelLabelTop = normalizeLabel(modelChild.labelTop);
+                            const modelLabelBottom = normalizeLabel(modelChild.labelBottom);
+                            
+                            let matchedStudent = null;
+                            let matchedIndex = -1;
+                            
+                            // Tier 1: exact match
+                            for (let si = 0; si < studentExtra.length; si++) {
+                                if (usedStudentExtras.has(si)) continue;
+                                const sTop = normalizeLabel(studentExtra[si].labelTop);
+                                const sBottom = normalizeLabel(studentExtra[si].labelBottom);
+                                if (sTop === modelLabelTop && sBottom === modelLabelBottom) {
+                                    matchedStudent = studentExtra[si];
+                                    matchedIndex = si;
+                                    break;
+                                }
+                            }
+                            
+                            // Tier 2: labelTop (category) only
+                            if (matchedIndex === -1 && modelLabelTop !== '') {
+                                for (let si = 0; si < studentExtra.length; si++) {
+                                    if (usedStudentExtras.has(si)) continue;
+                                    const sTop = normalizeLabel(studentExtra[si].labelTop);
+                                    if (sTop === modelLabelTop) {
+                                        matchedStudent = studentExtra[si];
+                                        matchedIndex = si;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            // Tier 3: positional (first available extra)
+                            if (matchedIndex === -1) {
+                                for (let si = 0; si < studentExtra.length; si++) {
+                                    if (usedStudentExtras.has(si)) continue;
+                                    matchedStudent = studentExtra[si];
+                                    matchedIndex = si;
+                                    break;
+                                }
+                            }
+                            
+                            if (matchedIndex !== -1) {
+                                usedStudentExtras.add(matchedIndex);
+                            }
+                            
+                            compareNodes(matchedStudent, modelChild, `${path}-e${mi}`);
+                        });
+                    } else {
+                        // If division error (or node not identified), count remaining elements 
+                        // from model for total score, but do NOT add correct
+                        countModelElements(model);
+                    }
+                };
+
+                compareNodes(studentTree, modelTree, 'root');
+
+                results.totalElements = results.totalNodes + results.totalLabelTopParts + results.totalLabelBottomParts;
+                results.correctElements = results.correctNodes + results.correctLabelTopParts + results.correctLabelBottomParts;
+                if (results.totalElements > 0) {
+                    results.totalElements -= 1;
+                    results.correctElements -= 1;
+                    }
+                results.errorElements = results.totalElements - results.correctElements;
+                results.accuracy = results.totalElements ? (results.correctElements / results.totalElements) : 1;
+
+                return results;
+            };
+
+            const handleFinishExercise = () => {
+                if (!tree || !modelTree) return;
+                const results = compareTrees(tree, modelTree);
+                setComparisonResults(results);
+                setShowComparison(true);
+            };
+
+            const resetExercise = () => {
+                setExerciseMode(false);
+                setModelTree(null);
+                setShowComparison(false);
+                setComparisonResults(null);
+                setTree(null);
+                setSentence('');
+                // Reset history
+                setHistory([]);
+                setHistoryIndex(-1);
+            };
+
+            const newExercise = () => {
+                
+                clearAutoSave();
+setExerciseMode(true);
+                setModelTree(null);
+                setShowComparison(false);
+                setComparisonResults(null);
+                setTree(null);
+                setSentence('');
+                setDivisionMode(null);
+                setSelectedCuts([]);
+                // Reset history
+                setHistory([]);
+                setHistoryIndex(-1);
+            };
+
+            // ===========================================
+            // EXPORT
+            // ===========================================
+            const handleExport = async (isTechnical = false) => {
+                const treeWrapper = document.querySelector('.tree-container .tree-wrapper');
+                if (!treeWrapper) return;
+
+                const treeContainer = document.querySelector('.tree-container');
+                const zoomContainer = treeContainer.querySelector('.zoom-container');
+
+                // Save current zoom and reset to 100% for consistent export
+                const savedZoom = zoomLevel;
+                setZoomLevel(100);
+
+
+                try {
+
+                // Wait for React to re-render at 100% zoom
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                await new Promise(resolve => setTimeout(resolve, 50));
+                const originalOverflow = treeContainer.style.overflow;
+                const originalWidth = treeContainer.style.width;
+                const originalMaxWidth = treeContainer.style.maxWidth;
+                treeContainer.style.overflow = 'visible';
+                treeContainer.style.width = 'fit-content';
+                treeContainer.style.maxWidth = 'none';
+
+                if (isTechnical) treeWrapper.classList.add('technical-mode');
+
+                // Hide edit buttons
+                const undoBtns = treeWrapper.querySelectorAll('.btn-danger-soft');
+                const clearBtns = treeWrapper.querySelectorAll('.clear-text-btn');
+                const addBtns = treeWrapper.querySelectorAll('.add-sibling-btn');
+                const splitBtns = treeWrapper.querySelectorAll('.split-toggle-btn');
+                const zoomControls = treeContainer.querySelector('.zoom-controls');
+
+                undoBtns.forEach(b => b.style.visibility = 'hidden');
+                clearBtns.forEach(b => b.style.display = 'none');
+                addBtns.forEach(b => b.style.display = 'none');
+                splitBtns.forEach(b => b.style.display = 'none');
+
+                if (zoomControls) zoomControls.style.display = 'none';
+
+                let svg = null;
+                const connectors = treeWrapper.querySelectorAll('.connector-v, .v-line-stem');
+                const nodeBoxes = treeWrapper.querySelectorAll('.node-box');
+                const inputData = [];
+
+                const originalInlineStyles = {
+                    connectors: Array.from(connectors).map(el => ({ el, cssText: el.style.cssText })),
+                    nodeBoxes: Array.from(nodeBoxes).map(el => ({ el, cssText: el.style.cssText })),
+                    treeWrapperPos: treeWrapper.style.position
+                };
+
+                // Helper function to get label value (from input or display)
+                const getLabelValue = (element) => {
+                    if (!element) return '';
+                    if (element.tagName === 'INPUT') {
+                        return element.value.trim();
+                    } else {
+                        // For label-display, use data-raw-value if exists to preserve format markers
+                        const rawValue = element.getAttribute('data-raw-value');
+                        if (rawValue !== null) {
+                            return rawValue.trim();
+                        }
+                        return element.textContent.trim();
+                    }
+                };
+
+                const nodeContainers = treeWrapper.querySelectorAll('.node-container');
+                
+                nodeContainers.forEach(container => {
+                    // Search both inputs and displays (including those inside label-with-dropdown)
+                    const topElements = container.querySelectorAll(':scope > .label-wrap > .label-input.label-top, :scope > .label-wrap > .label-display.label-top, :scope > .label-wrap > .label-with-dropdown > .label-input.label-top, :scope > .label-wrap > .label-with-dropdown > .label-display.label-top');
+                    const bottomElements = container.querySelectorAll(':scope > .label-wrap > .label-input:not(.label-top), :scope > .label-wrap > .label-display:not(.label-top), :scope > .label-wrap > .label-with-dropdown > .label-input:not(.label-top), :scope > .label-wrap > .label-with-dropdown > .label-display:not(.label-top)');
+                    
+                    // The node-box is inside a flex div that is direct child of container
+                    // IMPORTANT: Only search direct children, NOT descendants
+                    let nodeBox = null;
+                    const directChildren = container.children;
+                    for (let child of directChildren) {
+                        // If div that does NOT have children-container and is NOT connector-v
+                        if (child.tagName === 'DIV' && 
+                            !child.classList.contains('connector-v') && 
+                            !child.classList.contains('label-wrap') &&
+                            !child.querySelector(':scope > .children-container')) {
+                            // Search node-box as direct child of this div
+                            const box = child.querySelector(':scope > .node-box');
+                            if (box) {
+                                nodeBox = box;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    const hasChildren = container.querySelector(':scope > div > .children-container') !== null;
+                    const isNucleus = container.classList.contains('nucleus-node');
+                    const isRootNode = container.parentElement && container.parentElement.classList.contains('tree-wrapper');
+
+                    const topVal = Array.from(topElements).map(el => getLabelValue(el)).filter(v => v && v !== 'func.' && v !== 'cat.').join(' • ');
+                    const botVal = Array.from(bottomElements).map(el => getLabelValue(el)).filter(v => v && v !== 'func.' && v !== 'cat.').join(' • ');
+
+                    const slashSeparators = container.querySelectorAll(':scope > .label-wrap > .slash-separator');
+                    slashSeparators.forEach(s => s.style.display = 'none');
+                    
+                    // Hide complete label-wraps
+                    const labelWraps = container.querySelectorAll(':scope > .label-wrap');
+
+                    if (isTechnical && hasChildren) {
+                        // In technical mode with children, we do NOT extract or show node text
+                        // to avoid redundancy and misalignment in tree diagram.
+                        if (nodeBox) nodeBox.style.display = 'none';
+                        
+                        let combinedText = '';
+                        if (topVal && botVal) combinedText = `${topVal} • ${botVal}`;
+                        else if (topVal) combinedText = `${topVal}`;
+                        else if (botVal) combinedText = `${botVal}`;
+                        
+                        const mergedSpan = document.createElement('span');
+                        mergedSpan.className = 'exp-merged';
+                        mergedSpan.style.cssText = `display: block; text-align: center; font-size: 16px; color: #374151; font-weight: ${isNucleus ? 'bold' : 'normal'}; padding: 4px; text-transform: uppercase;`;
+                        applyFormatToSpan(mergedSpan, combinedText.toUpperCase());
+                        
+                        labelWraps.forEach(lw => lw.style.display = 'none');
+
+                        inputData.push({ type: 'merged', labelWraps, box: nodeBox, span: mergedSpan, textSpan: null, parent: container, slashSeparators });
+                        
+                        // Insert mergedSpan at beginning of container
+                        container.insertBefore(mergedSpan, container.firstChild);
+                    } else {
+                        const processLabels = (elements, isTop, combinedVal, labelWrap) => {
+                            const span = document.createElement('span');
+                            
+                            if (!combinedVal) {
+                                span.style.display = 'none';
+                                const allConnectors = container.querySelectorAll(':scope > .connector-v');
+
+                                if (isTop) {
+                                    if (allConnectors.length >= 1) {
+                                        if (!isTechnical && isRootNode) {
+                                            allConnectors[0].style.display = 'none';
+                                            inputData.push({ type: 'connector-hidden', connector: allConnectors[0] });
+                                        } else {
+                                            const currentHeight = parseInt(window.getComputedStyle(allConnectors[0]).height) || 12;
+                                            const extraHeight = 23;
+                                            allConnectors[0].dataset.originalHeight = currentHeight;
+                                            allConnectors[0].style.height = (currentHeight + extraHeight) + 'px';
+                                            inputData.push({ type: 'connector-extended', connector: allConnectors[0] });
+                                        }
+                                    }
+                                } else {
+                                    if (allConnectors.length >= 2) {
+                                        allConnectors[1].style.display = 'none';
+                                        inputData.push({ type: 'connector-hidden', connector: allConnectors[1] });
+                                    }
+                                }
+                            } else {
+                                let val = combinedVal;
+                                if (isTechnical) val = `[${val}]`;
+                                
+                                span.className = isTop ? 'exp-top' : 'exp-bottom';
+                                const textColor = isTechnical ? '#6b7280' : '#334155';
+                                const transform = isTop ? 'uppercase' : 'none';
+                                let marginStyle = isTechnical ? (isTop ? 'margin-bottom: 2px;' : 'margin-top: 2px;') : '';
+                                const borderStyle = isTechnical ? 'none' : '1px solid #cbd5e1';
+                                const bgStyle = isTechnical ? 'transparent' : '#f1f5f9';
+
+                                span.style.cssText = `${marginStyle} display: inline-block; min-width: 95px; text-align: center; font-size: 11px; font-family: Arial, sans-serif; padding: 4px; border: ${borderStyle}; border-radius: 4px; background-color: ${bgStyle}; color: ${textColor}; font-weight: ${container.classList.contains('nucleus-node') ? 'bold' : 'normal'}; text-transform: ${transform};`;
+                                applyFormatToSpan(span, isTop ? val.toUpperCase() : val);
+                            }
+                            
+                            if (labelWrap) {
+                                labelWrap.style.display = 'none';
+                            }
+
+                            inputData.push({ type: 'single', labelWrap, span, parent: container, isTop });
+                            
+                            if (isTop) {
+                                container.insertBefore(span, container.firstChild);
+                            } else {
+                                const childrenDiv = container.querySelector(':scope > div:last-child');
+                                if (childrenDiv && childrenDiv.querySelector('.children-container')) {
+                                    container.insertBefore(span, childrenDiv);
+                                } else {
+                                    container.appendChild(span);
+                                }
+                            }
+                        };
+                        
+                        // Find label-wraps for top and bottom
+                        const topLabelWrap = Array.from(labelWraps).find(lw => lw.querySelector('.label-top'));
+                        const bottomLabelWrap = Array.from(labelWraps).find(lw => lw.querySelector(':not(.label-top)') && !lw.querySelector('.label-top'));
+                        
+                        processLabels(Array.from(topElements), true, topVal, topLabelWrap);
+                        processLabels(Array.from(bottomElements), false, botVal, bottomLabelWrap || (labelWraps[1] || null));
+                    }
+                });
+
+                if (isTechnical) {
+                    connectors.forEach(c => c.style.display = 'none');
+                    nodeBoxes.forEach(b => { 
+                        if (b && b.style.display !== 'none') { 
+                            b.style.border = 'none'; 
+                            b.style.backgroundColor = 'transparent'; 
+                        }
+                    });
+                    
+                    const rect = treeWrapper.getBoundingClientRect();
+                    svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    svg.setAttribute('width', rect.width);
+                    svg.setAttribute('height', rect.height);
+                    svg.style.cssText = `position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1;`;
+                    treeWrapper.style.position = 'relative';
+                    treeWrapper.appendChild(svg);
+                    
+                    const getPos = (el) => {
+                        const r = el.getBoundingClientRect();
+                        return { x: r.left + r.width / 2 - rect.left, top: r.top - rect.top, bottom: r.bottom - rect.top };
+                    };
+                    
+                    // Helper function to find direct node-box of a container
+                    const findDirectNodeBox = (container) => {
+                        const directChildren = container.children;
+                        for (let child of directChildren) {
+                            // If div that does NOT have children-container, connector-v or label-wrap
+                            if (child.tagName === 'DIV' && 
+                                !child.classList.contains('connector-v') && 
+                                !child.classList.contains('label-wrap') &&
+                                !child.querySelector(':scope > .children-container')) {
+                                const box = child.querySelector(':scope > .node-box');
+                                if (box) return box;
+                            }
+                        }
+                        return null;
+                    };
+                    
+                    const getTopConnectionPoint = (container) => {
+                        const merged = container.querySelector(':scope > .exp-merged');
+                        if (merged) return merged;
+                        const expTop = container.querySelector(':scope > .exp-top');
+                        if (expTop && expTop.style.display !== 'none') return expTop;
+                        const nodeBox = findDirectNodeBox(container);
+                        if (nodeBox && nodeBox.style.display !== 'none') return nodeBox;
+                        const expBottom = container.querySelector(':scope > .exp-bottom');
+                        if (expBottom && expBottom.style.display !== 'none') return expBottom;
+                        return null;
+                    };
+                    
+                    treeWrapper.querySelectorAll('.node-container').forEach(cont => {
+                        const pLabel = cont.querySelector(':scope > .exp-merged');
+                        const textNode = cont.querySelector(':scope > .exp-text-node');
+                        const nodeBox = findDirectNodeBox(cont);
+                        const branches = cont.querySelector(':scope > div > .children-container');
+                        
+                        if (pLabel && branches) {
+                            // Use exp-merged (since nodeBox and textSpan are hidden/null in technical mode for parents)
+                            let connectionSource = pLabel;
+                            if (textNode && textNode.textContent.trim()) {
+                                connectionSource = textNode;
+                            }
+                            const pPos = getPos(connectionSource);
+                            Array.from(branches.children).forEach(branch => {
+                                const childContainer = branch.querySelector(':scope > .node-container');
+                                if (childContainer) {
+                                    const cTarget = getTopConnectionPoint(childContainer);
+                                    if (cTarget) {
+                                        const cPos = getPos(cTarget);
+                                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                                        line.setAttribute('x1', pPos.x);
+                                        line.setAttribute('y1', pPos.bottom);
+                                        line.setAttribute('x2', cPos.x);
+                                        line.setAttribute('y2', cPos.top);
+                                        line.setAttribute('stroke', 'black');
+                                        line.setAttribute('stroke-width', '1.5');
+                                        svg.appendChild(line);
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+
+                const canvas = await html2canvas(treeWrapper, { 
+                    backgroundColor: null, 
+                    scale: 2,
+                    width: treeWrapper.scrollWidth,
+                    height: treeWrapper.scrollHeight
+                });
+                
+                const link = document.createElement('a');
+                link.download = getFileName('png');
+                link.href = canvas.toDataURL();
+                link.click();
+
+                // Restore styles
+                treeContainer.style.overflow = originalOverflow;
+                treeContainer.style.width = originalWidth;
+                treeContainer.style.maxWidth = originalMaxWidth;
+
+
+                if (zoomControls) zoomControls.style.display = '';
+
+                if (isTechnical) treeWrapper.classList.remove('technical-mode');
+                if (svg) svg.remove();
+                treeWrapper.style.position = originalInlineStyles.treeWrapperPos;
+                
+                inputData.forEach(d => {
+                    if (d.type === 'connector-hidden') {
+                        d.connector.style.display = '';
+                    } else if (d.type === 'connector-extended') {
+                        const originalHeight = d.connector.dataset.originalHeight || '12';
+                        d.connector.style.height = originalHeight + 'px';
+                        delete d.connector.dataset.originalHeight;
+                    } else if (d.type === 'merged') {
+                        d.span.remove();
+                        if (d.textSpan) d.textSpan.remove();
+                        d.labelWraps.forEach(lw => lw.style.display = '');
+                        if (d.box) d.box.style.display = '';
+                        d.slashSeparators.forEach(s => s.style.display = '');
+                    } else {
+                        d.span.remove();
+                        if (d.labelWrap) {
+                            d.labelWrap.style.display = '';
+                        }
+                    }
+                });
+                
+                originalInlineStyles.connectors.forEach(({ el, cssText }) => { el.style.cssText = cssText; });
+                originalInlineStyles.nodeBoxes.forEach(({ el, cssText }) => { el.style.cssText = cssText; });
+
+                undoBtns.forEach(b => b.style.visibility = 'visible');
+                clearBtns.forEach(b => b.style.display = '');
+                addBtns.forEach(b => b.style.display = '');
+                splitBtns.forEach(b => b.style.display = '');
+                }
+                finally {
+                    // Restore original zoom level after export
+                    setZoomLevel(savedZoom);
+                }
+            };
+
+            // ===========================================
+            // LABEL RENDERING WITH DROPDOWN
+            // ===========================================
+            const [editingLabel, setEditingLabel] = useState(null);
+            const [dropdownOpen, setDropdownOpen] = useState(null);
+            const [dropdownSearch, setDropdownSearch] = useState('');
+
+            // Close dropdown on click outside
+            const dropdownRef = useRef(null);
+            
+            useEffect(() => {
+                const handleClickOutside = (e) => {
+                    // If no dropdown open, do nothing
+                    if (!dropdownOpen) return;
+                    
+                    // Check if click was inside any dropdown or trigger button
+                    const clickedDropdown = e.target.closest('.label-dropdown');
+                    const clickedTrigger = e.target.closest('.dropdown-trigger');
+                    
+                    // If click was outside dropdowns and triggers, close
+                    if (!clickedDropdown && !clickedTrigger) {
+                        setDropdownOpen(null);
+                        setDropdownSearch('');
+                    }
+                };
+                
+                // Use setTimeout so listener is added after render
+                const timeoutId = setTimeout(() => {
+                    document.addEventListener('click', handleClickOutside);
+                }, 0);
+                
+                return () => {
+                    clearTimeout(timeoutId);
+                    document.removeEventListener('click', handleClickOutside);
+                };
+            }, [dropdownOpen]);
+
+            const renderLabelInput = (node, field, isTop) => {
+                const value = (node[field] || '');
+                const parts = value.split('/').map(p => p.trim());
+                const isSplit = parts.length > 1;
+                const hasValue = value.trim() !== '';
+                const isEditing = editingLabel === `${node.id}-${field}`;
+                const dropdownId = `${node.id}-${field}`;
+                const baseClass = `label-input ${hasValue ? (isTop ? 'has-value-top' : 'has-value-bottom') : ''}`;
+
+                const setValue = (newVal) => setTree(prev => updateNode(prev, node.id, { [field]: newVal }));
+
+                const toggleSplit = (e) => {
+                    e.stopPropagation();
+                    if (isSplit) {
+                        const left = (parts[0] || '').trim();
+                        const right = (parts.slice(1).join('/').trim() || '');
+                        setValue((left || right || '').trim());
+                    } else {
+                        const left = value.trim();
+                        setValue((left ? left : '') + ' / ');
+                    }
+                };
+
+                const startEditing = () => {
+                    setEditingLabel(`${node.id}-${field}`);
+                };
+
+                const handleBlur = (e) => {
+                    const labelWrap = e.currentTarget.closest('.label-wrap');
+                    const relatedTarget = e.relatedTarget;
+                    
+                    // If focus goes to another element in same label-wrap (including dropdown), do not close
+                    if (labelWrap && relatedTarget && labelWrap.contains(relatedTarget)) {
+                        return;
+                    }
+                    
+                    // If focus goes to dropdown button or dropdown itself, do not close
+                    if (relatedTarget && (relatedTarget.closest('.dropdown-trigger') || relatedTarget.closest('.label-dropdown'))) {
+                        return;
+                    }
+                    
+                    setTimeout(() => {
+                        setEditingLabel(prev => {
+                            if (prev === `${node.id}-${field}`) {
+                                return null;
+                            }
+                            return prev;
+                        });
+                    }, 200);
+                };
+
+                const handleKeyDown = (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        setEditingLabel(null);
+                    }
+                };
+
+                const handleDropdownSelect = (abbr, partIndex = null) => {
+                    if (isSplit && partIndex !== null) {
+                        const newParts = [...parts];
+                        newParts[partIndex] = abbr;
+                        setValue(newParts.join(' / '));
+                    } else {
+                        setValue(abbr);
+                    }
+                    setDropdownOpen(null);
+                    setDropdownSearch('');
+                    // Close edit mode so label shows in display mode
+                    setEditingLabel(null);
+                };
+
+                const openDropdown = (e, suffix = '') => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const newId = dropdownId + suffix;
+                    // If this same dropdown is open, close it; otherwise, open it
+                    if (dropdownOpen === newId) {
+                        setDropdownOpen(null);
+                        setDropdownSearch('');
+                    } else {
+                        setDropdownOpen(newId);
+                        setDropdownSearch('');
+                    }
+                };
+
+                // Helper: keep the dropdown open/closed based on the text typed in the input.
+                // If there's text and the dropdown is not open for this input, it opens it.
+                // If the text is empty, it closes it.
+                const syncDropdownWithTyping = (suffix, currentText) => {
+                    const targetId = dropdownId + suffix;
+                    if (currentText.trim() === '') {
+                        if (dropdownOpen === targetId) setDropdownOpen(null);
+                    } else {
+                        if (dropdownOpen !== targetId) setDropdownOpen(targetId);
+                    }
+                };
+
+                // Edit mode: show inputs with dropdown buttons
+                if (isEditing) {
+                    return (
+                        <div className="label-wrap">
+                            {isSplit ? (
+                                <>
+                                    <div className="label-with-dropdown">
+                                        <input
+                                            type="text"
+                                            value={parts[0] || ''}
+                                            onChange={(e) => {
+                                                const left = e.target.value;
+                                                const right = parts.slice(1).join('/').trim();
+                                                setValue(left + ' / ' + right);
+                                                syncDropdownWithTyping('-0', left);
+                                            }}
+                                            onBlur={handleBlur}
+                                            onKeyDown={handleKeyDown}
+                                            autoFocus
+                                            className={baseClass}
+                                            style={{ width: '65px' }}
+                                            placeholder={isTop ? 'func.' : 'cat.'}
+                                        />
+                                        <button 
+                                            type="button" 
+                                            className="dropdown-trigger"
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            onClick={(e) => openDropdown(e, '-0')}
+                                            title="Select label from catalog"
+                                        >
+                                            ☰
+                                        </button>
+                                        {dropdownOpen === `${dropdownId}-0` && (
+                                            <LabelDropdown
+                                                isTop={isTop}
+                                                onSelect={(abbr) => handleDropdownSelect(abbr, 0)}
+                                                onClose={() => { setDropdownOpen(null); setDropdownSearch(''); }}
+                                                searchValue={(parts[0] || '').trim() !== '' ? (parts[0] || '').trim() : dropdownSearch}
+                                                onSearchChange={setDropdownSearch}
+                                                hideSearch={(parts[0] || '').trim() !== ''}
+                                            />
+                                        )}
+                                    </div>
+                                    <span className="slash-separator" style={{ color: '#6b7280', fontWeight: 'bold', fontSize: '12px' }}>•</span>
+                                    <div className="label-with-dropdown">
+                                        <input
+                                            type="text"
+                                            value={parts.slice(1).join('/').trim()}
+                                            onChange={(e) => {
+                                                const right = e.target.value;
+                                                const left = (parts[0] || '').trim();
+                                                setValue(left + ' / ' + right);
+                                                syncDropdownWithTyping('-1', right);
+                                            }}
+                                            onBlur={handleBlur}
+                                            onKeyDown={handleKeyDown}
+                                            className={baseClass}
+                                            style={{ width: '65px' }}
+                                            placeholder={isTop ? 'func.' : 'cat.'}
+                                        />
+                                        <button 
+                                            type="button" 
+                                            className="dropdown-trigger"
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            onClick={(e) => openDropdown(e, '-1')}
+                                            title="Select label from catalog"
+                                        >
+                                            ☰
+                                        </button>
+                                        {dropdownOpen === `${dropdownId}-1` && (
+                                            <LabelDropdown
+                                                isTop={isTop}
+                                                onSelect={(abbr) => handleDropdownSelect(abbr, 1)}
+                                                onClose={() => { setDropdownOpen(null); setDropdownSearch(''); }}
+                                                searchValue={parts.slice(1).join('/').trim() !== '' ? parts.slice(1).join('/').trim() : dropdownSearch}
+                                                onSearchChange={setDropdownSearch}
+                                                hideSearch={parts.slice(1).join('/').trim() !== ''}
+                                            />
+                                        )}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="label-with-dropdown">
+                                    <input
+                                        type="text"
+                                        value={value}
+                                        onChange={(e) => {
+                                            setValue(e.target.value);
+                                            syncDropdownWithTyping('', e.target.value);
+                                        }}
+                                        onBlur={handleBlur}
+                                        onKeyDown={handleKeyDown}
+                                        autoFocus
+                                        className={baseClass}
+                                        style={{ width: '78px' }}
+                                        placeholder={isTop ? 'func.' : 'cat.'}
+                                    />
+                                    <button 
+                                        type="button" 
+                                        className="dropdown-trigger"
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        onClick={(e) => openDropdown(e)}
+                                        title="Select label from catalog"
+                                    >
+                                        ☰
+                                    </button>
+                                    {dropdownOpen === dropdownId && (
+                                        <LabelDropdown
+                                            isTop={isTop}
+                                            onSelect={(abbr) => handleDropdownSelect(abbr)}
+                                            onClose={() => { setDropdownOpen(null); setDropdownSearch(''); }}
+                                            searchValue={value.trim() !== '' ? value.trim() : dropdownSearch}
+                                            onSearchChange={setDropdownSearch}
+                                            hideSearch={value.trim() !== ''}
+                                        />
+                                    )}
+                                </div>
+                            )}
+                            <button
+                                type="button"
+                                className="split-toggle-btn"
+                                title={isSplit ? 'Merge label' : 'Split label'}
+                                onClick={toggleSplit}
+                                aria-label={isSplit ? 'Merge label' : 'Split label'}
+                            >
+                                ⇄
+                            </button>
+                        </div>
+                    );
+                }
+
+                // Display mode: show formatted text
+                const displayClass = `label-display ${isTop ? 'label-top' : ''} ${hasValue ? 'has-value' : ''}`;
+
+                return (
+                    <div className="label-wrap">
+                        {isSplit ? (
+                            <>
+                                <span 
+                                    className={displayClass}
+                                    style={{ width: '80px', minWidth: '80px' }}
+                                    onClick={startEditing}
+                                    data-raw-value={parts[0]?.trim() || ''}
+                                >
+                                    {parts[0]?.trim() ? formatLabelText(parts[0].trim()) : <span style={{color: '#9ca3af'}}>{isTop ? 'func.' : 'cat.'}</span>}
+                                </span>
+                                <span className="slash-separator" style={{ color: '#6b7280', fontWeight: 'bold', fontSize: '12px' }}>•</span>
+                                <span 
+                                    className={displayClass}
+                                    style={{ width: '80px', minWidth: '80px' }}
+                                    onClick={startEditing}
+                                    data-raw-value={parts.slice(1).join('/').trim() || ''}
+                                >
+                                    {parts.slice(1).join('/').trim() ? formatLabelText(parts.slice(1).join('/').trim()) : <span style={{color: '#9ca3af'}}>{isTop ? 'func.' : 'cat.'}</span>}
+                                </span>
+                            </>
+                        ) : (
+                            <span 
+                                className={displayClass}
+                                style={{ width: '95px', minWidth: '95px' }}
+                                onClick={startEditing}
+                                data-raw-value={value || ''}
+                            >
+                                {hasValue ? formatLabelText(value) : <span style={{color: '#9ca3af'}}>{isTop ? 'func.' : 'cat.'}</span>}
+                            </span>
+                        )}
+                        <button
+                            type="button"
+                            className="split-toggle-btn"
+                            title={isSplit ? 'Merge label' : 'Split label'}
+                            onClick={toggleSplit}
+                            aria-label={isSplit ? 'Merge label' : 'Split label'}
+                        >
+                            ⇄
+                        </button>
+                    </div>
+                );
+            };
+
+            // ===========================================
+            // NODE RENDERING
+            // ===========================================
+            const renderNode = (node) => {
+                const isDiv = divisionMode === node.id;
+                const hasC = node.children && node.children.length > 0;
+                const isEmpty = !node.text || node.text.trim() === '';
+                const words = node.text ? node.text.split(/\s+/) : [];
+                const canDivide = words.length > 1 && !node.isInserted && !node.isConsolidated;
+                const canConsolidate = words.length > 1 && !node.isInserted && !hasC;
+                const canExpand = !hasC && !node.isInserted && !canDivide;
+                const isTerminal = !hasC;
+                const isAbsoluteTerminal = isTerminal && !canDivide;
+                const hasParent = !!findParentId(tree, node.id);
+                const showAddSiblingButtons = isAbsoluteTerminal && hasParent;
+
+                return (
+                    <div
+                        className={`node-container ${node.isNucleus ? 'nucleus-node' : ''}`}
+                        key={node.id}
+                    >
+                        {renderLabelInput(node, 'labelTop', true)}
+                        
+                        {isEmpty ? (
+                            <div className="connector-v" style={{ height: '36px' }} />
+                        ) : (
+                            <>
+                                <div className="connector-v" style={{ height: '12px' }} />
+                                
+                                {isDiv ? (
+                                    <div style={{background:'#f8fafc', padding:'15px', border:'1px solid #374151', borderRadius:'4px'}}>
+                                        <div style={{display:'flex', gap:'4px', marginBottom:'10px'}}>
+                                            {words.map((w, i) => (
+                                                <React.Fragment key={i}>
+                                                    <span style={{padding:'6px 10px', background:'white', border:'1px solid #cbd5e1'}}>{w}</span>
+                                                    {i < words.length - 1 && (
+                                                        <button
+                                                            onClick={() => setSelectedCuts(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i].sort((a, b) => a - b))}
+                                                            style={{width:'10px', background: selectedCuts.includes(i) ? '#374151' : '#e2e8f0', border:'none', cursor:'pointer'}}
+                                                        />
+                                                    )}
+                                                </React.Fragment>
+                                            ))}
+                                        </div>
+                                        <div style={{display:'flex', gap:'8px', justifyContent:'center'}}>
+                                            <button onClick={handleDivide} className="btn btn-primary" style={{padding:'5px 12px'}}>Divide</button>
+                                            <button onClick={() => setDivisionMode(null)} className="btn btn-outline" style={{padding:'5px 12px'}}>Cancel</button>
+                                        </div>
+                                    </div>
+                                ) : (
+	                                    <div className="node-box-row">
+                                        <div
+                                            className={`node-box ${canDivide ? 'can-divide' : ''}`}
+                                            onClick={() => !hasC && canDivide && setDivisionMode(node.id)}
+                                        >
+                                            {node.text}
+                                            {canConsolidate && !node.isConsolidated && (
+                                                <button
+                                                    className="consolidate-btn"
+                                                    title="Consolidate (do not divide)"
+                                                    onClick={(e) => { e.stopPropagation(); toggleConsolidated(node.id); }}
+                                                >
+                                                    ∪
+                                                </button>
+                                            )}
+                                            {canConsolidate && node.isConsolidated && (
+                                                <button
+                                                    className="deconsolidate-btn"
+                                                    title="Allow division"
+                                                    style={canExpand ? { left: '25%', transform: 'translateX(-50%)' } : undefined}
+                                                    onClick={(e) => { e.stopPropagation(); toggleConsolidated(node.id); }}
+                                                >
+                                                    ✂
+                                                </button>
+                                            )}
+                                            {canExpand && (
+                                                <button
+                                                    className="consolidate-btn"
+                                                    style={canConsolidate && node.isConsolidated ? { left: '75%', transform: 'translateX(-50%)' } : undefined}
+                                                    title="Expand (create child constituents)"
+                                                    onClick={(e) => { e.stopPropagation(); openExpandModal(node.id); }}
+                                                >
+                                                    ⑃
+                                                </button>
+                                            )}
+                                            {showAddSiblingButtons && (
+                                                <>
+                                                    <button
+                                                        className="add-sibling-btn left"
+                                                        title="Add sibling to the left"
+                                                        onClick={(e) => { e.stopPropagation(); addSiblingNode(node.id, 'left'); }}
+                                                    >
+                                                        ← +
+                                                    </button>
+                                                    <button
+                                                        className="add-sibling-btn right"
+                                                        title="Add sibling to the right"
+                                                        onClick={(e) => { e.stopPropagation(); addSiblingNode(node.id, 'right'); }}
+                                                    >
+                                                        + →
+                                                    </button>
+                                                </>
+                                            )}
+                                            {hasC && (
+                                                <button
+                                                    className="clear-text-btn"
+                                                    onClick={(e) => { e.stopPropagation(); setTree(prev => updateNode(prev, node.id, { text: '' })); }}
+                                                >
+                                                    ✕
+                                                </button>
+                                            )}
+                                            {isAbsoluteTerminal && (
+                                                <button
+                                                    className={`nucleus-toggle-btn ${node.isNucleus ? 'is-nucleus' : ''}`}
+                                                    title={node.isNucleus ? "Remove bold (head)" : "Mark as head (bold)"}
+                                                    onClick={(e) => { 
+                                                        e.stopPropagation(); 
+                                                        setTree(prev => updateNode(prev, node.id, { isNucleus: !node.isNucleus })); 
+                                                    }}
+                                                >
+                                                    H
+                                                </button>
+                                            )}
+                                        </div>
+                                        {hasC && (
+                                            <button
+                                                className="btn-danger-soft node-revert-btn"
+                                                onMouseDown={(e) => e.stopPropagation()}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setTree(prev => updateNode(prev, node.id, { children: null }));
+                                                }}
+                                                title="Undo division"
+                                                aria-label="Undo division"
+                                            >
+                                                <RevertDivisionIcon />
+                                            </button>
+                                        )}</div>
+                                )}
+                                
+                                <div className="connector-v" style={{ height: '12px' }} />
+                            </>
+                        )}
+
+                        {renderLabelInput(node, 'labelBottom', false)}
+                        
+                        {hasC && (
+                            <div style={{display:'flex', flexDirection:'column', alignItems:'center', width:'100%'}}>
+                                <div className="connector-v" style={{height:'24px'}} />
+                                <div className="children-container">
+                                    {node.children.map((c) => (
+                                        <div className="child-branch" key={c.id}>
+                                            <div className="v-line-stem" />
+                                            {renderNode(c)}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            // ===========================================
+            // STATIC RENDERING (COMPARISON)
+            // ===========================================
+            const renderStaticNode = (node, comparisons, path = 'root', isModel = false) => {
+                const comparison = comparisons?.get(path);
+
+                // For student tree, if no node, render nothing
+                // (no longer creating ghost nodes ∅)
+                if (!node) return null;
+
+                const isEmpty = !node.text || node.text.trim() === '';
+
+                let nodeClass = 'node-container';
+                if (node.isNucleus) nodeClass += ' nucleus-node';
+
+                // Color node based on whether it was IDENTIFIED correctly (not based on division)
+                // A green node means student correctly identified this constituent
+                if (!isModel && comparison) {
+                    nodeClass += comparison.nodeCorrect ? ' node-correct' : ' node-incorrect';
+                }
+
+                const modelTop = comparison?.modelNode?.labelTop?.trim() || '';
+                const modelBottom = comparison?.modelNode?.labelBottom?.trim() || '';
+                const studentTop = (node.labelTop || '').trim();
+                const studentBottom = (node.labelBottom || '').trim();
+
+                const shouldShowTop = isModel ? !!studentTop : (!!studentTop || !!modelTop);
+                const shouldShowBottom = isModel ? !!studentBottom : (!!studentBottom || !!modelBottom);
+
+                const labelTopClass = (!isModel && comparison && (studentTop || modelTop))
+                    ? (comparison.labelTopMatch ? 'label-correct' : 'label-incorrect')
+                    : '';
+
+                const labelBottomClass = (!isModel && comparison && (studentBottom || modelBottom))
+                    ? (comparison.labelBottomMatch ? 'label-correct' : 'label-incorrect')
+                    : '';
+
+                const renderStaticLabel = (valueToShow, isTop, extraClass) => {
+                    if (!valueToShow || !valueToShow.trim()) return null;
+                    const showAsEmpty = valueToShow.trim() === '∅';
+                    
+                    // Format value to show • instead of / as separator
+                    const displayValue = valueToShow.split('/').map(p => p.trim()).filter(p => p).join(' • ');
+
+                    return (
+                        <div
+                            className={extraClass}
+                            style={{
+                                width: '95px',
+                                textAlign: 'center',
+                                fontSize: 'calc(11px * var(--ent-text-scale, 1))',
+                                lineHeight: '1.1',
+                                padding: 'calc(4px * var(--ent-text-scale, 1))',
+                                borderRadius: '4px',
+                                textTransform: isTop ? 'uppercase' : 'none',
+                                fontStyle: showAsEmpty ? 'italic' : 'normal',
+                                opacity: showAsEmpty ? 0.9 : 1,
+                                backgroundColor: extraClass ? undefined : '#f1f5f9',
+                                border: extraClass ? undefined : '1px solid #cbd5e1',
+                                color: extraClass ? undefined : '#334155'
+                            }}
+                        >
+                            {displayValue}
+                        </div>
+                    );
+                };
+
+                // Determine which children to render
+                let childrenToRender = [];
+                
+                // If model, or if division is correct, show children
+                if (isModel || (comparison && comparison.divisionCorrect)) {
+                    const children = node.children || [];
+                    const normalizeLabel = (label) => {
+                        if (!label) return '';
+                        return label.split('/')
+                            .map(p => p.trim().toLowerCase().replace(/\s+/g, ''))
+                            .filter(p => p)
+                            .sort()
+                            .join('•');
+                    };
+                    
+                    // Count separate indices for normal and extra nodes
+                    let normalIndex = 0;
+                    let extraIndex = 0;
+                    
+                    if (isModel) {
+                        // For model: traverse in original order, assigning paths by type
+                        children.forEach((c) => {
+                            if (c.isInserted) {
+                                childrenToRender.push({ 
+                                    node: c, 
+                                    path: `${path}-e${extraIndex}`
+                                });
+                                extraIndex++;
+                            } else {
+                                childrenToRender.push({ 
+                                    node: c, 
+                                    path: `${path}-n${normalIndex}`
+                                });
+                                normalIndex++;
+                            }
+                        });
+                    } else {
+                        // For student: traverse in original order, but match extras by labels
+                        const modelExtra = (comparison?.modelNode?.children || []).filter(c => c.isInserted);
+                        
+                        // Create map from model labels to index
+                        const modelExtraByLabels = new Map();
+                        modelExtra.forEach((mc, mi) => {
+                            const key = normalizeLabel(mc.labelTop) + '|' + normalizeLabel(mc.labelBottom);
+                            if (!modelExtraByLabels.has(key)) {
+                                modelExtraByLabels.set(key, mi);
+                            }
+                        });
+                        
+                        const usedModelExtraIndices = new Set();
+                        
+                        children.forEach((c) => {
+                            if (c.isInserted) {
+                                // Find model index corresponding to this extra node by labels
+                                const key = normalizeLabel(c.labelTop) + '|' + normalizeLabel(c.labelBottom);
+                                let modelIdx = modelExtraByLabels.get(key);
+                                
+                                // If that index already used, find another with same labels
+                                if (modelIdx !== undefined && usedModelExtraIndices.has(modelIdx)) {
+                                    modelIdx = undefined;
+                                    for (let mi = 0; mi < modelExtra.length; mi++) {
+                                        if (usedModelExtraIndices.has(mi)) continue;
+                                        const mKey = normalizeLabel(modelExtra[mi].labelTop) + '|' + normalizeLabel(modelExtra[mi].labelBottom);
+                                        if (mKey === key) {
+                                            modelIdx = mi;
+                                            break;
+                                        }
+                                    }
+                                }
+                                
+                                if (modelIdx !== undefined) {
+                                    usedModelExtraIndices.add(modelIdx);
+                                    childrenToRender.push({ 
+                                        node: c, 
+                                        path: `${path}-e${modelIdx}`
+                                    });
+                                }
+                            } else {
+                                childrenToRender.push({ 
+                                    node: c, 
+                                    path: `${path}-n${normalIndex}`
+                                });
+                                normalIndex++;
+                            }
+                        });
+                    }
+                }
+                // If division error (shouldTruncate), do not show children, only message
+
+                return (
+                    <div className={nodeClass} key={node.id || path}>
+                        {shouldShowTop && renderStaticLabel(
+                            isModel ? studentTop : (studentTop || (modelTop ? '∅' : '')), 
+                            true, 
+                            labelTopClass
+                        )}
+
+                        {isEmpty ? (
+                            <div className="connector-v" style={{ height: '36px' }} />
+                        ) : (
+                            <>
+                                <div className="connector-v" style={{ height: '12px' }} />
+                                <div className="node-box" style={{ cursor: 'default' }}>
+                                    {node.text}
+                                </div>
+                                {/* Only show bottom line if there is bottom label, children, or error message */}
+                                {(shouldShowBottom || childrenToRender.length > 0 || (!isModel && comparison?.shouldTruncate)) && (
+                                    <div className="connector-v" style={{ height: '12px' }} />
+                                )}
+                            </>
+                        )}
+
+                        {shouldShowBottom && renderStaticLabel(
+                            isModel ? studentBottom : (studentBottom || (modelBottom ? '∅' : '')), 
+                            false, 
+                            labelBottomClass
+                        )}
+
+                        {/* If division error, show message and truncate */}
+                        {!isModel && comparison?.shouldTruncate ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                                <div className="connector-v" style={{ height: '24px' }} />
+                                <div style={{
+                                    padding: '8px 16px',
+                                    backgroundColor: '#fef2f2',
+                                    border: '2px solid #ef4444',
+                                    borderRadius: '6px',
+                                    color: '#b91c1c',
+                                    fontWeight: 'bold',
+                                    textAlign: 'center',
+                                    maxWidth: '150px',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                                    fontSize: `calc(12px * var(--ent-text-scale, 1) * 0.85)`,
+                                    lineHeight: 1.25,
+                                    whiteSpace: 'normal',
+                                    wordBreak: 'break-word'
+                                }}>
+                                    Constituent incorrectly divided
+                                </div>
+                            </div>
+                        ) : (
+                            /* If division is correct (or is model), show children */
+                            childrenToRender.length > 0 && (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                                    <div className="connector-v" style={{ height: '24px' }} />
+                                    <div className="children-container">
+                                        {childrenToRender.map((item, i) => (
+                                            <div className="child-branch" key={(item.node?.id) || item.path || i}>
+                                                <div className="v-line-stem" />
+                                                {renderStaticNode(item.node, comparisons, item.path, isModel)}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )
+                        )}
+                    </div>
+                );
+            };
+
+            // ===========================================
+            // COMPARISON VIEW
+            // ===========================================
+            if (showComparison && comparisonResults) {
+                return (
+                    <div className="container">
+                        {/* Language selector */}
+                        <div className="language-selector">
+                            <a href="index.html">
+                                <img src="spain_grey.png" alt="Español" className="language-flag inactive" title="Cambiar a Español" />
+                            </a>
+                            <img src="uk_solid.png" alt="English" className="language-flag active" title="English (current)" />
+                        </div>
+                        
+                        <header className="header-logo-container">
+                            <img src="english_logo.png" alt="ENT - Syntactic Analysis Assistant" className="header-logo" />
+                        </header>
+
+                        <div className="exercise-banner">
+                            <div className="exercise-banner-text">
+                                
+                                <div>
+                                    <div className="exercise-badge">📚 <strong>Exercise mode</strong></div>
+                                    <p>You are viewing results. You can go back to edit or exit exercise mode.</p>
+                                </div>
+                            </div>
+                            <button onClick={resetExercise} className="btn btn-danger"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:"6px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Exit exercise mode</button>
+                        </div>
+
+                        <div className="results-summary">
+                            <h3>Results</h3>
+                            <div className="results-stats" style={{ marginBottom: '14px' }}>
+                                <div className="stat-item">
+                                    <span className="stat-dot correct"></span>
+                                    <strong>Correct:</strong>&nbsp;
+                                    {comparisonResults.correctElements} / {comparisonResults.totalElements}
+                                </div>
+                                <div className="stat-item">
+                                    <span className="stat-dot incorrect"></span>
+                                    <strong>Errors:</strong>&nbsp;
+                                    {comparisonResults.errorElements}
+                                </div>
+                                <div className="stat-item">
+                                    <span className="stat-dot partial"></span>
+                                    <strong>Accuracy:</strong>&nbsp;
+                                    {(comparisonResults.accuracy * 100).toFixed(0)}%
+                                </div>
+                            </div>
+                            <p style={{margin: 0, fontSize: '15px', color: '#374151', lineHeight: '1.6'}}>
+                                <ul>
+                                    <li>Constituents in <span style={{color: '#10b981'}}>green</span> have correct structure; 
+                                    those in <span style={{color: '#ef4444'}}>red</span> have structural differences. </li>
+                                    <li>Labels in <span style={{color: '#10b981'}}>green</span> have correct information;
+                                    those in <span style={{color: '#ef4444'}}>red</span> differ from the model.  </li>
+                                </ul>
+                            </p>
+                        </div>
+
+                        <div className="comparison-container">
+                            <div className="comparison-panel student">
+                                <h3>✎ Your analysis</h3>
+                                <div className="comparison-tree">
+                                    {/* Zoom controls for student panel (sticky wrapper) */}
+                                    <div className="zoom-controls-wrapper">
+                                        <div className={`zoom-controls visible`}>
+                                            <button
+                                                className="zoom-btn"
+                                                onClick={studentZoomOut}
+                                                disabled={studentZoomLevel <= ZOOM_MIN}
+                                                title="Zoom out"
+                                            >
+                                                −
+                                            </button>
+                                            <div
+                                                className="zoom-indicator"
+                                                onClick={studentZoomReset}
+                                                title="Reset zoom"
+                                            >
+                                                {studentZoomLevel}%
+                                            </div>
+                                            <button
+                                                className="zoom-btn"
+                                                onClick={studentZoomIn}
+                                                disabled={studentZoomLevel >= ZOOM_MAX}
+                                                title="Zoom in"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        className="zoom-container"
+                                        ref={studentZoomContainerRef}
+                                        style={{ zoom: studentZoomLevel / 100, '--ent-text-scale': studentTextScale }}
+                                    >
+                                        <div className="tree-wrapper">
+                                            {renderStaticNode(tree, comparisonResults.nodeComparisons, 'root', false)}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="comparison-panel model">
+                                <h3>✓ Model analysis</h3>
+                                <div className="comparison-tree">
+                                    {/* Zoom controls for model panel (sticky wrapper) */}
+                                    <div className="zoom-controls-wrapper">
+                                        <div className={`zoom-controls visible`}>
+                                            <button
+                                                className="zoom-btn"
+                                                onClick={modelZoomOut}
+                                                disabled={modelZoomLevel <= ZOOM_MIN}
+                                                title="Zoom out"
+                                            >
+                                                −
+                                            </button>
+                                            <div
+                                                className="zoom-indicator"
+                                                onClick={modelZoomReset}
+                                                title="Reset zoom"
+                                            >
+                                                {modelZoomLevel}%
+                                            </div>
+                                            <button
+                                                className="zoom-btn"
+                                                onClick={modelZoomIn}
+                                                disabled={modelZoomLevel >= ZOOM_MAX}
+                                                title="Zoom in"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        className="zoom-container"
+                                        ref={modelZoomContainerRef}
+                                        style={{ zoom: modelZoomLevel / 100, '--ent-text-scale': modelTextScale }}
+                                    >
+                                        <div className="tree-wrapper">
+                                            {renderStaticNode(modelTree, null, 'root', true)}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bottom-actions">
+                            <button onClick={() => setShowComparison(false)} className="btn btn-outline">✏️ Back to edit</button>
+                            <button onClick={newExercise} className="btn btn-primary">🔄 New exercise</button>
+                        </div>
+
+                        <Footer />
+                    </div>
+                );
+            }
+
+            // ===========================================
+            // MAIN VIEW
+            // ===========================================
+            return (
+                <div className="container">
+                    {/* Language selector */}
+                        <div className="language-selector">
+                            <a href="index.html">
+                                <img src="spain_grey.png" alt="Español" className="language-flag inactive" title="Cambiar a Español" />
+                            </a>
+                            <img src="uk_solid.png" alt="English" className="language-flag active" title="English (current)" />
+                        </div>  
+                    
+                    <header className="header-logo-container">
+                        <img src="english_logo.png" alt="ENT - Syntactic Analysis Assistant" className="header-logo" />
+                    </header>  
+
+                    {exerciseMode && !modelTree && (
+                        <div className="exercise-banner" style={{flexDirection: 'column', alignItems: 'center', padding: '40px'}}>
+                            <div className="exercise-banner-text">
+                                
+                                <div>
+                                    <div className="exercise-badge">📚 <strong>Exercise mode</strong></div>
+                                    <p>Analyze the expression and compare your result with the model when done</p>
+                                </div>
+                            </div>
+                            <p style={{marginBottom: '16px', color: '#6b7280'}}>Select an exercise from your computer or from the example bank</p>
+                            
+                            <div style={{display: 'flex', gap: '12px', marginBottom: '16px'}}>
+                                <button onClick={() => exerciseInputRef.current.click()} className="btn btn-primary">📂 Load local file</button>
+                                <button onClick={() => { setShowFilesModal(true); setFilesActiveTab('cloud'); }} className="btn btn-primary">☁️ Example bank</button>
+                            </div>
+                            
+                            {driveFiles.length > 0 && (
+                                <div style={{width: '100%', maxWidth: '500px', marginBottom: '16px'}}>
+                                    <div className="drive-files-list" style={{maxHeight: '200px'}}>
+                                        {driveFiles.map((folder, idx) => (
+                                            folder.folderName ? (
+                                                <div className="drive-folder" key={folder.folderId || idx}>
+                                                    <div 
+                                                        className="drive-folder-header"
+                                                        onClick={() => toggleFolder(folder.folderId)}
+                                                    >
+                                                        <span className={`drive-folder-toggle ${collapsedFolders[folder.folderId] ? 'collapsed' : ''}`}>▼</span>
+                                                        📁 {folder.folderName}
+                                                        <span style={{marginLeft: 'auto', fontSize: '11px', color: '#9ca3af'}}>
+                                                            {folder.files.length} file{folder.files.length !== 1 ? 's' : ''}
+                                                        </span>
+                                                    </div>
+                                                    <div className={`drive-folder-content ${collapsedFolders[folder.folderId] ? 'collapsed' : ''}`}>
+                                                        {folder.files.map(file => (
+                                                            <div 
+                                                                key={file.id}
+                                                                className={`drive-file-item ${selectedDriveFile?.id === file.id ? 'selected' : ''}`}
+                                                                onClick={() => setSelectedDriveFile(file)}
+                                                            >
+                                                                <span className="drive-file-icon">📄</span>
+                                                                <span className="drive-file-name">{file.name}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="drive-root-files" key="root">
+                                                    {folder.files.map(file => (
+                                                        <div 
+                                                            key={file.id}
+                                                            className={`drive-file-item ${selectedDriveFile?.id === file.id ? 'selected' : ''}`}
+                                                            onClick={() => setSelectedDriveFile(file)}
+                                                        >
+                                                            <span className="drive-file-icon">📄</span>
+                                                            <span className="drive-file-name">{file.name}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )
+                                        ))}
+                                    </div>
+                                    {selectedDriveFile && (
+                                        <div style={{marginTop: '12px', textAlign: 'center'}}>
+                                            <button 
+                                                className="btn btn-exercise"
+                                                onClick={() => handleLoadFromDrive(true)}
+                                            >
+                                                📚 Start exercise with "{selectedDriveFile.name}"
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            
+                            <button onClick={resetExercise} className="btn btn-danger"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:"6px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Exit exercise mode</button>
+                        </div>
+                    )}
+
+                    {exerciseMode && modelTree && (
+                        <div className="exercise-banner">
+                            <div className="exercise-banner-text">
+                                <div>
+                                    <div className="exercise-badge">📚 <strong>Exercise mode</strong></div>
+                                    <p>Analyze the expression and compare your result with the model when done</p>
+                                </div>
+                            </div>
+                            <div style={{display:'flex', alignItems:'center', gap:'6px'}}>
+                                <button 
+                                    onClick={handleUndo} 
+                                    className="btn btn-outline" 
+                                    disabled={!canUndo}
+                                    title="Undo (Ctrl+Z)"
+                                >
+                                    <UndoIcon /> Undo
+                                </button>
+                                <button 
+                                    onClick={handleRedo} 
+                                    className="btn btn-outline" 
+                                    disabled={!canRedo}
+                                    title="Redo (Ctrl+Shift+Z)"
+                                >
+                                    <RedoIcon /> Redo
+                                </button>
+                                <span className="btn-separator"></span>
+                                <button onClick={handleFinishExercise} className="btn btn-success" disabled={!tree}>✅ Finish analysis and compare</button>
+                                <button onClick={resetExercise} className="btn btn-danger"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:"6px"}}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Exit exercise mode</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {!(exerciseMode && !modelTree) && (
+                    <div className="input-section">
+                        <div className="input-row">
+                            {!exerciseMode ? (
+                                <>
+                                    <input 
+                                        type="text" 
+                                        value={sentence} 
+                                        onChange={(e) => setSentence(e.target.value)} 
+                                        placeholder="Type the expression you want to analyze" 
+                                        onKeyPress={(e) => e.key === 'Enter' && handleStartAnalysis()} 
+                                    />
+                                    <div className="analyze-undo-group">
+                                        <button onClick={handleStartAnalysis} className="btn btn-primary">Analyze</button>
+
+                                        <span className="btn-separator"></span>
+
+                                        <button 
+                                            onClick={handleUndo} 
+                                            className="btn btn-outline btn-icon" 
+                                            disabled={!canUndo}
+                                            title="Undo (Ctrl+Z)"
+                                        >
+                                            <UndoIcon />
+                                        </button>
+                                        <button 
+                                            onClick={handleRedo} 
+                                            className="btn btn-outline btn-icon" 
+                                            disabled={!canRedo}
+                                            title="Redo (Ctrl+Shift+Z)"
+                                        >
+                                            <RedoIcon />
+                                        </button>
+                                    </div>
+                                    <span className="btn-separator"></span>
+                                    <button onClick={() => setShowFilesModal(true)} className="btn btn-outline">📁 Files</button>
+                                    <input type="file" ref={fileInputRef} style={{display:'none'}} accept=".ent,.json,application/json,text/plain,*/*" onChange={handleLoadJSON} />
+                                    <span className="btn-separator"></span>
+                                    <button onClick={() => setExerciseMode(true)} className="btn btn-exercise">📚 Exercise mode</button>
+                                    <span className="btn-separator"></span>
+                                    <button 
+                                        onClick={() => window.open('english_manual.html', '_blank')} 
+                                        className="btn btn-outline"
+                                        title="View detailed manual"
+                                    >
+                                        🗂 Manual
+                                    </button>
+                                </>
+                            ) : (
+                                modelTree && (
+                                    <div style={{flex: 1, padding: '8px 16px', backgroundColor: '#f3f4f6', borderRadius: '6px', fontSize: '15px', color: '#374151'}}>
+                                        <strong>Expression to analyze:</strong> {sentence}
+                                    </div>
+                                )
+                            )}
+                        </div>
+                    </div>
+                    )}
+                    <input type="file" ref={exerciseInputRef} style={{display:'none'}} accept=".ent,.json,application/json,text/plain,*/*" onChange={handleLoadExercise} />
+
+                    {!(exerciseMode && !modelTree) && (
+                        <div className="tree-container" ref={treeContainerRef} style={{minHeight: '550px'}}>
+                        <div className={`autosave-indicator ${(isSaving || lastSaved) ? 'visible' : ''}`}>
+                            <span className={`autosave-dot ${isSaving ? 'saving' : ''}`}></span>
+                            <span>
+                                {isSaving ? 'Saving…' : (lastSaved ? `Saved ${formatTimeAgo(lastSaved)}` : '')}
+                            </span>
+                        </div>
+
+                            {/* Zoom controls (sticky wrapper) */}
+                            <div className="zoom-controls-wrapper">
+                                <div className={`zoom-controls ${tree ? 'visible' : ''}`}>
+                                    <button
+                                        className="zoom-btn"
+                                        onClick={zoomOut}
+                                        disabled={zoomLevel <= ZOOM_MIN}
+                                        title="Zoom out"
+                                    >
+                                        −
+                                    </button>
+                                    <div
+                                        className="zoom-indicator"
+                                        onClick={zoomReset}
+                                        title="Reset zoom"
+                                    >
+                                        {zoomLevel}%
+                                    </div>
+                                    <button
+                                        className="zoom-btn"
+                                        onClick={zoomIn}
+                                        disabled={zoomLevel >= ZOOM_MAX}
+                                        title="Zoom in"
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                            </div>
+
+                            {tree ? (
+                                <div className="zoom-container"
+                                    ref={zoomContainerRef}
+                                    style={{ zoom: zoomLevel / 100, '--ent-text-scale': textScale }}
+                                >
+                                    <div className="tree-wrapper">{renderNode(tree)}</div>
+                                </div>
+                            ) : (
+                                <p style={{textAlign:'center', color:'#9ca3af', marginTop:'100px'}}>
+                                    <strong>Type a sentence</strong> or load an .ent file in <strong>Files</strong> to edit it
+                                </p>
+                            )}
+                        </div>
+                    )}
+
+                    {tree && (
+                        <div className="bottom-actions">
+                            {!exerciseMode && (
+                                <>
+                                    <button onClick={() => { clearAutoSave(); setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); }} className="btn btn-new-analysis"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{marginRight:'4px'}}><path d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5Z"/><path d="M19 2L19.75 4.25L22 5L19.75 5.75L19 8L18.25 5.75L16 5L18.25 4.25Z"/><path d="M5 16L5.75 18.25L8 19L5.75 19.75L5 22L4.25 19.75L2 19L4.25 18.25Z"/></svg>New analysis</button>
+                                    <button onClick={handleSaveJSON} className="btn btn-outline" disabled={!tree} title="Save (Ctrl+S)">💾 Save .ent</button>
+                                    <button onClick={() => handleExport(false)} className="btn btn-outline">📤 Export diagram</button>
+                                    <button onClick={() => handleExport(true)} className="btn btn-outline">🌳 Export tree diagram</button>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="instructions-panel">
+                        <div 
+                            className="instructions-header" 
+                            onClick={() => setInstructionsCollapsed(!instructionsCollapsed)}
+                        >
+                            <span>Quick guide</span>
+                            <span className={`instructions-toggle ${instructionsCollapsed ? 'collapsed' : ''}`}>▼</span>
+                        </div>
+                        <div className={`instructions-content ${instructionsCollapsed ? 'collapsed' : ''}`}>
+                            <div className="instructions-grid">
+                                
+                                <div className="instruction-card">
+                                    <h4><span className="icon">✂️</span> Constituents</h4>
+                                    <ul>
+                                        <li>Click on a <strong>light blue box</strong> to divide a syntactic structure into constituents.</li>
+                                        <li>Click on the <strong>gray bars</strong> between words to mark boundaries between constituents.</li>
+                                        <li>Click the curved arrow next to a divided node to revert the division.</li>
+                                        <li>Click the red <code>⨉</code> to remove the text from a node and keep only the labels and the hierarchy.</li>
+                                        <li>In absolute terminal nodes, click <code>H</code> at the top edge to mark the node as <strong>head</strong> (bold).</li>
+                                    </ul>
+                                </div>
+
+                                <div className="instruction-card">
+                                    <h4><span className="icon">🏷️</span> Labels</h4>
+                                    <ul>
+                                        <li>In the <strong>top</strong> label, write the grammatical function (SUBJ, DO, IO, HEAD, DET, etc.).</li>
+                                        <li>In the <strong>bottom</strong> label, write the category (N, V, NP, VP, etc.).</li>
+                                        <li>If you prefer, click <code>☰</code> to select predefined labels.</li>
+                                        <li>Hover over a label and click <code>⇄</code> to split or merge it.</li>
+                                    </ul>
+                                </div>
+
+                                <div className="instruction-card">
+                                    <h4><span className="icon">🔗</span> Consolidate nodes and add extra constituents</h4>
+                                    <ul>
+                                        <li>Hover over a light blue node and click <code>∪</code> to consolidate it.</li>
+                                        <li>Use this for multi-word expressions that should not be syntactically divided.</li>
+                                        <li>Click <code>✂</code> to allow division again.</li>
+                                        <li>In terminal nodes, use <code>⑃</code> to open the expand dialog and create child constituents manually.</li>
+                                        <li>In terminal nodes, use <code>← +</code> or <code>+ →</code> to add an immediate sibling to the left or right. (Useful for adding elided constituents).</li>
+                                    </ul>
+                                </div>
+
+                                <div className="instruction-card">
+                                    <h4><span className="icon">🔎</span> Zoom</h4>
+                                    <ul>
+                                        <li>Use the <code>[−]</code> and <code>[+]</code> buttons in the top-right corner to zoom out/in.</li>
+                                        <li>Click the percentage to reset to 100%.</li>
+                                        <li>Zoom range: 40% to 200% in 20% increments.</li>
+                                        <li>The controls appear when a diagram is present.</li>
+                                    </ul>
+                                </div>
+
+                                <div className="instruction-card">
+                                    <h4><span className="icon">📁</span> Files</h4>
+                                    <ul>
+                                        <li>Click <strong>📁 Files</strong> to open the file manager.</li>
+                                        <li><strong>Local</strong> tab: save or load <code>.ent</code> files from your computer.</li>
+                                        <li><strong>Example bank</strong> tab: connect to Google Drive to access shared examples.</li>
+                                        <li>Shortcut: <span className="key">Ctrl</span>/<span className="key">⌘</span>+<span className="key">S</span> saves directly.</li>
+                                        <li><strong>Auto-save:</strong> your work is saved locally every ~3 seconds. When you reopen the page, ENT will offer to restore it.</li>
+                                    </ul>
+                                </div>
+
+                                <div className="instruction-card">
+                                    <h4><span className="icon">☁️</span> Example bank</h4>
+                                    <ul>
+                                        <li>To create an example bank, upload <code>.ent</code> files to a Google Drive folder.</li>
+                                        <li>Right-click the folder → <strong>Share</strong> → <strong>Anyone with the link</strong> (as Viewer).</li>
+                                        <li>Copy the link and share it with your students.</li>
+                                        <li>You can organize examples in subfolders (by topic, difficulty, etc.).</li>
+                                    </ul>
+                                </div>
+
+                                {!exerciseMode && (
+                                <div className="instruction-card">
+                                    <h4><span className="icon">📚</span> Exercise mode</h4>
+                                    <ul>
+                                        <li>Click <strong>📚 Exercise mode</strong> to practice.</li>
+                                        <li>Load an exercise from your computer or from an <strong>example bank</strong> on Google Drive.</li>
+                                        <li>Analyze the given expression and compare your result with the model.</li>
+                                    </ul>
+                                </div>
+                                )}
+
+                                {exerciseMode && (
+                                <div className="instruction-card">
+                                    <h4 style={{color: '#5b21b6'}}><span className="icon" style={{backgroundColor: '#5b21b6'}}>✎</span> Active exercise</h4>
+                                    <ul>
+                                        <li>Complete the analysis of the expression.</li>
+                                        <li>Use <strong>Compare</strong> to see the solution.</li>
+                                    </ul>
+                                </div>
+                                )}    
+
+                                <div className="instruction-card">
+                                    <h4><span className="icon">🅰️</span> Text formatting</h4>
+                                    <ul>
+                                        <li><code>*text*</code> for <em>italics</em></li>
+                                        <li><code>**text**</code> for <strong>bold</strong></li>
+                                        <li><code>_text_</code> for <sub>subscript</sub></li>
+                                        <li><code>__text__</code> for <sup>superscript</sup></li>
+                                    </ul>
+                                </div> 
+
+                                <div className="instruction-card">
+                                    <h4><span className="icon">⌨️</span> Keyboard shortcuts</h4>
+                                        <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '40px', marginTop: '8px' }}>
+                                        <ul className="shortcut-list">
+                                            <li
+                                            style={{
+                                            marginBottom: '10px',
+                                            opacity: 0.7,
+                                            fontSize: '11px',
+                                            fontWeight: 'bold',
+                                            whiteSpace: 'normal',
+                                            wordBreak: 'break-word',
+                                            color: '#6b7280'
+                                            }}
+                                            >
+                                            WINDOWS / LINUX
+                                            </li>
+                                            <li><span className="key">Ctrl</span>+<span className="key">Z</span> Undo</li>
+                                            <li><span className="key">Ctrl</span>+<span className="key">Y</span> Redo</li>
+                                            <li><span className="key">Ctrl</span>+<span className="key">S</span> Save</li>
+                                            <li><span className="key">Ctrl</span>+<span className="key">+</span> Zoom in</li>
+                                            <li><span className="key">Ctrl</span>+<span className="key">−</span> Zoom out</li>
+                                            <li><span className="key">Ctrl</span>+<span className="key">0</span> Reset zoom</li>
+                                        </ul>
+
+                                        <ul className="shortcut-list">
+                                            <li
+                                            style={{
+                                            marginBottom: '10px',
+                                            opacity: 0.7,
+                                            fontSize: '11px',
+                                            fontWeight: 'bold',
+                                            whiteSpace: 'normal',
+                                            wordBreak: 'break-word',
+                                            color: '#6b7280'
+                                            }}
+                                            >
+                                            macOS
+                                            </li>
+                                            <li><span className="key">⌘</span>+<span className="key">Z</span> Undo</li>
+                                            <li><span className="key">⌘</span>+<span className="key">⇧</span>+<span className="key">Z</span> Redo</li>
+                                            <li><span className="key">⌘</span>+<span className="key">S</span> Save</li>
+                                            <li><span className="key">⌘</span>+<span className="key">+</span> Zoom in</li>
+                                            <li><span className="key">⌘</span>+<span className="key">−</span> Zoom out</li>
+                                            <li><span className="key">⌘</span>+<span className="key">0</span> Reset zoom</li>
+                                        </ul>
+                                        </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    {showFilesModal && (
+                        <div className="pos-overlay" onClick={() => setShowFilesModal(false)}>
+                            <div className="files-modal" onClick={(e) => e.stopPropagation()}>
+                                <div className="files-modal-header">
+                                    <h4 className="files-modal-title">{exerciseMode ? '☁️ Example bank' : '📁 Files'}</h4>
+                                    {!exerciseMode && (
+                                        <div className="files-tabs">
+                                            <button 
+                                                className={`files-tab ${filesActiveTab === 'local' ? 'active' : ''}`}
+                                                onClick={() => setFilesActiveTab('local')}
+                                            >
+                                                💻 Local
+                                            </button>
+                                            <button 
+                                                className={`files-tab ${filesActiveTab === 'cloud' ? 'active' : ''}`}
+                                                onClick={() => setFilesActiveTab('cloud')}
+                                            >
+                                                ☁️ Example bank
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="files-modal-body">
+                                    {!exerciseMode && filesActiveTab === 'local' && (
+                                        <div className="files-section">
+                                            <div className="files-section-title">Local file management</div>
+                                            <div className="files-btn-row">
+                                                <button 
+                                                    onClick={() => { fileInputRef.current.click(); setShowFilesModal(false); }} 
+                                                    className="btn btn-outline"
+                                                >
+                                                    📂 Load .ent
+                                                </button>
+                                                <button 
+                                                    onClick={() => { handleSaveJSON(); setShowFilesModal(false); }} 
+                                                    className="btn btn-outline" 
+                                                    disabled={!tree}
+                                                    title="Save (Ctrl+S)"
+                                                >
+                                                    💾 Save .ent
+                                                </button>
+                                            </div>
+                                            <p className="files-help-text">
+                                                <code>.ent</code> files save your complete analysis (expression, structure and labels).
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {(exerciseMode || filesActiveTab === 'cloud') && (
+                                        <div className="files-section">
+                                            <div className="files-section-title">Connect to Google Drive</div>
+                                            <div className="drive-connect-row">
+                                                <input 
+                                                    type="text"
+                                                    className="drive-url-input"
+                                                    placeholder="Google Drive folder URL..."
+                                                    value={driveUrl}
+                                                    onChange={(e) => setDriveUrl(e.target.value)}
+                                                    onKeyPress={(e) => e.key === 'Enter' && handleConnectDrive()}
+                                                />
+                                                <button 
+                                                    className="btn btn-primary" 
+                                                    onClick={handleConnectDrive}
+                                                    disabled={!driveUrl.trim()}
+                                                >
+                                                    Connect
+                                                </button>
+                                            </div>
+                                            <p className="files-help-text">
+                                                Paste the URL of a public Google Drive folder containing <code>.ent</code> files.<br/>
+                                                The folder must be shared as "Anyone with the link".<br/><br/>
+                                                Don't have a folder or link? Try the <a 
+                                                    href="#" 
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        setDriveUrl('https://drive.google.com/drive/folders/1faSpC1f2qUUJag87xRVKuJf2VBk--d7r?usp=share_link');
+                                                        setTimeout(() => handleConnectDrive(), 100);
+                                                    }}
+                                                    style={{color: '#3b82f6', textDecoration: 'underline', cursor: 'pointer'}}
+                                                >ENT example bank</a>.
+                                            </p>
+
+                                            {driveStatus.type && (
+                                                <div className={`drive-status ${driveStatus.type}`}>
+                                                    {driveStatus.type === 'loading' && <div className="drive-spinner"></div>}
+                                                    {driveStatus.type === 'error' && <span>⚠️</span>}
+                                                    {driveStatus.type === 'success' && <span>✓</span>}
+                                                    <span>{driveStatus.message}</span>
+                                                </div>
+                                            )}
+
+                                            {driveFiles.length > 0 && (
+                                                <>
+                                                    <div className="files-section-title" style={{marginTop: '16px'}}>Available files</div>
+                                                    <div className="drive-files-list">
+                                                        {driveFiles.map((folder, idx) => (
+                                                            folder.folderName ? (
+                                                                <div className="drive-folder" key={folder.folderId || idx}>
+                                                                    <div 
+                                                                        className="drive-folder-header"
+                                                                        onClick={() => toggleFolder(folder.folderId)}
+                                                                    >
+                                                                        <span className={`drive-folder-toggle ${collapsedFolders[folder.folderId] ? 'collapsed' : ''}`}>▼</span>
+                                                                        📁 {folder.folderName}
+                                                                        <span style={{marginLeft: 'auto', fontSize: '11px', color: '#9ca3af'}}>
+                                                                            {folder.files.length} file{folder.files.length !== 1 ? 's' : ''}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className={`drive-folder-content ${collapsedFolders[folder.folderId] ? 'collapsed' : ''}`}>
+                                                                        {folder.files.map(file => (
+                                                                            <div 
+                                                                                key={file.id}
+                                                                                className={`drive-file-item ${selectedDriveFile?.id === file.id ? 'selected' : ''}`}
+                                                                                onClick={() => setSelectedDriveFile(file)}
+                                                                            >
+                                                                                <span className="drive-file-icon">📄</span>
+                                                                                <span className="drive-file-name">{file.name}</span>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="drive-root-files" key="root">
+                                                                    {folder.files.map(file => (
+                                                                        <div 
+                                                                            key={file.id}
+                                                                            className={`drive-file-item ${selectedDriveFile?.id === file.id ? 'selected' : ''}`}
+                                                                            onClick={() => setSelectedDriveFile(file)}
+                                                                        >
+                                                                            <span className="drive-file-icon">📄</span>
+                                                                            <span className="drive-file-name">{file.name}</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )
+                                                        ))}
+                                                    </div>
+
+                                                    {selectedDriveFile && (
+                                                        <div className="drive-load-options">
+                                                            {!exerciseMode && (
+                                                                <button 
+                                                                    className="btn btn-outline"
+                                                                    onClick={() => handleLoadFromDrive(false)}
+                                                                >
+                                                                    📖 Load as reference
+                                                                </button>
+                                                            )}
+                                                            <button 
+                                                                className="btn btn-exercise"
+                                                                onClick={() => handleLoadFromDrive(true)}
+                                                            >
+                                                                📚 Load as exercise
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="files-modal-footer">
+                                    <button className="btn btn-outline" onClick={() => setShowFilesModal(false)}>Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {showContractionModal && (
+                        <div className="pos-overlay" onClick={skipContractionExpansion}>
+                            <div className="contraction-modal" onClick={(e) => e.stopPropagation()}>
+                                <h4 className="contraction-title">Ambiguous contractions detected</h4>
+                                <p className="contraction-sub">
+                                    The following words contain contractions that can be interpreted in more than one way.
+                                    Please select the correct expansion for each.
+                                </p>
+                                <div className="contraction-list">
+                                    {contractionCandidates.map((c, idx) => (
+                                        <div key={idx} className="contraction-item">
+                                            <span className="contraction-original">{c.original}</span>
+                                            <span className="contraction-arrow">→</span>
+                                            <select
+                                                className="contraction-select"
+                                                value={c.expansion}
+                                                onChange={(e) => {
+                                                    setContractionCandidates(prev => prev.map((item, j) =>
+                                                        j === idx ? { ...item, expansion: e.target.value } : item
+                                                    ));
+                                                }}
+                                            >
+                                                {c.options.map(opt => (
+                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="contraction-actions">
+                                    <button className="btn btn-outline" onClick={skipContractionExpansion}>Skip</button>
+                                    <button className="btn btn-primary" onClick={confirmContractionExpansion}>Apply and analyze</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {expandModal && (
+                        <div className="pos-overlay" onClick={() => setExpandModal(null)}>
+                            <div className="expand-modal" onClick={(e) => e.stopPropagation()}>
+                                <h4 className="expand-title">Expand node</h4>
+                                <p className="expand-sub">
+                                    Specify how many child constituents you want to create and enter the text for each one.
+                                </p>
+                                <div className="expand-grid">
+                                    <label className="expand-label" htmlFor="expand-count">Number of constituents</label>
+                                    <select
+                                        id="expand-count"
+                                        className="expand-count-select"
+                                        value={expandModal.count}
+                                        onChange={(e) => updateExpandCount(e.target.value)}
+                                    >
+                                        {Array.from({ length: 7 }, (_, idx) => idx + 2).map(n => (
+                                            <option key={n} value={n}>{n}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="expand-parts-list">
+                                    {expandModal.parts.map((part, idx) => (
+                                        <div key={idx} className="expand-part-row">
+                                            <label className="expand-label" htmlFor={`expand-part-${idx}`}>
+                                                Constituent {idx + 1}
+                                            </label>
+                                            <input
+                                                id={`expand-part-${idx}`}
+                                                type="text"
+                                                className="expand-part-input"
+                                                value={part}
+                                                onChange={(e) => updateExpandPart(idx, e.target.value)}
+                                                placeholder={`Text for constituent ${idx + 1}`}
+                                                autoFocus={idx === 0}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="expand-actions">
+                                    <button className="btn btn-outline" onClick={() => setExpandModal(null)}>Cancel</button>
+                                    <button className="btn btn-primary" onClick={confirmExpandNode}>Create children</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {siblingModal && (
+                        <div className="pos-overlay" onClick={() => setSiblingModal(null)}>
+                            <div className="sibling-modal" onClick={(e) => e.stopPropagation()}>
+                                <h4 className="sibling-title">Add extra node</h4>
+                                <p className="sibling-sub">
+                                    Enter the text for the new constituent to be inserted to the {siblingModal.side === 'left' ? 'left' : 'right'}.
+                                </p>
+                                <input
+                                    type="text"
+                                    className="sibling-input"
+                                    value={siblingModal.text}
+                                    onChange={(e) => setSiblingModal(prev => ({ ...prev, text: e.target.value }))}
+                                    onKeyDown={(e) => { if (e.key === 'Enter' && siblingModal.text.trim()) confirmAddSibling(); }}
+                                    placeholder="Constituent text"
+                                    autoFocus
+                                />
+                                <div className="sibling-actions">
+                                    <button className="btn btn-outline" onClick={() => setSiblingModal(null)}>Cancel</button>
+                                    <button className="btn btn-primary" onClick={confirmAddSibling} disabled={!siblingModal.text.trim()}>Insert</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {posPicker && (
+                        <div className="pos-overlay" onClick={() => setPosPicker(null)}>
+                            <div className="pos-modal" onClick={(e) => e.stopPropagation()}>
+                                <h4 className="pos-title">Where do you want the new constituent?</h4>
+                                <p className="pos-sub">Choose the position to insert it among the current constituents.</p>
+                                <div className="pos-row">
+                                    <label className="pos-row-label" htmlFor="pos-select">Position</label>
+                                    <select
+                                        id="pos-select"
+                                        className="pos-select"
+                                        value={posPicker.pos}
+                                        onChange={(e) => setPosPicker(pp => ({ ...pp, pos: parseInt(e.target.value, 10) }))}
+                                    >
+                                        {Array.from({ length: posPicker.siblings.length + 1 }, (_, idx) => {
+                                            const i = idx + 1;
+                                            return (
+                                                <option key={i} value={i}>{buildPosLabel(i, posPicker.siblings)}</option>
+                                            );
+                                        })}
+                                    </select>
+                                </div>
+                                <div className="pos-actions">
+                                    <button className="btn btn-outline" onClick={() => setPosPicker(null)}>Cancel</button>
+                                    <button className="btn btn-primary" onClick={confirmInsertAtPosition}>Insert</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <Footer />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<SyntaxTreeBuilder />);
+    </script>
+</body>
+</html>
