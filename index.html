@@ -2170,12 +2170,41 @@
         const CAT_SECTIONS = ['sintagmas', 'palabras', 'determinantes', 'pronombres', 'oracionesCat'];
 
         // Utilidad debounce (fuera del componente para evitar recreación)
+        // Versión robusta: permite cancelar o ejecutar de inmediato un guardado pendiente.
         const debounce = (func, delay) => {
-            let timeout;
-            return (...args) => {
+            let timeout = null;
+            let lastArgs = null;
+            let lastThis = null;
+
+            const debounced = function(...args) {
+                lastArgs = args;
+                lastThis = this;
                 clearTimeout(timeout);
-                timeout = setTimeout(() => func(...args), delay);
+                timeout = setTimeout(() => {
+                    timeout = null;
+                    func.apply(lastThis, lastArgs);
+                    lastArgs = null;
+                    lastThis = null;
+                }, delay);
             };
+
+            debounced.cancel = () => {
+                clearTimeout(timeout);
+                timeout = null;
+                lastArgs = null;
+                lastThis = null;
+            };
+
+            debounced.flush = () => {
+                if (!timeout) return;
+                clearTimeout(timeout);
+                timeout = null;
+                func.apply(lastThis, lastArgs);
+                lastArgs = null;
+                lastThis = null;
+            };
+
+            return debounced;
         };
 
         // Cálculo de escala tipográfica (reutilizable para múltiples vistas de zoom)
@@ -2758,74 +2787,129 @@
             // ===========================================
             // GUARDAR (definido aquí para usar en atajos)
             // ===========================================
-            const handleSaveJSON = useCallback(() => {
-    if (!tree) return;
-    const blob = new Blob([JSON.stringify({ sentence, tree }, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    const words = sentence.trim().split(/\s+/).slice(0, 5).join('_');
-    a.download = `${words}.ent`;
-    a.click();
-
-    // Limpiar auto-guardado después de un guardado manual
-    localStorage.removeItem('ent-autosave');
-    setLastSaved(null);
-}, [tree, sentence]);
-
-
-            // ===========================================
-            // AUTO-GUARDADO (localStorage)
-            // ===========================================
-            const performAutoSave = useCallback(() => {
-                if (!tree || isUndoRedo.current) return;
-
-                setIsSaving(true);
-                const data = {
-                    sentence,
-                    tree,
-                    divisionMode,
-                    selectedCuts,
-                    exerciseMode,
-                    modelTree,
-                    timestamp: new Date().toISOString(),
-                    version: '1.0'
-                };
-
-                try {
-                    localStorage.setItem('ent-autosave', JSON.stringify(data));
-                    setLastSaved(new Date());
-                    setTimeout(() => setIsSaving(false), 500);
-                } catch (err) {
-                    console.error('Error auto-saving:', err);
-                    setIsSaving(false);
-                }
-            }, [sentence, tree, divisionMode, selectedCuts, exerciseMode, modelTree]);
+            const AUTOSAVE_KEY = 'ent-autosave';
+            const AUTOSAVE_VERSION = '1.1';
 
             const autoSaveDebounced = useRef(null);
             if (!autoSaveDebounced.current) {
                 autoSaveDebounced.current = debounce((saveFn) => saveFn(), 3000);
             }
 
+            const buildAutoSaveData = useCallback(() => ({
+                sentence,
+                tree,
+                divisionMode,
+                selectedCuts,
+                exerciseMode,
+                modelTree,
+                timestamp: new Date().toISOString(),
+                version: AUTOSAVE_VERSION
+            }), [sentence, tree, divisionMode, selectedCuts, exerciseMode, modelTree]);
+
+            const writeAutoSave = useCallback(({ silent = false } = {}) => {
+                if (!tree) return false;
+
+                const data = buildAutoSaveData();
+
+                try {
+                    if (!silent) setIsSaving(true);
+                    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(data));
+                    setLastSaved(new Date(data.timestamp));
+                    if (!silent) setTimeout(() => setIsSaving(false), 500);
+                    return true;
+                } catch (err) {
+                    console.error('Error auto-saving:', err);
+                    setIsSaving(false);
+                    return false;
+                }
+            }, [tree, buildAutoSaveData]);
+
+            const clearAutoSave = useCallback(() => {
+                autoSaveDebounced.current?.cancel?.();
+                localStorage.removeItem(AUTOSAVE_KEY);
+                setLastSaved(null);
+                setIsSaving(false);
+            }, []);
+
+            const handleSaveJSON = useCallback(() => {
+                if (!tree) return;
+
+                // Antes de descargar, ejecutamos cualquier autoguardado pendiente y escribimos
+                // el estado actual. No se borra el respaldo: así se evita perder la restauración
+                // si el usuario cierra la pestaña justo después de guardar manualmente.
+                autoSaveDebounced.current?.flush?.();
+                writeAutoSave({ silent: true });
+
+                const blob = new Blob([JSON.stringify({ sentence, tree }, null, 2)], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                const words = sentence.trim().split(/\s+/).slice(0, 5).join('_') || 'analisis_ent';
+                a.download = `${words}.ent`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+            }, [tree, sentence, writeAutoSave]);
+
+
+            // ===========================================
+            // AUTO-GUARDADO (localStorage)
+            // ===========================================
+            const performAutoSave = useCallback(() => {
+                // El autoguardado debe reflejar el estado visible del usuario, incluso tras undo/redo.
+                // Por eso no se bloquea con isUndoRedo.current.
+                writeAutoSave();
+            }, [writeAutoSave]);
+
             // Auto-save: guardar cuando cambien los estados relevantes
             useEffect(() => {
-                if (tree && !isUndoRedo.current) {
+                if (tree) {
                     autoSaveDebounced.current(performAutoSave);
                 }
             }, [sentence, tree, divisionMode, selectedCuts, exerciseMode, modelTree, performAutoSave]);
 
+            // Guardado de emergencia antes de cerrar, recargar o esconder la pestaña.
+            useEffect(() => {
+                const saveImmediately = () => {
+                    if (!tree) return;
+                    autoSaveDebounced.current?.cancel?.();
+                    writeAutoSave({ silent: true });
+                };
+
+                const handleVisibilityChange = () => {
+                    if (document.visibilityState === 'hidden') saveImmediately();
+                };
+
+                window.addEventListener('beforeunload', saveImmediately);
+                document.addEventListener('visibilitychange', handleVisibilityChange);
+
+                return () => {
+                    window.removeEventListener('beforeunload', saveImmediately);
+                    document.removeEventListener('visibilitychange', handleVisibilityChange);
+                };
+            }, [tree, writeAutoSave]);
+
             // Restore from auto-save on mount
             useEffect(() => {
-                const saved = localStorage.getItem('ent-autosave');
+                const saved = localStorage.getItem(AUTOSAVE_KEY);
                 if (!saved) return;
 
                 try {
                     const data = JSON.parse(saved);
-                    const savedDate = new Date(data.timestamp);
-                    const minutesAgo = Math.round((Date.now() - savedDate.getTime()) / 60000);
+                    if (!data || !data.tree) {
+                        clearAutoSave();
+                        return;
+                    }
 
-                    const message = minutesAgo < 1
+                    const savedDate = new Date(data.timestamp);
+                    const hasValidDate = !Number.isNaN(savedDate.getTime());
+                    const minutesAgo = hasValidDate
+                        ? Math.max(0, Math.round((Date.now() - savedDate.getTime()) / 60000))
+                        : null;
+
+                    const message = minutesAgo === null
                         ? 'Se encontró trabajo no guardado.\n\n¿Quieres continuar donde lo dejaste?'
-                        : `Se encontró trabajo no guardado de hace ${minutesAgo} minuto${minutesAgo === 1 ? '' : 's'}.\n\n¿Quieres continuar donde lo dejaste?`;
+                        : minutesAgo < 1
+                            ? 'Se encontró trabajo no guardado.\n\n¿Quieres continuar donde lo dejaste?'
+                            : `Se encontró trabajo no guardado de hace ${minutesAgo} minuto${minutesAgo === 1 ? '' : 's'}.\n\n¿Quieres continuar donde lo dejaste?`;
 
                     const restore = confirm(message);
 
@@ -2841,20 +2925,20 @@
                         setShowComparison(false);
                         setComparisonResults(null);
 
-                        setHistory([]);
-                        setHistoryIndex(-1);
+                        // El estado restaurado pasa a ser el primer punto del historial.
+                        setHistory(data.tree ? [JSON.stringify(data.tree)] : []);
+                        setHistoryIndex(data.tree ? 0 : -1);
+                        if (hasValidDate) setLastSaved(savedDate);
 
                         setTimeout(() => { isUndoRedo.current = false; }, 0);
                     } else {
-                        localStorage.removeItem('ent-autosave');
-                        setLastSaved(null);
+                        clearAutoSave();
                     }
                 } catch (err) {
                     console.error('Error restoring auto-save:', err);
-                    localStorage.removeItem('ent-autosave');
-                    setLastSaved(null);
+                    clearAutoSave();
                 }
-            }, []); // Solo al montar
+            }, [clearAutoSave]); // Solo al montar
 
             // ===========================================
             // GOOGLE DRIVE API
@@ -2987,9 +3071,8 @@
                         setComparisonResults(null);
                         setHistory([JSON.stringify(newTree)]);
                         setHistoryIndex(0);
-                        // Limpiar auto-guardado al cargar un archivo
-                        localStorage.removeItem('ent-autosave');
-                        setLastSaved(null);
+                        // Limpiar auto-guardado anterior al cargar un archivo
+                        clearAutoSave();
                     } else {
                         // Cargar como referencia (para ver/editar)
                         setSentence(data.sentence || '');
@@ -2999,9 +3082,8 @@
                         setShowComparison(false);
                         setHistory([JSON.stringify(data.tree)]);
                         setHistoryIndex(0);
-                        // Limpiar auto-guardado al cargar un archivo
-                        localStorage.removeItem('ent-autosave');
-                        setLastSaved(null);
+                        // Limpiar auto-guardado anterior al cargar un archivo
+                        clearAutoSave();
                     }
 
                     setShowFilesModal(false);
@@ -3257,6 +3339,7 @@
                             alert('Error: El archivo no tiene el formato esperado.\n\nEl archivo debe contener las propiedades "sentence" y "tree".');
                             return;
                         }
+                        clearAutoSave();
                         setSentence(imported.sentence || '');
                         setTree(imported.tree);
                         setExerciseMode(false);
@@ -3287,6 +3370,7 @@
                             alert('Error: El archivo no tiene el formato esperado.\n\nEl archivo de ejercicio debe contener las propiedades "sentence" y "tree".');
                             return;
                         }
+                        clearAutoSave();
                         const originalSentence = imported.sentence || '';
                         setSentence(originalSentence);
                         setModelTree(imported.tree);
@@ -3589,8 +3673,7 @@
                 setHistory([]);
                 setHistoryIndex(-1);
                 // Limpiar auto-guardado
-                localStorage.removeItem('ent-autosave');
-                setLastSaved(null);
+                clearAutoSave();
             };
 
             const newExercise = () => {
@@ -3606,8 +3689,7 @@
                 setHistory([]);
                 setHistoryIndex(-1);
                 // Limpiar auto-guardado
-                localStorage.removeItem('ent-autosave');
-                setLastSaved(null);
+                clearAutoSave();
             };
 
             // ===========================================
@@ -5062,7 +5144,7 @@
                         <div className="bottom-actions">
                             {!exerciseMode && (
                                 <>
-                                    <button onClick={() => { setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); localStorage.removeItem('ent-autosave'); setLastSaved(null); }} className="btn btn-new-analysis"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{marginRight:'4px'}}><path d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5Z"/><path d="M19 2L19.75 4.25L22 5L19.75 5.75L19 8L18.25 5.75L16 5L18.25 4.25Z"/><path d="M5 16L5.75 18.25L8 19L5.75 19.75L5 22L4.25 19.75L2 19L4.25 18.25Z"/></svg>Nuevo análisis</button>
+                                    <button onClick={() => { setTree(null); setSentence(''); setHistory([]); setHistoryIndex(-1); clearAutoSave(); }} className="btn btn-new-analysis"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{marginRight:'4px'}}><path d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5Z"/><path d="M19 2L19.75 4.25L22 5L19.75 5.75L19 8L18.25 5.75L16 5L18.25 4.25Z"/><path d="M5 16L5.75 18.25L8 19L5.75 19.75L5 22L4.25 19.75L2 19L4.25 18.25Z"/></svg>Nuevo análisis</button>
                                     <button onClick={handleSaveJSON} className="btn btn-outline" disabled={!tree} title="Save (Ctrl+S)">💾 Guardar .ent</button>
                                     <button onClick={() => handleExport(false)} className="btn btn-outline">📤 Exportar diagrama</button>
                                     <button onClick={() => handleExport(true)} className="btn btn-outline">🌳 Exportar diagrama arbóreo</button>
