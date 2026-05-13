@@ -220,16 +220,18 @@
             ENT permite guardar y cargar el progreso del análisis mediante archivos con extensión propia <code>.ent</code>. Estos archivos son documentos de datos JSON, que preservan la estructura del árbol, las etiquetas y la expresión original.
         </p>
         <ul>
-            <li><strong>Guardar:</strong> Accede a <span class="ui-element">📁 Archivos</span> y selecciona <span class="ui-element">💾 Guardar .ent</span>. El archivo se descargará en tu ordenador.</li>
+            <li><strong>Guardar:</strong> Accede a <span class="ui-element">📁 Archivos</span> y selecciona <span class="ui-element">💾 Guardar .ent</span>. Se abrirá un diálogo donde puedes editar el nombre del archivo antes de descargarlo.</li>
             <li><strong>Cargar:</strong> Usa la opción <span class="ui-element">📂 Cargar .ent</span> para importar un análisis previamente guardado.</li>
         </ul>
-        <p>Al guardar, el nombre del archivo se genera automáticamente a partir de las primeras palabras de la oración.</p>
+        <p>
+            Al guardar, ENT propone un nombre por defecto basado en las primeras palabras de la oración, pero puedes cambiarlo libremente. La extensión <code>.ent</code> se añade automáticamente y no es necesario escribirla. Pulsa <span class="key-tip">Enter</span> para confirmar o <span class="key-tip">Esc</span> para cancelar.
+        </p>
 
         <div class="note-block">
-            <p><strong>Autoguardado</strong></p>
+            <p><strong>Autoguardado y restauración</strong></p>
             <p>
                 Además del guardado manual en <code>.ent</code>, ENT realiza un <strong>autoguardado local</strong> de tu trabajo (modo principal y modo ejercitación).
-                Si cierras la pestaña o el navegador, al volver a abrir ENT te ofrecerá <strong>restaurar</strong> el último estado guardado automáticamente.
+                Si cierras la pestaña o el navegador, al volver a abrir ENT te ofrecerá <strong>restaurar</strong> el último estado guardado automáticamente mediante un diálogo con dos opciones: <strong>Continuar donde lo dejé</strong> (recupera el estado anterior y lo coloca como primer punto del historial de deshacer) o <strong>Empezar desde cero</strong> (descarta el respaldo y abre una sesión limpia).
                 Este autoguardado se almacena en el navegador (no se sube a ninguna nube), por lo que puede perderse si borras los datos del sitio.
             </p>
         </div>
@@ -459,6 +461,14 @@
                     <td><span class="key-tip">Ctrl</span>+<span class="key-tip">0</span></td>
                     <td><span class="key-tip">⌘</span>+<span class="key-tip">0</span></td>
                 </tr>
+                <tr>
+                    <td><strong>Confirmar diálogo abierto</strong></td>
+                    <td colspan="2"><span class="key-tip">Enter</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Cancelar diálogo abierto</strong></td>
+                    <td colspan="2"><span class="key-tip">Esc</span></td>
+                </tr>
             </tbody>
         </table>
     </section>
@@ -467,16 +477,16 @@
         <h2>10. Exportación de resultados</h2>
 
         <p>
-            ENT exporta el análisis como imagen PNG con <strong>fondo transparente</strong> para que puedas insertarlo en documentos, diapositivas o artículos.
+            ENT exporta el análisis como imagen PNG. Al pulsar uno de los botones de exportación se abre un diálogo donde puedes elegir el <strong>nombre del archivo</strong> y el <strong>fondo</strong> de la imagen (blanco o transparente). La opción <em>transparente</em> resulta útil para insertar el diagrama sobre diapositivas o documentos de cualquier color.
         </p>
 
         <ul>
             <li><strong>Exportar diagrama</strong>: exporta el diagrama tal como se ve (con cajas).</li>
-            <li><strong>Exportar diagrama arbóreo</strong>: exporta un estilo más “limpio” (modo técnico), ocultando controles de edición y reduciendo elementos visuales no esenciales.</li>
+            <li><strong>Exportar diagrama arbóreo</strong>: exporta un estilo más “limpio” (modo técnico), ocultando controles de edición y reduciendo elementos visuales no esenciales. ENT añade el sufijo <code>_arboreo</code> al nombre propuesto por defecto, pero puedes cambiarlo en el diálogo.</li>
         </ul>
 
         <p>
-            Durante la exportación, ENT oculta automáticamente los botones interactivos para que no aparezcan en la imagen final.
+            Durante la exportación, ENT oculta automáticamente los botones interactivos y restablece el zoom al 100% para que la imagen final tenga proporciones consistentes. Si cancelas el diálogo, ningún cambio visual se aplica.
         </p>
     </section>
 

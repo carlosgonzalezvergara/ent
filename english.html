@@ -9,7 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
-    <link rel="icon" type="image/png" href="favicon.png".png">
+    <link rel="icon" type="image/png" href="favicon.png">
     
     <style>
         /* ===========================================
@@ -1080,20 +1080,23 @@
         .pos-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(17,24,39,.35);
+            background: rgba(17, 24, 39, 0.45);
+            backdrop-filter: blur(2px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 9999;
+            animation: fnmFadeIn 0.15s ease-out;
         }
 
         .pos-modal {
             width: min(520px, calc(100vw - 32px));
             background: #fff;
             border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,.18);
+            border-radius: 14px;
+            box-shadow: 0 16px 48px rgba(17, 24, 39, 0.22);
             padding: 22px 22px 16px;
+            animation: fnmCardIn 0.18s cubic-bezier(0.34, 1.3, 0.64, 1);
         }
 
         .pos-title {
@@ -1154,10 +1157,11 @@
             max-height: calc(100vh - 64px);
             background: #fff;
             border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,.18);
+            border-radius: 14px;
+            box-shadow: 0 16px 48px rgba(17, 24, 39, 0.22);
             padding: 22px 22px 16px;
             overflow-y: auto;
+            animation: fnmCardIn 0.18s cubic-bezier(0.34, 1.3, 0.64, 1);
         }
 
         .expand-title {
@@ -1366,49 +1370,70 @@
 
         /* ===========================================
            FILES MODAL
-           =========================================== */
+           ===========================================
+           Comparte el lenguaje visual de los modales .fnm-* (header verde con
+           icono, animación de entrada, sombra). La estructura interna (tabs,
+           listado de Drive, footer) se mantiene intacta porque cubre necesidades
+           que los .fnm-* no tienen.
+        */
         .files-modal {
             width: min(600px, calc(100vw - 32px));
             max-height: calc(100vh - 64px);
-            background: #fff;
+            background: #ffffff;
             border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,.18);
+            border-radius: 14px;
+            box-shadow: 0 16px 48px rgba(17, 24, 39, 0.22);
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            animation: fnmCardIn 0.18s cubic-bezier(0.34, 1.3, 0.64, 1);
         }
 
         .files-modal-header {
-            padding: 18px 20px 0;
+            padding: 0;
             border-bottom: 1px solid #e5e7eb;
         }
 
         .files-modal-title {
-            font-weight: 700;
-            color: #374151;
-            margin: 0 0 16px;
-            font-size: 18px;
+            background: #1E8C5C;
+            color: #ffffff;
+            padding: 14px 22px;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-weight: 600;
+            font-size: 1.05rem;
+            letter-spacing: 0.01em;
+            margin: 0;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+        }
+
+        .files-modal-title > span:first-child {
+            font-size: 1.15rem;
+            line-height: 1;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
         }
 
         .files-tabs {
             display: flex;
             gap: 0;
+            background: #ffffff;
+            padding: 0 12px;
         }
 
         .files-tab {
-            padding: 10px 20px;
-            font-size: 14px;
-            font-weight: 500;
+            padding: 10px 18px;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            font-weight: 600;
             color: #6b7280;
             background: transparent;
             border: none;
             border-bottom: 2px solid transparent;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
         }
 
         .files-tab:hover {
@@ -1422,7 +1447,7 @@
         }
 
         .files-modal-body {
-            padding: 20px;
+            padding: 22px;
             overflow-y: auto;
             flex: 1;
         }
@@ -1996,6 +2021,181 @@
             max-height: 500px;
         }
 
+        /* ===========================================
+           FILENAME MODAL & RESTORE MODAL
+           ===========================================
+           Diálogos personalizados que reemplazan los prompt()/confirm() nativos
+           del navegador. Paleta verde de ENT sobre fondo blanco, tipografía
+           heredada del sistema (Segoe UI). Estructura adaptada desde Telperion,
+           Kilmer y MAK manteniendo la API: askForFilename(...) devuelve una
+           Promise con el nombre confirmado (string) o, si hay extraFields,
+           un objeto { name, extras }. null si se cancela.
+        */
+        .fnm-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(17, 24, 39, 0.45);
+            backdrop-filter: blur(2px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fnmFadeIn 0.15s ease-out;
+        }
+        @keyframes fnmFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .fnm-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            box-shadow: 0 16px 48px rgba(17, 24, 39, 0.22);
+            width: min(420px, calc(100vw - 40px));
+            overflow: hidden;
+            animation: fnmCardIn 0.18s cubic-bezier(0.34, 1.3, 0.64, 1);
+        }
+        @keyframes fnmCardIn {
+            from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .fnm-header {
+            background: #1E8C5C;
+            color: #ffffff;
+            padding: 14px 22px;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .fnm-header svg { flex-shrink: 0; opacity: 0.95; }
+        .fnm-header-icon {
+            font-size: 1.15rem;
+            line-height: 1;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .fnm-body { padding: 22px; }
+        .fnm-label {
+            display: block;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 8px;
+            letter-spacing: 0.02em;
+        }
+        .fnm-input-wrap {
+            display: flex;
+            align-items: stretch;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            background: #ffffff;
+            overflow: hidden;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .fnm-input-wrap:focus-within {
+            border-color: #1E8C5C;
+            box-shadow: 0 0 0 3px rgba(30, 140, 92, 0.15);
+        }
+        .fnm-input {
+            flex: 1;
+            min-width: 0;
+            border: none;
+            outline: none;
+            padding: 10px 12px;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-size: 15px;
+            color: #374151;
+            background: transparent;
+        }
+        .fnm-ext {
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            background: #f0fdf4;
+            border-left: 1px solid #d1fae5;
+            font-family: 'SF Mono', Consolas, monospace;
+            font-size: 13px;
+            color: #166b46;
+            user-select: none;
+        }
+        .fnm-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 0 22px 18px;
+        }
+        .fnm-btn {
+            padding: 9px 18px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, transform 0.05s;
+        }
+        .fnm-btn:active { transform: translateY(1px); }
+        .fnm-btn-cancel {
+            background: transparent;
+            border-color: #d1d5db;
+            color: #374151;
+        }
+        .fnm-btn-cancel:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        .fnm-btn-confirm {
+            background: #1E8C5C;
+            color: #ffffff;
+        }
+        .fnm-btn-confirm:hover:not(:disabled) { background: #166b46; }
+        .fnm-btn-confirm:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        /* Radio groups para campos extra del FilenameModal (p. ej. fondo del PNG).
+           Diseño discreto para no competir con el input del nombre. */
+        .fnm-radio-group {
+            display: flex;
+            gap: 6px;
+        }
+        .fnm-radio {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: transparent;
+            cursor: pointer;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-size: 12px;
+            color: #6b7280;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .fnm-radio:hover {
+            border-color: #d1d5db;
+            color: #374151;
+        }
+        .fnm-radio.selected {
+            border-color: #1E8C5C;
+            color: #374151;
+        }
+        .fnm-radio input[type="radio"] {
+            accent-color: #1E8C5C;
+            margin: 0;
+            transform: scale(0.9);
+        }
+
     </style>
 </head>
 <body>
@@ -2175,6 +2375,177 @@
             </footer>
         );
 
+        // ════════════════════════════════════════════════════════════════
+        // FilenameModal — custom dialog that replaces the native prompt()
+        // for saving the .ent file and exporting PNGs. Adapted to ENT's
+        // visual language: green palette on white background, system font
+        // (Segoe UI). Invoked via askForFilename(...), which returns a
+        // promise with the confirmed name (string) or, if extraFields are
+        // present, an object { name, extras }. Resolves with null on cancel.
+        // ════════════════════════════════════════════════════════════════
+        const FilenameModal = ({ title, defaultName, extension, icon, extraFields, onCancel, onConfirm }) => {
+            const [value, setValue] = useState(defaultName || '');
+            const inputRef = useRef(null);
+
+            // State for extra fields (radio groups or others). Keys are each
+            // field's id; initial values come from the declared `default`.
+            const [extras, setExtras] = useState(() => {
+                const init = {};
+                (extraFields || []).forEach(f => { init[f.id] = f.default; });
+                return init;
+            });
+
+            // Auto-focus + full selection on open, so the user can overwrite
+            // the default name immediately by typing.
+            useEffect(() => {
+                if (inputRef.current) {
+                    inputRef.current.focus();
+                    inputRef.current.select();
+                }
+            }, []);
+
+            // Result returned on confirm: if extras are present we return
+            // { name, extras }; otherwise just the name (kept for backwards
+            // compatibility with call sites that don't use extras).
+            const buildResult = useCallback(() => {
+                const name = value.trim();
+                if (extraFields && extraFields.length > 0) return { name, extras };
+                return name;
+            }, [value, extras, extraFields]);
+
+            // Keyboard shortcuts at modal scope: Enter confirms, Escape cancels.
+            useEffect(() => {
+                const onKey = (e) => {
+                    if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
+                    else if (e.key === 'Enter') { e.preventDefault(); if (value.trim()) onConfirm(buildResult()); }
+                };
+                window.addEventListener('keydown', onKey);
+                return () => window.removeEventListener('keydown', onKey);
+            }, [value, onCancel, onConfirm, buildResult]);
+
+            // Header icon: emoji string provided by the caller, matching the
+            // emojis used in the UI buttons (💾 Save, 📤 Export, 🌳 Tree).
+            const iconNode = icon ? <span className="fnm-header-icon">{icon}</span> : null;
+
+            // Close on backdrop click. Click on the card does not propagate.
+            return (
+                <div className="fnm-backdrop" onMouseDown={onCancel}>
+                    <div className="fnm-card" onMouseDown={(e) => e.stopPropagation()}>
+                        <div className="fnm-header">
+                            {iconNode}
+                            <span>{title}</span>
+                        </div>
+                        <div className="fnm-body">
+                            <label className="fnm-label" htmlFor="fnm-input">File name</label>
+                            <div className="fnm-input-wrap">
+                                <input
+                                    ref={inputRef}
+                                    id="fnm-input"
+                                    type="text"
+                                    className="fnm-input"
+                                    value={value}
+                                    onChange={(e) => setValue(e.target.value)}
+                                    spellCheck={false}
+                                    autoComplete="off"
+                                />
+                                {extension && <div className="fnm-ext">.{extension}</div>}
+                            </div>
+
+                            {/* Optional extra fields declared by the caller. */}
+                            {extraFields && extraFields.map(field => (
+                                <div key={field.id} className="fnm-extra-field">
+                                    <div className="fnm-label" style={{ marginTop: '14px', fontSize: '11px' }}>{field.label}</div>
+                                    <div className="fnm-radio-group">
+                                        {field.options.map(opt => (
+                                            <label key={opt.value} className={`fnm-radio ${extras[field.id] === opt.value ? 'selected' : ''}`}>
+                                                <input
+                                                    type="radio"
+                                                    name={field.id}
+                                                    value={opt.value}
+                                                    checked={extras[field.id] === opt.value}
+                                                    onChange={() => setExtras(prev => ({ ...prev, [field.id]: opt.value }))}
+                                                />
+                                                <span>{opt.label}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="fnm-actions">
+                            <button type="button" className="fnm-btn fnm-btn-cancel" onClick={onCancel}>Cancel</button>
+                            <button
+                                type="button"
+                                className="fnm-btn fnm-btn-confirm"
+                                disabled={!value.trim()}
+                                onClick={() => onConfirm(buildResult())}
+                            >Save</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // ════════════════════════════════════════════════════════════════
+        // RestoreModal — custom dialog that replaces the native confirm()
+        // when unsaved work is detected in localStorage. Reuses the .fnm-*
+        // classes from FilenameModal.
+        // ════════════════════════════════════════════════════════════════
+        const RestoreModal = ({ minutesAgo, onContinue, onDiscard }) => {
+            const continueRef = useRef(null);
+
+            useEffect(() => {
+                if (continueRef.current) continueRef.current.focus();
+            }, []);
+
+            useEffect(() => {
+                const onKey = (e) => {
+                    if (e.key === 'Escape') { e.preventDefault(); onDiscard(); }
+                    else if (e.key === 'Enter') { e.preventDefault(); onContinue(); }
+                };
+                window.addEventListener('keydown', onKey);
+                return () => window.removeEventListener('keydown', onKey);
+            }, [onContinue, onDiscard]);
+
+            const iconNode = <span className="fnm-header-icon">↻</span>;
+
+            const timeLabel = (minutesAgo === null || minutesAgo < 1)
+                ? 'Unsaved work from your last session was found.'
+                : `Unsaved work from ${minutesAgo} minute${minutesAgo === 1 ? '' : 's'} ago was found.`;
+
+            // No backdrop-click dismissal: the decision must be explicit.
+            return (
+                <div className="fnm-backdrop">
+                    <div className="fnm-card" onMouseDown={(e) => e.stopPropagation()}>
+                        <div className="fnm-header">
+                            {iconNode}
+                            <span>Restore previous session</span>
+                        </div>
+                        <div className="fnm-body">
+                            <p style={{
+                                fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                                fontSize: '14px',
+                                color: '#374151',
+                                margin: '0 0 6px 0',
+                                lineHeight: 1.5
+                            }}>{timeLabel}</p>
+                            <p style={{
+                                fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                                fontSize: '13px',
+                                color: '#6b7280',
+                                margin: 0,
+                                lineHeight: 1.5
+                            }}>Would you like to pick up where you left off or start from scratch?</p>
+                        </div>
+                        <div className="fnm-actions">
+                            <button type="button" className="fnm-btn fnm-btn-cancel" onClick={onDiscard}>Start from scratch</button>
+                            <button ref={continueRef} type="button" className="fnm-btn fnm-btn-confirm" onClick={onContinue}>Pick up where I left off</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         // ===========================================
         // LABELDROPDOWN COMPONENT (outside SyntaxTreeBuilder for stable identity)
         // ===========================================
@@ -2304,6 +2675,38 @@
             const [posPicker, setPosPicker] = useState(null);
             const [siblingModal, setSiblingModal] = useState(null);
             const [expandModal, setExpandModal] = useState(null);
+
+            // ===========================================
+            // MODALS (filename / session restore)
+            // ===========================================
+            // filenameModal !== null while the save/export dialog is open.
+            // The promise returned by askForFilename resolves on confirm or cancel.
+            const [filenameModal, setFilenameModal] = useState(null);
+            const filenameResolverRef = useRef(null);
+
+            const askForFilename = useCallback(({ title, defaultName, extension, icon, extraFields }) => {
+                return new Promise((resolve) => {
+                    filenameResolverRef.current = resolve;
+                    setFilenameModal({
+                        title,
+                        defaultName: defaultName || '',
+                        extension: extension || '',
+                        icon: icon || null,
+                        extraFields: extraFields || null
+                    });
+                });
+            }, []);
+
+            const closeFilenameModal = useCallback((value) => {
+                const resolve = filenameResolverRef.current;
+                filenameResolverRef.current = null;
+                setFilenameModal(null);
+                if (resolve) resolve(value);
+            }, []);
+
+            // restorePending !== null while the restore dialog is open.
+            // We keep the parsed data so we don't parse twice and can show minutesAgo.
+            const [restorePending, setRestorePending] = useState(null);
 
             // Exercise mode
             const [exerciseMode, setExerciseMode] = useState(false);
@@ -2732,8 +3135,25 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
                 setIsSaving(false);
             }, []);
 
-            const handleSaveJSON = useCallback(() => {
+            const handleSaveJSON = useCallback(async () => {
                 if (!tree) return;
+
+                // Compute default name without extension: getFileName('json') returns
+                // "words.ent"; strip the ".ent" suffix so the modal shows just the
+                // name and visually appends the extension as a tag.
+                // If the sentence is empty, fall back to 'analysis_ent' so the input
+                // is never blank (which would disable the Save button).
+                const fullName = getFileName('json');
+                const defaultName = fullName.replace(/\.ent$/i, '') || 'analysis_ent';
+
+                const raw = await askForFilename({
+                    title: 'Save project',
+                    defaultName,
+                    extension: 'ent',
+                    icon: '💾',
+                });
+                if (raw === null) return; // cancelled
+                const filename = (raw || 'analysis_ent').replace(/\s+/g, '_');
 
                 // Before downloading, flush any pending autosave and write the current
                 // state. The backup is NOT cleared: this avoids losing the restoration
@@ -2744,11 +3164,10 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
                 const blob = new Blob([JSON.stringify({ sentence, tree }, null, 2)], { type: 'application/json' });
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
-                const words = sentence.trim().split(/\s+/).slice(0, 5).join('_') || 'analysis_ent';
-                a.download = `${words}.ent`;
+                a.download = `${filename}.ent`;
                 a.click();
                 URL.revokeObjectURL(a.href);
-            }, [tree, sentence, writeAutoSave]);
+            }, [tree, sentence, writeAutoSave, askForFilename]);
 
 
             // ===========================================
@@ -2788,7 +3207,11 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
                 };
             }, [tree, writeAutoSave]);
 
-            // Restore from auto-save on mount
+            // Restore from auto-save on mount.
+            // Instead of a blocking confirm(), we parse the localStorage entry
+            // and, if the data is valid, open the RestoreModal. The actual
+            // decision (acceptRestore / declineRestore) is taken when the user
+            // responds to the modal.
             useEffect(() => {
                 const saved = localStorage.getItem(AUTOSAVE_KEY);
                 if (!saved) return;
@@ -2806,40 +3229,42 @@ const [modelZoomLevel, setModelZoomLevel] = useState(100);
                         ? Math.max(0, Math.round((Date.now() - savedDate.getTime()) / 60000))
                         : null;
 
-                    const message = minutesAgo === null
-                        ? 'Unsaved work was found.\n\nDo you want to continue where you left off?'
-                        : minutesAgo < 1
-                            ? 'Unsaved work was found.\n\nDo you want to continue where you left off?'
-                            : `Unsaved work from ${minutesAgo} minute${minutesAgo === 1 ? '' : 's'} ago was found.\n\nDo you want to continue where you left off?`;
-
-                    const restore = confirm(message);
-
-                    if (restore) {
-                        isUndoRedo.current = true;
-
-                        setSentence(data.sentence || '');
-                        setTree(data.tree || null);
-                        setDivisionMode(data.divisionMode ?? null);
-                        setSelectedCuts(Array.isArray(data.selectedCuts) ? data.selectedCuts : []);
-                        setExerciseMode(!!data.exerciseMode);
-                        setModelTree(data.modelTree || null);
-                        setShowComparison(false);
-                        setComparisonResults(null);
-
-                        // The restored state becomes the first history point.
-                        setHistory(data.tree ? [JSON.stringify(data.tree)] : []);
-                        setHistoryIndex(data.tree ? 0 : -1);
-                        if (hasValidDate) setLastSaved(savedDate);
-
-                        setTimeout(() => { isUndoRedo.current = false; }, 0);
-                    } else {
-                        clearAutoSave();
-                    }
+                    setRestorePending({ data, savedDate, hasValidDate, minutesAgo });
                 } catch (err) {
                     console.error('Error restoring auto-save:', err);
                     clearAutoSave();
                 }
             }, [clearAutoSave]); // Only on mount
+
+            // Handlers for the RestoreModal decision.
+            const acceptRestore = useCallback(() => {
+                if (!restorePending) return;
+                const { data, savedDate, hasValidDate } = restorePending;
+                isUndoRedo.current = true;
+
+                setSentence(data.sentence || '');
+                setTree(data.tree || null);
+                setDivisionMode(data.divisionMode ?? null);
+                setSelectedCuts(Array.isArray(data.selectedCuts) ? data.selectedCuts : []);
+                setExerciseMode(!!data.exerciseMode);
+                setModelTree(data.modelTree || null);
+                setShowComparison(false);
+                setComparisonResults(null);
+
+                // The restored state becomes the first history point.
+                setHistory(data.tree ? [JSON.stringify(data.tree)] : []);
+                setHistoryIndex(data.tree ? 0 : -1);
+                if (hasValidDate) setLastSaved(savedDate);
+
+                setRestorePending(null);
+                setTimeout(() => { isUndoRedo.current = false; }, 0);
+            }, [restorePending]);
+
+            const declineRestore = useCallback(() => {
+                clearAutoSave();
+                setRestorePending(null);
+            }, [clearAutoSave]);
+
 // ===========================================
             // GOOGLE DRIVE API
             // ===========================================
@@ -3591,6 +4016,32 @@ setExerciseMode(true);
                 const treeContainer = document.querySelector('.tree-container');
                 const zoomContainer = treeContainer.querySelector('.zoom-container');
 
+                // Ask for name + background BEFORE starting the costly render.
+                // If the user cancels, nothing visible changes (zoom, hidden buttons).
+                // For the tree diagram we append "_tree" suffix to the default name.
+                const fullName = getFileName('png');
+                let defaultName = fullName.replace(/\.png$/i, '') || 'analysis_ent';
+                if (isTechnical) defaultName = `${defaultName}_tree`;
+
+                const result = await askForFilename({
+                    title: isTechnical ? 'Export tree diagram' : 'Export diagram',
+                    defaultName,
+                    extension: 'png',
+                    icon: isTechnical ? '🌳' : '📤',
+                    extraFields: [{
+                        id: 'background',
+                        label: 'Background',
+                        default: 'white',
+                        options: [
+                            { value: 'white', label: 'White' },
+                            { value: 'transparent', label: 'Transparent' },
+                        ],
+                    }],
+                });
+                if (result === null) return; // cancelled
+                const filename = (result.name || 'analysis_ent').replace(/\s+/g, '_');
+                const backgroundMode = result.extras.background; // 'white' | 'transparent'
+
                 // Save current zoom and reset to 100% for consistent export
                 const savedZoom = zoomLevel;
                 setZoomLevel(100);
@@ -3864,14 +4315,14 @@ setExerciseMode(true);
                 }
 
                 const canvas = await html2canvas(treeWrapper, { 
-                    backgroundColor: null, 
+                    backgroundColor: backgroundMode === 'white' ? '#ffffff' : null, 
                     scale: 2,
                     width: treeWrapper.scrollWidth,
                     height: treeWrapper.scrollHeight
                 });
                 
                 const link = document.createElement('a');
-                link.download = getFileName('png');
+                link.download = `${filename}.png`;
                 link.href = canvas.toDataURL();
                 link.click();
 
@@ -4787,6 +5238,7 @@ setExerciseMode(true);
             // MAIN VIEW
             // ===========================================
             return (
+                <>
                 <div className="container">
                     {/* Language selector */}
                         <div className="language-selector">
@@ -5198,7 +5650,10 @@ setExerciseMode(true);
                         <div className="pos-overlay" onClick={() => setShowFilesModal(false)}>
                             <div className="files-modal" onClick={(e) => e.stopPropagation()}>
                                 <div className="files-modal-header">
-                                    <h4 className="files-modal-title">{exerciseMode ? '☁️ Example bank' : '📁 Files'}</h4>
+                                    <h4 className="files-modal-title">
+                                        <span>{exerciseMode ? '☁️' : '📁'}</span>
+                                        <span>{exerciseMode ? 'Example bank' : 'Files'}</span>
+                                    </h4>
                                     {!exerciseMode && (
                                         <div className="files-tabs">
                                             <button 
@@ -5502,6 +5957,30 @@ setExerciseMode(true);
 
                     <Footer />
                 </div>
+
+                {/* Global modals: filename (Save / Export PNG) and session
+                    restoration. Rendered outside .container so the backdrop
+                    covers the whole screen. */}
+                {filenameModal && (
+                    <FilenameModal
+                        title={filenameModal.title}
+                        defaultName={filenameModal.defaultName}
+                        extension={filenameModal.extension}
+                        icon={filenameModal.icon}
+                        extraFields={filenameModal.extraFields}
+                        onCancel={() => closeFilenameModal(null)}
+                        onConfirm={(result) => closeFilenameModal(result)}
+                    />
+                )}
+
+                {restorePending && (
+                    <RestoreModal
+                        minutesAgo={restorePending.minutesAgo}
+                        onContinue={acceptRestore}
+                        onDiscard={declineRestore}
+                    />
+                )}
+                </>
             );
         };
 

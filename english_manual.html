@@ -220,16 +220,18 @@
             ENT allows you to save and load analysis progress using files with the proprietary <code>.ent</code> extension. These files are JSON data documents that preserve the tree structure, labels, and original expression.
         </p>
         <ul>
-            <li><strong>Save:</strong> Access <span class="ui-element">📁 Files</span> and select <span class="ui-element">💾 Save .ent</span>. The file will be downloaded to your computer.</li>
+            <li><strong>Save:</strong> Access <span class="ui-element">📁 Files</span> and select <span class="ui-element">💾 Save .ent</span>. A dialog will open where you can edit the filename before downloading.</li>
             <li><strong>Load:</strong> Use the <span class="ui-element">📂 Load .ent</span> option to import a previously saved analysis.</li>
         </ul>
-        <p>When saving, the filename is automatically generated from the first words of the sentence.</p>
+        <p>
+            When saving, ENT proposes a default name based on the first words of the sentence, but you can freely edit it. The <code>.ent</code> extension is appended automatically — you don't need to type it. Press <span class="key-tip">Enter</span> to confirm or <span class="key-tip">Esc</span> to cancel.
+        </p>
 
         <div class="note-block">
-            <p><strong>Auto-save</strong></p>
+            <p><strong>Auto-save and restoration</strong></p>
             <p>
                 In addition to manually saving <code>.ent</code> files, ENT keeps a <strong>local auto-save</strong> of your work (both in the main mode and in Exercise mode).
-                If you close the tab or your browser, ENT will offer to <strong>restore</strong> the last auto-saved state when you reopen the app.
+                If you close the tab or your browser, ENT will offer to <strong>restore</strong> the last auto-saved state when you reopen the app, through a dialog with two options: <strong>Pick up where I left off</strong> (recovers the previous state and places it as the first point of the undo history) or <strong>Start from scratch</strong> (discards the backup and opens a clean session).
                 This auto-save is stored only in your browser (nothing is uploaded), so it may be lost if you clear the site data.
             </p>
         </div>
@@ -460,6 +462,14 @@
                     <td><span class="key-tip">Ctrl</span>+<span class="key-tip">0</span></td>
                     <td><span class="key-tip">⌘</span>+<span class="key-tip">0</span></td>
                 </tr>
+                <tr>
+                    <td><strong>Confirm open dialog</strong></td>
+                    <td colspan="2"><span class="key-tip">Enter</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Cancel open dialog</strong></td>
+                    <td colspan="2"><span class="key-tip">Esc</span></td>
+                </tr>
             </tbody>
         </table>
     </section>
@@ -468,16 +478,16 @@
         <h2>10. Exporting results</h2>
 
         <p>
-            ENT exports the analysis as a PNG image with a <strong>transparent background</strong> so you can insert it into documents, slides, or articles.
+            ENT exports the analysis as a PNG image. When you click an export button, a dialog opens where you can choose the <strong>filename</strong> and the <strong>background</strong> of the image (white or transparent). The <em>transparent</em> option is useful for placing the diagram over slides or documents of any color.
         </p>
 
         <ul>
             <li><strong>Export diagram</strong>: exports the diagram as it appears (with boxes).</li>
-            <li><strong>Export tree diagram</strong>: exports a "cleaner" style (technical mode), hiding editing controls and reducing non-essential visual elements.</li>
+            <li><strong>Export tree diagram</strong>: exports a "cleaner" style (technical mode), hiding editing controls and reducing non-essential visual elements. ENT appends the suffix <code>_tree</code> to the proposed default name, but you can change it in the dialog.</li>
         </ul>
 
         <p>
-            During export, ENT automatically hides interactive buttons so they don't appear in the final image.
+            During export, ENT automatically hides interactive buttons and resets the zoom to 100% so the final image has consistent proportions. If you cancel the dialog, no visual changes are applied.
         </p>
     </section>
 
